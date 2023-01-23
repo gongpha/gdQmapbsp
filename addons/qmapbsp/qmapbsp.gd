@@ -3,9 +3,9 @@ extends EditorPlugin
 
 const PATH := "res://addons/qmapbsp/"
 const PLUGIN_PATHS := [
-	"importer/bsp_quake_importer.gd",
-	"importer/map_quake_importer.gd",
-	"inspector/map_quake_inspector.gd",
+	"importer/bsp_importer.gd",
+	"importer/map_importer.gd",
+	"inspector/map_inspector.gd",
 ]
 var plugins : Array[RefCounted] # []
 

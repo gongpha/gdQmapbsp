@@ -1,5 +1,5 @@
 extends EditorImportPlugin
-class_name Qmapbsp_MapImporterPlugin
+class_name QmapbspMapImporterPlugin
 
 func _get_importer_name() -> String :
 	return "qmapbsp.map"

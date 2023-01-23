@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://bfrpdkolpjr3g"]
+
+[ext_resource type="PackedScene" uid="uid://dvlurm3ntglha" path="res://quake1_example/console.tscn" id="1_1r65e"]
+[ext_resource type="Script" path="res://quake1_example/viewer.gd" id="1_whe0i"]
+
+[node name="viewer" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_whe0i")
+
+[node name="console" parent="." instance=ExtResource("1_1r65e")]
+layout_mode = 1

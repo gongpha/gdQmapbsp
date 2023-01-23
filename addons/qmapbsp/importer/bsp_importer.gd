@@ -56,15 +56,15 @@ func _import(
 		return FileAccess.get_open_error()
 		
 	var extp : String = options.get("extended_importer", "")
-	var ext : Qmapbsp_BSPImporterExtension
+	var ext : QmapbspImporterExtension
 	if extp.is_empty() :
-		ext = Qmapbsp_BSPImporterExtension.new()
+		ext = QmapbspImporterExtension.new()
 	else :
 		ext = load(extp).new()
 	var node := Node3D.new()
 	node.name = &'map'
 	ext.root = node
-	var parser := Qmapbsp_BSPParser.new()
+	var parser := QmapbspBSPParser.new()
 	
 	var res : StringName = parser.begin_read_file(file, ext)
 	

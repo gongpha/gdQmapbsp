@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="gdQmapbsp"
+run/main_scene="res://quake1_example/hub.tscn"
 config/features=PackedStringArray("4.0", "Mobile")
 config/icon="res://icon.svg"
+
+[debug]
+
+gdscript/warnings/enable=false
 
 [rendering]
 

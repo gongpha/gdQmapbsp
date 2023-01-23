@@ -1,5 +1,7 @@
 extends RefCounted
-class_name Qmapbsp_BSPParser
+class_name QmapbspBSPParser
+
+# CURRENTLY SUPPORT QUAKE 1 MAP ONLY
 
 var bsp_version : int
 var unit_scale : float
@@ -8,7 +10,7 @@ var known_palette : PackedColorArray
 var region_size : float = 0.5
 var bsp_shader : Shader
 
-var ext : Qmapbsp_BSPImporterExtension
+var ext : QmapbspImporterExtension
 
 var file : FileAccess
 var load_section : int
@@ -46,8 +48,10 @@ const ENTRY_LIST := [
 	
 enum LoadSection {
 	VERTICES, EDGES, LEDGES, PLANES, MIPTEXTURES,
-	TEXINFOS, MODELS, FACES, CLIPNODES,
-	ENTITIES, CONSTRUCT_CLIPS,
+	TEXINFOS, MODELS, FACES,# CLIPNODES,
+	
+	ENTITIES, # TODO : separate these sections to the MAP parsing part (?)
+		
 	CONSTRUCT_REGIONS, BUILD_REGIONS,
 	
 	END
@@ -61,10 +65,10 @@ var sections := {
 	LoadSection.TEXINFOS : [_read_texinfo, 'texinfo'],
 	LoadSection.MODELS : [_read_models, 'models'],
 	LoadSection.FACES : [_read_faces, 'faces'],
-	LoadSection.CLIPNODES : [_read_clipnodes, 'clipnodes'],
+	#LoadSection.CLIPNODES : [_read_clipnodes, 'clipnodes'],
 	LoadSection.ENTITIES : [_read_entities, 'entities'],
 	
-	LoadSection.CONSTRUCT_CLIPS : [_construct_clips, ''],
+	#LoadSection.CONSTRUCT_CLIPS : [_construct_clips, ''],
 	LoadSection.CONSTRUCT_REGIONS : [_construct_regions, ''],
 	LoadSection.BUILD_REGIONS : [_build_regions, ''],
 }
@@ -86,7 +90,7 @@ var entities : Array[Array]
 var model_desc : Dictionary # <model_id : dict>
 
 func begin_read_file(
-	f : FileAccess, ext_ : Qmapbsp_BSPImporterExtension,
+	f : FileAccess, ext_ : QmapbspImporterExtension,
 ) -> StringName :
 	file = f
 	ext = ext_
@@ -113,6 +117,20 @@ func begin_read_file(
 	
 	return StringName()
 	
+func load_file(path : String, ext_ := QmapbspImporterExtension.new(), return_code : Array = []) -> StringName :
+	var f := FileAccess.open(path, FileAccess.READ)
+	if FileAccess.get_open_error() != OK :
+		return_code.append(FileAccess.get_open_error())
+		return &'CANNOT_OPEN_FILE'
+	
+	var ret := begin_read_file(f, ext_)
+	if ret != StringName() : return ret
+	while true :
+		var reti := poll()
+		if reti == ERR_FILE_EOF : break
+		
+	return StringName()
+	
 func _update_load_section() :
 	curr_section = sections[load_section]
 	curr_section_call = curr_section[0]
@@ -121,9 +139,12 @@ func _update_load_section() :
 var curr_section : Array
 var curr_section_call : Callable
 var curr_entry : Vector2i
+var local_progress : float
 func poll() -> int :
-	if curr_section_call.call() :
+	local_progress = curr_section_call.call()
+	if local_progress >= 1.0 :
 		load_section += 1
+		local_progress = 0.0
 		#print(load_section)
 		if load_section == LoadSection.END :
 			return ERR_FILE_EOF
@@ -131,7 +152,13 @@ func poll() -> int :
 		load_index = 0
 	return OK
 	
-func _read_vertices() -> bool :
+func get_progress() -> float :
+	var stp := 1.0 / LoadSection.END
+	var sec := float(load_section) / LoadSection.END
+	var scp : float = local_progress * stp
+	return scp + sec
+	
+func _read_vertices() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		vertices.resize(curr_entry.y / VEC3_SIZE)
@@ -143,9 +170,9 @@ func _read_vertices() -> bool :
 		)
 	)
 	load_index += 1
-	return load_index == vertices.size()
+	return float(load_index) / vertices.size()
 			
-func _read_edges() -> bool :
+func _read_edges() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		edges.resize(curr_entry.y / 4)
@@ -154,17 +181,17 @@ func _read_edges() -> bool :
 		file.get_16() # end vertex
 	)
 	load_index += 1
-	return load_index == edges.size()
+	return  float(load_index) / edges.size()
 		
-func _read_ledges() -> bool :
+func _read_ledges() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		edge_list.resize(curr_entry.y / 4)
 	edge_list[load_index] = file.get_32()
 	load_index += 1
-	return load_index == edge_list.size()
+	return float(load_index) / edge_list.size()
 		
-func _read_planes() -> bool :
+func _read_planes() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		planes.resize(curr_entry.y / 20)
@@ -176,10 +203,10 @@ func _read_planes() -> bool :
 	)
 	planetypes[load_index] = file.get_32()
 	load_index += 1
-	return load_index == planes.size()
+	return float(load_index) / planes.size()
 		
 var mipoffsets : PackedInt32Array
-func _read_mip_textures() -> bool :
+func _read_mip_textures() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		var count := file.get_32()
@@ -221,10 +248,10 @@ func _read_mip_textures() -> bool :
 	load_index += 1
 	if load_index == mipoffsets.size() :
 		mipoffsets.clear()
-		return true
-	return false 
+		return 1.0
+	return float(load_index) / mipoffsets.size()
 			
-func _read_texinfo() -> bool :
+func _read_texinfo() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		texinfos.resize(curr_entry.y / 40)
@@ -235,9 +262,9 @@ func _read_texinfo() -> bool :
 		file.get_32() # flags
 	]
 	load_index += 1
-	return load_index == texinfos.size()
+	return float(load_index) / texinfos.size()
 		
-func _read_models() -> bool :
+func _read_models() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		models.resize(curr_entry.y / 64)
@@ -250,9 +277,9 @@ func _read_models() -> bool :
 		file.get_32() # count
 	]
 	load_index += 1
-	return load_index == models.size()
+	return float(load_index) / models.size()
 
-func _read_faces() -> bool :
+func _read_faces() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		faces.resize(curr_entry.y / 20)
@@ -268,22 +295,22 @@ func _read_faces() -> bool :
 		file.get_32(), # lightmap
 	]
 	load_index += 1
-	return load_index == faces.size()
+	return float(load_index) / faces.size()
 	
-func _read_clipnodes() -> bool :
-	if load_index == 0 :
-		file.seek(curr_entry.x)
-		clipnodes.resize(curr_entry.y / 8)
-	clipnodes[load_index] = [
-		file.get_32(), # plane
-		file.get_16(), # front
-		file.get_16(), # back
-	]
-	load_index += 1
-	return load_index == clipnodes.size()
+#func _read_clipnodes() -> float :
+#	if load_index == 0 :
+#		file.seek(curr_entry.x)
+#		clipnodes.resize(curr_entry.y / 8)
+#	clipnodes[load_index] = [
+#		file.get_32(), # plane
+#		file.get_16(), # front
+#		file.get_16(), # back
+#	]
+#	load_index += 1
+#	return float(load_index) / clipnodes.size()
 	
 var entities_kv : Array[Dictionary]
-func _read_entities() -> bool :
+func _read_entities() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
 		var b := file.get_buffer(curr_entry.y).get_string_from_ascii()
@@ -304,51 +331,51 @@ func _read_entities() -> bool :
 	load_index += 1
 	if load_index == entities_kv.size() :
 		entities_kv.clear()
-		return true
-	return false
+		return 1.0
+	return float(load_index) / entities_kv.size()
 		
 		
-func _get_plane_tree(nodeindex : int, bucket : Array[Plane], add : bool) :
-	var arr : Array = clipnodes[nodeindex]
-	var plane : Plane = planes[arr[0]]
-	var plane_t : int = planetypes[arr[0]]
-	var front : int = arr[1]
-	var back : int = arr[2]
-	if add :
-		bucket.append(plane)
-	if front != 65535 and front != 65534 :
-		_get_plane_tree(front, bucket, true)
-	if back != 65535 and back != 65534 :
-		_get_plane_tree(back, bucket, true)
+#func _get_plane_tree(nodeindex : int, bucket : Array[Plane], add : bool) :
+#	var arr : Array = clipnodes[nodeindex]
+#	var plane : Plane = planes[arr[0]]
+#	var plane_t : int = planetypes[arr[0]]
+#	var front : int = arr[1]
+#	var back : int = arr[2]
+#	if add :
+#		bucket.append(plane)
+#	if front != 65535 and front != 65534 :
+#		_get_plane_tree(front, bucket, true)
+#	if back != 65535 and back != 65534 :
+#		_get_plane_tree(back, bucket, true)
 	#prints(nodeindex, plane, arr[1], arr[2], '<>', plane_t)
 
-func _construct_clips() :
-	var model : Array = models[load_index]
-	#var node_left : int = model[4]
-	var node_right : int = model[5]
-	
-	var arr : Array[Plane]
-	_get_plane_tree(node_right, arr, true)
-	var l : PackedVector3Array
-	for i in arr.size() :
-		for j in range(i + 1, arr.size()) :
-			for k in range(i + 1, arr.size()) :
-				var p1 : Plane = arr[i]
-				var p2 : Plane = arr[j]
-				var p3 : Plane = arr[k]
-				var e = p1.intersect_3(p2, p3)
-				if e != null : l.append(e)
-				prints(i, j, k)
-	var convex := ConvexPolygonShape3D.new()
-	convex.points = l
-	
-	var node := ext._get_collision_shape_node(load_index, 0)
-	node.shape = convex
-	
-	load_index += 1
-	if load_index == models.size() :
-		return true
-	return false
+#func _construct_clips() :
+#	var model : Array = models[load_index]
+#	#var node_left : int = model[4]
+#	var node_right : int = model[5]
+#
+#	var arr : Array[Plane]
+#	_get_plane_tree(node_right, arr, true)
+#	var l : PackedVector3Array
+#	for i in arr.size() :
+#		for j in range(i + 1, arr.size()) :
+#			for k in range(i + 1, arr.size()) :
+#				var p1 : Plane = arr[i]
+#				var p2 : Plane = arr[j]
+#				var p3 : Plane = arr[k]
+#				var e = p1.intersect_3(p2, p3)
+#				if e != null : l.append(e)
+#				prints(i, j, k)
+#	var convex := ConvexPolygonShape3D.new()
+#	convex.points = l
+#
+#	var node := ext._get_collision_shape_node(load_index, 0)
+#	node.shape = convex
+#
+#	load_index += 1
+#	if load_index == models.size() :
+#		return true
+#	return false
 
 # key = Vector2i : Worldspawn meshes
 # key = int : Other meshes
@@ -356,7 +383,7 @@ var worldspawn_regions : Dictionary
 var lightmapdata : PackedByteArray
 var ip : QuakeImagePacker
 var unlit : int
-func _construct_regions() -> bool :
+func _construct_regions() -> float :
 	
 	if load_index == 0 :
 		var lightmaps_e : Vector2i = entries.lightmaps
@@ -522,8 +549,8 @@ func _construct_regions() -> bool :
 			
 	if load_index == models.size() :
 		lightmapdata.clear()
-		return true
-	return false
+		return 1.0
+	return float(load_index) / models.size()
 		
 var region_keys : Array
 var pos_list : PackedVector2Array
@@ -531,13 +558,15 @@ var lightmap_image : Image
 var lightmap_size : Vector2
 var lmtex : ImageTexture
 
-func _build_regions() -> bool :
+func _build_regions() -> float :
 	if load_index == 0 :
 		lightmap_image = ip.commit(Image.FORMAT_L8, pos_list)
 		lightmap_size = lightmap_image.get_size()
 		lmtex = ImageTexture.create_from_image(lightmap_image)
 		#lightmap_image.save_png('a.png')
 		region_keys = worldspawn_regions.keys()
+	
+	if region_keys.is_empty() : return 1.0
 	
 	var mesh : ArrayMesh
 	var r = region_keys[load_index]
@@ -599,21 +628,21 @@ func _build_regions() -> bool :
 			meshin.position = center
 		else :
 			meshin = ext._get_mesh_instance_per_model(r)
-			var parent := meshin.get_parent()
-			if parent == ext.root :
-				pass
-			if parent is Node3D :
-				#print(r)
-				parent.position = center
-				if desc.get('add_col', false) :
-					var box := BoxShape3D.new()
-					box.extents = extents
-					var col := CollisionShape3D.new()
-					col.shape = box
-					col.name = &'col000'
-					parent.add_child(col, true)
-					print(parent)
+#			var parent := meshin.get_parent()
+#			if parent == ext.root :
+#				pass
+#			if parent is Node3D :
+#				parent.position = center
+#				if desc.get('add_col', false) :
+#					var box := BoxShape3D.new()
+#					box.extents = extents
+#					var col := CollisionShape3D.new()
+#					col.shape = box
+#					col.name = &'col000'
+#					parent.add_child(col, true)
+#					print(parent)
 		meshin.mesh = mesh
+		ext._on_brush_mesh_updated(r, meshin)
 	
 	load_index += 1
 	
@@ -625,10 +654,10 @@ func _build_regions() -> bool :
 		worldspawn_regions.clear()
 		lightmapdata.clear()
 		ip = null
-		return true
-	return false
+		return 1.0
+	return float(load_index) / region_keys.size()
 
-# it's literally the same as the method inside PakFile
+# it's literally the same as the method inside QmapbspPakFile
 func _make_im_from_pal(
 	s : Vector2i, d : PackedByteArray
 ) -> Image :

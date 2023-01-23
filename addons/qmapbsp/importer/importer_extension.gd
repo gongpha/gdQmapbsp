@@ -1,16 +1,11 @@
 extends RefCounted
-class_name Qmapbsp_BSPImporterExtension
+class_name QmapbspImporterExtension
 
 var root : Node
 var pal : PackedColorArray
-
-#var entities : Node
 var entities_owner : Dictionary # <model_id : Node>
 
 func _start() :
-	#entities = Node.new()
-	#entities.name = &'entities'
-	#root.add_child(entities)
 	pass
 	
 func _get_palette() -> PackedColorArray : return pal
@@ -31,16 +26,11 @@ func _get_no_texture() -> Material :
 	t.albedo_color = Color.RED
 	return t
 
-func _get_texture(name : String, size : Vector2i) :
-	return null # uses textures inside the bsp file
-#	var path := "res://textures/{name}".format({
-#		'name' : name
-#	})
-#	var mat : Material = load(path)
-#	if !mat : mat = get_no_texture()
-#	return mat
+func _get_texture(name : String, size : Vector2i) -> Material :
+	return null
 
 func _get_mesh_instance_per_model(model_id : int) -> MeshInstance3D :
+	if !root : return null
 	var meshin := MeshInstance3D.new()
 	meshin.name = "mesh%04d" % model_id
 	
@@ -57,6 +47,7 @@ func _get_mesh_instance_per_model(model_id : int) -> MeshInstance3D :
 	return meshin
 
 func _get_worldspawn_mesh_instance(region : Vector3i) -> MeshInstance3D :
+	if !root : return null
 	var meshin := MeshInstance3D.new()
 	meshin.name = "worldspawn_%03d_%03d_%03d" % [region.x, region.y, region.z]
 	
@@ -66,6 +57,7 @@ func _get_worldspawn_mesh_instance(region : Vector3i) -> MeshInstance3D :
 	return meshin
 	
 func _get_collision_shape_node(model_id : int, shape_id : int) -> CollisionShape3D :
+	if !root : return null
 	var col := CollisionShape3D.new()
 	col.name = "col%04d" % shape_id
 	
@@ -76,8 +68,19 @@ func _get_collision_shape_node(model_id : int, shape_id : int) -> CollisionShape
 	realroot.add_child(col)
 	col.owner = root
 	return col
+	
+func _get_entity_node(entity : Dictionary) -> Node :
+	var classname : String = entity.get('classname')
+	var scrpath := "res://addons/qmapbsp/class/%s.gd" % classname
+	if !ResourceLoader.exists(scrpath) :
+		return null
+	var scr : Script = load(scrpath)
+	if !scr :
+		return null
+	return scr.new()
 
 func _tell_entity(entity : Dictionary, return_data : Dictionary) -> StringName :
+	if !root : return &'NO_ROOT'
 	var classname : String = entity.get('classname')
 	var origin : Vector3 = QmapbspMapFormat.expect_vec3(entity.get('origin', ''))
 	var angle : int = QmapbspMapFormat.expect_int(entity.get('angle', ''))
@@ -87,15 +90,8 @@ func _tell_entity(entity : Dictionary, return_data : Dictionary) -> StringName :
 	if model_id != -1 :
 		return_data['model_id'] = model_id
 	
-	var node : Node
-	var scrpath := "res://addons/quake_bsp_parser/class/quake1/%s.gd" % classname
-	if !ResourceLoader.exists(scrpath) :
-		return &'NOT_IMPLEMENTED'
-	var scr : Script = load(scrpath)
-	if !scr :
-		return &'NOT_IMPLEMENTED'
-
-	node = scr.new()
+	var node : Node = _get_entity_node(entity)
+	if !node : return &'NOT_IMPLEMENTED'
 	root.add_child(node)
 	node.owner = root
 	
@@ -107,3 +103,8 @@ func _tell_entity(entity : Dictionary, return_data : Dictionary) -> StringName :
 	if model_id != -1 :
 		entities_owner[model_id] = node
 	return StringName()
+
+#########################################
+
+func _on_brush_mesh_updated(region_or_model_id, meshin : MeshInstance3D) :
+	pass

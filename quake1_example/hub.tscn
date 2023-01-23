@@ -1,0 +1,124 @@
+[gd_scene load_steps=3 format=3 uid="uid://b4fsmrslaowwn"]
+
+[ext_resource type="Script" path="res://quake1_example/quake1_hub.gd" id="1_2c1wm"]
+[ext_resource type="Texture2D" uid="uid://ddgo0qldm1jtp" path="res://icon.svg" id="2_c3pq6"]
+
+[node name="hub" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_2c1wm")
+
+[node name="tabs" type="TabContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PAK Viewer" type="Control" parent="tabs"]
+layout_mode = 2
+
+[node name="vbox" type="VBoxContainer" parent="tabs/PAK Viewer"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="hbox" type="HBoxContainer" parent="tabs/PAK Viewer/vbox"]
+layout_mode = 2
+
+[node name="000" type="Label" parent="tabs/PAK Viewer/vbox/hbox"]
+layout_mode = 2
+text = "Mod Directory"
+
+[node name="path" type="LineEdit" parent="tabs/PAK Viewer/vbox/hbox"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = ".../Quake/ID1"
+
+[node name="browse" type="Button" parent="tabs/PAK Viewer/vbox/hbox"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+text = ". . ."
+
+[node name="hbox2" type="HBoxContainer" parent="tabs/PAK Viewer/vbox"]
+layout_mode = 2
+
+[node name="load" type="Button" parent="tabs/PAK Viewer/vbox/hbox2"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Load"
+
+[node name="bsponly" type="CheckButton" parent="tabs/PAK Viewer/vbox/hbox2"]
+layout_mode = 2
+button_pressed = true
+text = "Show BSP files only"
+
+[node name="hbox3" type="HSplitContainer" parent="tabs/PAK Viewer/vbox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="tree" type="Tree" parent="tabs/PAK Viewer/vbox/hbox3"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+hide_root = true
+
+[node name="texview" type="VBoxContainer" parent="tabs/PAK Viewer/vbox/hbox3"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+
+[node name="tex" type="TextureRect" parent="tabs/PAK Viewer/vbox/hbox3/texview"]
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("2_c3pq6")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="info" type="Label" parent="tabs/PAK Viewer/vbox/hbox3/texview"]
+layout_mode = 2
+text = "Select an LMP or WAD entry file to view a texture !"
+autowrap_mode = 2
+
+[node name="status" type="Label" parent="tabs/PAK Viewer/vbox"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="prog" type="ProgressBar" parent="tabs/PAK Viewer/vbox"]
+visible = false
+layout_mode = 2
+max_value = 1.0
+
+[node name="dialog" type="FileDialog" parent="."]
+title = "Open a Directory"
+size = Vector2i(392, 162)
+ok_button_text = "Select Current Folder"
+file_mode = 2
+access = 2
+show_hidden_files = true
+
+[node name="wavplay" type="AudioStreamPlayer" parent="."]
+
+[connection signal="text_submitted" from="tabs/PAK Viewer/vbox/hbox/path" to="." method="_on_path_text_submitted"]
+[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox/browse" to="." method="_on_browse_pressed"]
+[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox2/load" to="." method="_on_load_pressed"]
+[connection signal="toggled" from="tabs/PAK Viewer/vbox/hbox2/bsponly" to="." method="_on_bsponly_toggled"]
+[connection signal="item_activated" from="tabs/PAK Viewer/vbox/hbox3/tree" to="." method="_on_tree_item_activated"]
+[connection signal="item_selected" from="tabs/PAK Viewer/vbox/hbox3/tree" to="." method="_on_tree_item_selected"]
+[connection signal="dir_selected" from="dialog" to="." method="_on_dialog_dir_selected"]
