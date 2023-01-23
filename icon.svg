@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="128"
+   height="128"
+   viewBox="0 0 128 128"
+   version="1.1"
+   id="svg5"
+   xml:space="preserve"
+   sodipodi:docname="qodot.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:export-filename="qodot.png"
+   inkscape:export-xdpi="256"
+   inkscape:export-ydpi="256"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+     id="namedview7"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="px"
+     showgrid="true"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="-64.346717"
+     inkscape:cy="101.11627"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"><inkscape:grid
+       type="xygrid"
+       id="grid238"
+       empspacing="4"
+       originx="-7"
+       originy="-6.9883987" /></sodipodi:namedview><defs
+     id="defs2" /><g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"><path
+       id="path348"
+       style="fill:#414042;fill-opacity:1;stroke:#478cbf;stroke-width:12;stroke-linecap:round;stroke-opacity:1"
+       d="m 98.429186,12.964064 a 45,45 0 0 1 11.460004,30.001149 v 0 a 45,45 0 0 1 -44.999995,45 45,45 0 0 1 -45,-45 45,45 0 0 1 11.490141,-30.034803" /><path
+       style="fill:none;stroke:#478cbf;stroke-width:12;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+       d="M 64.889195,63.965213 V 117.96521"
+       id="path1928"
+       sodipodi:nodetypes="cc" /><g
+       id="g12001"
+       transform="matrix(0.12469575,0,0,0.12469575,1.156604,-30.027865)"><path
+         d="m 0,0 c 0,0 -0.325,1.994 -0.515,1.976 l -36.182,-3.491 c -2.879,-0.278 -5.115,-2.574 -5.317,-5.459 l -0.994,-14.247 -27.992,-1.997 -1.904,12.912 c -0.424,2.872 -2.932,5.037 -5.835,5.037 h -38.188 c -2.902,0 -5.41,-2.165 -5.834,-5.037 l -1.905,-12.912 -27.992,1.997 -0.994,14.247 c -0.202,2.886 -2.438,5.182 -5.317,5.46 l -36.2,3.49 c -0.187,0.018 -0.324,-1.978 -0.511,-1.978 l -0.049,-7.83 30.658,-4.944 1.004,-14.374 c 0.203,-2.91 2.551,-5.263 5.463,-5.472 l 38.551,-2.75 c 0.146,-0.01 0.29,-0.016 0.434,-0.016 2.897,0 5.401,2.166 5.825,5.038 l 1.959,13.286 h 28.005 l 1.959,-13.286 c 0.423,-2.871 2.93,-5.037 5.831,-5.037 0.142,0 0.284,0.005 0.423,0.015 l 38.556,2.75 c 2.911,0.209 5.26,2.562 5.463,5.472 l 1.003,14.374 30.645,4.966 z"
+         fill="#ffffff"
+         transform="matrix(4.162611,0,0,-4.162611,919.24059,673.15214)"
+         id="path11969" /><path
+         d="m 0,0 c 0,-12.052 -9.765,-21.815 -21.813,-21.815 -12.042,0 -21.81,9.763 -21.81,21.815 0,12.044 9.768,21.802 21.81,21.802 C -9.765,21.802 0,12.044 0,0"
+         fill="#ffffff"
+         transform="matrix(4.162611,0,0,-4.162611,389.21484,527.15132)"
+         id="path11975" /><path
+         d="m 0,0 c 0,-7.994 -6.479,-14.473 -14.479,-14.473 -7.996,0 -14.479,6.479 -14.479,14.473 0,7.994 6.483,14.479 14.479,14.479 C -6.479,14.479 0,7.994 0,0"
+         fill="#414042"
+         transform="matrix(4.162611,0,0,-4.162611,367.36686,532.53707)"
+         id="path11977" /><path
+         d="m 0,0 c -3.878,0 -7.021,2.858 -7.021,6.381 v 20.081 c 0,3.52 3.143,6.381 7.021,6.381 3.878,0 7.028,-2.861 7.028,-6.381 V 6.381 C 7.028,2.858 3.878,0 0,0"
+         fill="#ffffff"
+         transform="matrix(4.162611,0,0,-4.162611,511.99336,626.21982)"
+         id="path11979" /><path
+         d="m 0,0 c 0,-12.052 9.765,-21.815 21.815,-21.815 12.041,0 21.808,9.763 21.808,21.815 0,12.044 -9.767,21.802 -21.808,21.802 C 9.765,21.802 0,12.044 0,0"
+         fill="#ffffff"
+         transform="matrix(4.162611,0,0,-4.162611,634.78706,527.15132)"
+         id="path11981" /><path
+         d="m 0,0 c 0,-7.994 6.477,-14.473 14.471,-14.473 8.002,0 14.479,6.479 14.479,14.473 0,7.994 -6.477,14.479 -14.479,14.479 C 6.477,14.479 0,7.994 0,0"
+         fill="#414042"
+         transform="matrix(4.162611,0,0,-4.162611,656.64056,532.53707)"
+         id="path11983" /></g></g><style
+     id="stylish-2"
+     class="stylish"
+     type="text/css">/* ========================================================================================================================== */
+
+
+
+/*TIGSource Dark (c) by mediochrea
+
+
+
+TIGSource Dark is licensed under a
+
+Creative Commons Attribution 4.0 International License.
+
+
+
+You should have received a copy of the license along with this
+
+work. If not, see &lt;http://creativecommons.org/licenses/by/4.0/&gt;.
+
+*/
+
+
+
+/* ========================================================================================================================== */
+
+
+
+
+
+
+
+@namespace url(http://www.w3.org/1999/xhtml);</style></svg>
