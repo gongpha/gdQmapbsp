@@ -1,10 +1,10 @@
 extends CharacterBody3D
 class_name QmapbspPlayer
 
-# my definition is 32 units/1 meter
-
 # THESE VALUES WERE APPROXIMATELY MEASURED
 # TO MATCH AN ORIGINAL AS CLOSE AS POSSIBLE >/\<
+
+# my definition is 32 units/1 meter
 
 @export var max_speed : float = 10
 @export var max_air_speed : float = 0.5
@@ -14,6 +14,8 @@ class_name QmapbspPlayer
 @export var stairstep := 0.6
 @export var gravity : float = 20
 @export var jump_up : float = 7.6
+
+var noclip : bool = false
 
 @onready var around : Node3D = $around
 @onready var head : Node3D = $around/head
@@ -68,24 +70,35 @@ func move_ground(delta : float) -> void :
 func move_air(delta : float) -> void :
 	accelerate(max_air_speed, delta)
 	move_and_slide()
-
-func queue_jump() -> void :
-	if auto_jump :
-		wish_jump = Input.is_action_pressed(&"q1_jump")
-		return
 	
-	if !wish_jump and Input.is_action_just_pressed(&"q1_jump") :
-		wish_jump = true
-	if Input.is_action_just_released(&"q1_jump") :
-		wish_jump = false
+func move_noclip(delta : float) -> void :
+	friction(delta)
+	accelerate(max_speed, delta)
+	translate(velocity * delta)
 
 func _physics_process(delta : float) -> void :
-	wishdir = around.global_transform.basis * Vector3((
+	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
+		return
+		
+	
+		
+	wishdir = (head if noclip else around).global_transform.basis * Vector3((
 		Input.get_axis(&"q1_move_left", &"q1_move_right")
 	), 0, (
 		Input.get_axis(&"q1_move_forward", &"q1_move_back")
 	)).normalized()
-	queue_jump()
+	
+	if noclip :
+		move_noclip(delta)
+		return
+	
+	if auto_jump :
+		wish_jump = Input.is_action_pressed(&"q1_jump")
+	else :
+		if !wish_jump and Input.is_action_just_pressed(&"q1_jump") :
+			wish_jump = true
+		if Input.is_action_just_released(&"q1_jump") :
+			wish_jump = false
 	
 	if is_on_floor() :
 		if wish_jump :
@@ -109,6 +122,9 @@ func _input(event : InputEvent) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
 		return
 		
+	if Input.is_action_pressed(&'q1_toggle_noclip') :
+		toggle_noclip()
+	
 	if event is InputEventMouseMotion :
 		var r : Vector2 = event.relative * -1
 		head.rotate_x(r.y * sensitivity)
@@ -117,3 +133,8 @@ func _input(event : InputEvent) -> void :
 		var hrot = head.rotation
 		hrot.x = clamp(hrot.x, -PI/2, PI/2)
 		head.rotation = hrot
+
+#########################################
+
+func toggle_noclip() :
+	noclip = !noclip

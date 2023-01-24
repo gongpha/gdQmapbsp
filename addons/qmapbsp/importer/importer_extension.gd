@@ -72,12 +72,21 @@ func _get_collision_shape_node(model_id : int, shape_id : int) -> CollisionShape
 	col.owner = root
 	return col
 	
+func _get_entity_node_dir() -> String :
+	return "res://addons/qmapbsp/class/"
+	
 func _get_entity_node(entity : Dictionary) -> Node :
 	var classname : String = entity.get('classname')
-	var scrpath := "res://addons/qmapbsp/class/%s.gd" % classname
-	if !ResourceLoader.exists(scrpath) :
+	var rscpath := _get_entity_node_dir().path_join("%s.tscn") % classname
+	if ResourceLoader.exists(rscpath) :
+		return load(rscpath).instantiate()
+	rscpath = _get_entity_node_dir().path_join("%s.scn") % classname
+	if ResourceLoader.exists(rscpath) :
+		return load(rscpath).instantiate()
+	rscpath = _get_entity_node_dir().path_join("%s.gd") % classname
+	if !ResourceLoader.exists(rscpath) :
 		return null
-	var scr : Script = load(scrpath)
+	var scr : Script = load(rscpath)
 	if !scr :
 		return null
 	return scr.new()

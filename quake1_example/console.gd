@@ -3,7 +3,7 @@ class_name QmapbspConsole
 
 var hub : QmapbspQuake1Hub
 
-const ENGINE_TEXT := "Qmapbsp by gongpha"
+var enginetext : String = "Qmapbsp Quake1 Example @ Godot 4"
 
 var cmds : Dictionary
 var control : QmapbspQuakeDraw
@@ -98,8 +98,8 @@ func _console_draw() :
 			y += 8 * 3
 		
 		control.draw_quake_text(
-			Vector2(size.x - (ENGINE_TEXT.length() * 8 * 3), size.y - 8 * 3),
-			ENGINE_TEXT, 0, Vector2(3, 3)
+			Vector2(size.x - (enginetext.length() * 8 * 3), size.y - 8 * 3),
+			enginetext, 0, Vector2(3, 3)
 		)
 
 func scroll(add : int) :

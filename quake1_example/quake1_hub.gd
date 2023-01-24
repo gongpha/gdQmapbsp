@@ -15,6 +15,7 @@ class_name QmapbspQuake1Hub
 @onready var texinfo : Label = $"tabs/PAK Viewer/vbox/hbox3/texview/info"
 
 var viewer : QmapbspViewer
+var last_play : String
 
 func _ready() :
 	set_process(false)
@@ -227,6 +228,7 @@ func _play_bsp(pakpath : String) :
 	
 	viewer = preload("res://quake1_example/viewer.tscn").instantiate()
 	viewer.hub = self
+	last_play = pakpath
 	add_child(viewer)
 	tabs.hide()
 	viewer.play_by_path.call_deferred(
@@ -236,3 +238,12 @@ func _play_bsp(pakpath : String) :
 
 func _on_path_text_submitted(new_text) :
 	find_pak()
+
+func back() :
+	viewer.queue_free()
+	viewer = null
+	tabs.show()
+	
+func restart() :
+	back()
+	_play_bsp.call_deferred(last_play)

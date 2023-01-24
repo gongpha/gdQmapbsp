@@ -1,18 +1,25 @@
 extends Control
 class_name QmapbspViewer
 
-@export var iterations : int = 32
+@export var iterations : int = 2048
 
 var hub : QmapbspQuake1Hub
 var parser : QmapbspBSPParser
 var map : Node3D
 var player : QmapbspPlayer
 @onready var console : QmapbspConsole = $console
+@onready var menu : QmapbspMenu = $menu
 
 func _ready() :
 	console.hub = hub
 	console.setup(hub)
 	set_process(false)
+	
+	menu.hub = hub
+	menu.viewer = self
+	menu.init()
+	menu.menu_canvas.hub = hub
+	menu.cursor.hub = hub
 
 func play_by_node() :
 	add_child(map)
@@ -27,16 +34,19 @@ func play_by_node() :
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func play_by_path(path : String, pal : PackedColorArray) -> void :
+	menu.hide()
+	
 	parser = QmapbspBSPParser.new()
 	var ext := QmapbspImporterExtensionQuake1.new()
 	map = Node3D.new()
 	console.printv("Loading %s" % path)
 	console.printv("Loading a map %s times per frame." % iterations)
-	console.printv("If you feel this was too slow,")
-	console.printv("You could adjust \"iterations\" inside the code.")
-	console.printv("This example performs at a low value,")
-	console.printv("So you could read this message")
-	console.printv("before it was pushed by percentage spam.")
+	if iterations <= 32 :
+		console.printv("If you feel this was too slow,")
+		console.printv("You could adjust \"iterations\" inside the code.")
+		console.printv("This example performs at a low value,")
+		console.printv("So you could read this message")
+		console.printv("before it was pushed by percentage spam.")
 	ext.pal = pal
 	ext.root = map
 	
@@ -62,5 +72,10 @@ func _process(delta) :
 		
 		if reti == ERR_FILE_EOF :
 			set_process(false)
+			parser = null # free the mem
 			play_by_node()
 			break
+
+func toggle_noclip() :
+	if !player : return
+	player.toggle_noclip()
