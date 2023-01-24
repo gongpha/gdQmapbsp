@@ -88,7 +88,7 @@ func _process(delta : float) :
 				prog.hide()
 				set_process(false)
 				load.disabled = false
-				status.text = 'Double-click on files to play or view'
+				status.text = 'Double-click on files to play'
 				_show_tree(bsponly.button_pressed)
 				return
 			

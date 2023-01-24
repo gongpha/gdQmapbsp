@@ -26,3 +26,15 @@ func _on_brush_mesh_updated(region_or_model_id, meshin : MeshInstance3D) :
 	col.name = &'generated_col'
 	col.position = meshin.position
 	root.add_child(col)
+	
+var skies : Dictionary # <name : ShaderMaterial>
+	
+func _get_material_for_bsp_textures(name : String, itex : ImageTexture) -> Material :
+	if name.begins_with('sky') :
+		var sky : ShaderMaterial = skies.get(name)
+		if !sky :
+			sky = load("res://quake1_example/material/sky.tres")
+			sky.set_shader_parameter(&'skytex', itex)
+			skies[name] = sky
+		return sky
+	return super(name, itex)

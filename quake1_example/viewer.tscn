@@ -14,3 +14,8 @@ script = ExtResource("1_whe0i")
 
 [node name="console" parent="." instance=ExtResource("1_1r65e")]
 layout_mode = 1
+
+[node name="menu" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0

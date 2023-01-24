@@ -28,6 +28,9 @@ func _get_no_texture() -> Material :
 
 func _get_texture(name : String, size : Vector2i) -> Material :
 	return null
+	
+func _get_material_for_bsp_textures(name : String, itex : ImageTexture) -> Material :
+	return null
 
 func _get_mesh_instance_per_model(model_id : int) -> MeshInstance3D :
 	if !root : return null
@@ -95,9 +98,9 @@ func _tell_entity(entity : Dictionary, return_data : Dictionary) -> StringName :
 	root.add_child(node)
 	node.owner = root
 	
-	if node is Node3D :
+	if node is Node3D and model_id != 0 :
 		node.position = Vector3(-origin.x, origin.z, origin.y) / _get_unit_scale_f()
-		node.rotation_degrees.y = angle
+		node.rotation_degrees.y = angle + 90.0
 		if node is CollisionObject3D :
 			return_data['add_col'] = true
 	if model_id != -1 :

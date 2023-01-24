@@ -23,6 +23,8 @@ func play_by_node() :
 	var pspawn : Node3D = get_tree().get_first_node_in_group(&'player_spawn')
 	if pspawn :
 		player.global_position = pspawn.global_position
+		player.around.rotation = pspawn.rotation
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func play_by_path(path : String, pal : PackedColorArray) -> void :
 	parser = QmapbspBSPParser.new()

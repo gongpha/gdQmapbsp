@@ -238,9 +238,12 @@ func _read_mip_textures() -> float :
 			var data := file.get_buffer(tsize.x * tsize.y)
 			var im := _make_im_from_pal(tsize, data)
 			var itex := ImageTexture.create_from_image(im)
-			mat = ShaderMaterial.new()
-			mat.shader = bsp_shader
-			mat.set_shader_parameter(&'tex', itex)
+			mat = ext._get_material_for_bsp_textures(tname, itex)
+			if !mat :
+				mat = ShaderMaterial.new()
+				mat.shader = bsp_shader
+				mat.set_shader_parameter(&'tex', itex)
+				mat.set_meta(&'apply_lightmaps', true)
 		mat.set_meta(&'size', tsize)
 		textures[load_index] = mat
 		
