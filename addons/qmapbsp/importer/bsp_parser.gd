@@ -48,11 +48,11 @@ const ENTRY_LIST := [
 	
 enum LoadSection {
 	VERTICES, EDGES, LEDGES, PLANES, MIPTEXTURES,
-	TEXINFOS, MODELS, FACES,# CLIPNODES,
+	TEXINFOS, MODELS, FACES, CLIPNODES,
 	
 	ENTITIES, # TODO : separate these sections to the MAP parsing part (?)
 		
-	CONSTRUCT_REGIONS, BUILD_REGIONS,
+	CONSTRUCT_CLIPS, CONSTRUCT_REGIONS, BUILD_REGIONS,
 	
 	END
 }
@@ -65,10 +65,10 @@ var sections := {
 	LoadSection.TEXINFOS : [_read_texinfo, 'texinfo'],
 	LoadSection.MODELS : [_read_models, 'models'],
 	LoadSection.FACES : [_read_faces, 'faces'],
-	#LoadSection.CLIPNODES : [_read_clipnodes, 'clipnodes'],
+	LoadSection.CLIPNODES : [_read_clipnodes, 'clipnodes'],
 	LoadSection.ENTITIES : [_read_entities, 'entities'],
 	
-	#LoadSection.CONSTRUCT_CLIPS : [_construct_clips, ''],
+	LoadSection.CONSTRUCT_CLIPS : [_construct_clips, ''],
 	LoadSection.CONSTRUCT_REGIONS : [_construct_regions, ''],
 	LoadSection.BUILD_REGIONS : [_build_regions, ''],
 }
@@ -300,17 +300,17 @@ func _read_faces() -> float :
 	load_index += 1
 	return float(load_index) / faces.size()
 	
-#func _read_clipnodes() -> float :
-#	if load_index == 0 :
-#		file.seek(curr_entry.x)
-#		clipnodes.resize(curr_entry.y / 8)
-#	clipnodes[load_index] = [
-#		file.get_32(), # plane
-#		file.get_16(), # front
-#		file.get_16(), # back
-#	]
-#	load_index += 1
-#	return float(load_index) / clipnodes.size()
+func _read_clipnodes() -> float :
+	if load_index == 0 :
+		file.seek(curr_entry.x)
+		clipnodes.resize(curr_entry.y / 8)
+	clipnodes[load_index] = [
+		file.get_32(), # plane
+		file.get_16(), # front
+		file.get_16(), # back
+	]
+	load_index += 1
+	return float(load_index) / clipnodes.size()
 	
 var entities_kv : Array[Dictionary]
 func _read_entities() -> float :
@@ -337,48 +337,101 @@ func _read_entities() -> float :
 		return 1.0
 	return float(load_index) / entities_kv.size()
 		
-		
-#func _get_plane_tree(nodeindex : int, bucket : Array[Plane], add : bool) :
-#	var arr : Array = clipnodes[nodeindex]
-#	var plane : Plane = planes[arr[0]]
-#	var plane_t : int = planetypes[arr[0]]
-#	var front : int = arr[1]
-#	var back : int = arr[2]
-#	if add :
-#		bucket.append(plane)
-#	if front != 65535 and front != 65534 :
-#		_get_plane_tree(front, bucket, true)
-#	if back != 65535 and back != 65534 :
-#		_get_plane_tree(back, bucket, true)
-	#prints(nodeindex, plane, arr[1], arr[2], '<>', plane_t)
+const QUAKE_PLAYER_HULL := Vector3(32, 56, 32)
+func _get_plane_tree(nodeindex : int, bucket : Array[Plane], add : bool) :
+	var arr : Array = clipnodes[nodeindex]
+	var plane : Plane = planes[arr[0]]
+	var plane_t : int = planetypes[arr[0]]
+	var front : int = arr[1]
+	var back : int = arr[2]
+	var p := plane
+	
+	# shrinks the boundary back.
+	# because the clip nodes were expanded for handling
+	# a single point collision of the player entity.
+	# I LOVE HOW PERFORMANCE BOOST IT WAS. BUT right now ? NO, thank you.
+	var X := QUAKE_PLAYER_HULL * 0.5 * unit_scale * (
+		# a dumb way to get squared normal
+		(p.normal * 2.0).clamp(-Vector3.ONE, Vector3.ONE)
+	)
+	p.d += sign(-p.d) * X.length()
+	# these WON'T 100% match the original shapes for non-axial planes.
+	
+	var model_center := Vector3()
+	var plane_point := p.normal * p.d
+	var plane_dir := (plane_point - model_center).normalized()
+	if plane_dir.dot(p.normal) > 0 :
+		p.normal *= -1
+		p.d *= -1
+	
+	if add :
+		bucket.append(p)
+	
+	prints(nodeindex, p, arr[1], arr[2], '<>', plane_t)
+	
+	if front != 65535 and front != 65534 :
+		_get_plane_tree(front, bucket, true)
+	if back != 65535 and back != 65534 :
+		_get_plane_tree(back, bucket, true)
+	
+const EPS := 0.000001
+func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
+	var vv := PackedVector3Array()
+	
+	for i in planes.size() - 2 :
+		for j in range(i + 1, planes.size() - 1) :
+			for k in range(j + 1, planes.size()) :
+				var n0 := planes[i].normal
+				var n1 := planes[j].normal
+				var n2 := planes[k].normal
+				var d0 := planes[i].d
+				var d1 := planes[j].d
+				var d2 := planes[k].d
+				var t : float = (
+					n0.x * (n1.y * n2.z - n1.z * n2.y) +
+					n0.y * (n1.z * n2.x - n1.x * n2.z) +
+					n0.z * (n1.x * n2.y - n1.y * n2.x)
+				)
+				if abs(t) < EPS : continue
+				
+				var v := Vector3(
+					(d0 * (n1.z * n2.y - n1.y * n2.z) + d1 * (n0.y * n2.z - n0.z * n2.y) + d2 * (n0.z * n1.y - n0.y * n1.z)) / -t,
+					(d0 * (n1.x * n2.z - n1.z * n2.x) + d1 * (n0.z * n2.x - n0.x * n2.z) + d2 * (n0.x * n1.z - n0.z * n1.x)) / -t,
+					(d0 * (n1.y * n2.x - n1.x * n2.y) + d1 * (n0.x * n2.y - n0.y * n2.x) + d2 * (n0.y * n1.x - n0.x * n1.y)) / -t
+				)
+				var yes := true
+				for l in planes.size() :
+					var lp := planes[l]
+					if l != i and l != j and l != k and v.dot(lp.normal) < lp.d + EPS :
+						yes = false
+						break
+				if yes :
+					v.y += 4 * unit_scale
+					vv.append(v)
+	return vv
 
-#func _construct_clips() :
-#	var model : Array = models[load_index]
-#	#var node_left : int = model[4]
-#	var node_right : int = model[5]
-#
-#	var arr : Array[Plane]
-#	_get_plane_tree(node_right, arr, true)
-#	var l : PackedVector3Array
-#	for i in arr.size() :
-#		for j in range(i + 1, arr.size()) :
-#			for k in range(i + 1, arr.size()) :
-#				var p1 : Plane = arr[i]
-#				var p2 : Plane = arr[j]
-#				var p3 : Plane = arr[k]
-#				var e = p1.intersect_3(p2, p3)
-#				if e != null : l.append(e)
-#				prints(i, j, k)
-#	var convex := ConvexPolygonShape3D.new()
-#	convex.points = l
-#
-#	var node := ext._get_collision_shape_node(load_index, 0)
-#	node.shape = convex
-#
-#	load_index += 1
-#	if load_index == models.size() :
-#		return true
-#	return false
+func _construct_clips() :
+	var model : Array = models[load_index]
+	var node_left : int = model[4]
+	var node_right : int = model[5]
+	
+	var arr : Array[Plane]
+	_get_plane_tree(node_left, arr, true)
+	var vv := planes_intersect(arr)
+	print()
+	#arr.clear()
+	#_get_plane_tree(node_right, arr, true)
+	
+	var convex := ConvexPolygonShape3D.new()
+	convex.points = vv
+
+	var node := ext._get_collision_shape_node(load_index, 0)
+	node.shape = convex
+
+	load_index += 1
+	if load_index == models.size() :
+		return true
+	return false
 
 # key = Vector2i : Worldspawn meshes
 # key = int : Other meshes
@@ -441,7 +494,7 @@ func _construct_regions() -> float :
 			var texture_info : Array = texinfos[face[4]] # tinfo id
 			var texture : Material = textures[texture_info[4]] # from texture index
 
-			var tsize := texture.get_meta(&'size')
+			var tsize : Vector2i = texture.get_meta(&'size') if texture else Vector2i()
 			
 			var tscale := Vector2(
 				1.0 / (tsize.x * unit_scale),
@@ -588,7 +641,9 @@ func _build_regions() -> float :
 			surface_tool.set_material(s)
 			if s is ShaderMaterial :
 				s.set_shader_parameter(&'lmp', lmtex)
-			var tsize : Vector2 = s.get_meta(&'size')
+			var tsize : Vector2 = (
+				s.get_meta(&'size') if s else Vector2()
+			)
 			for t in indexes :
 				var surface : Array = surfaces[t]
 				var verts : PackedVector3Array = surface[0]
