@@ -23,18 +23,44 @@ func _read_dentry() :
 static func _qnor_to_vec3(q : Vector3) -> Vector3 :
 	return Vector3(-q.x, q.z, q.y)
 	
-static func _read_vec3(f : FileAccess) -> Vector3 :
+static func _read_qvec3(f : FileAccess) -> Vector3 :
 	return Vector3(
 		f.get_float(),
 		f.get_float(),
 		f.get_float()
 	)
 	
+const _1s15 = 1 << 15
+const _1s16 = 1 << 16
+static func u16to16(u : int) -> int :
+	return (u + _1s15) % _1s16 - _1s15
+	
+static func _read_qvec3_16(f : FileAccess) -> Vector3i :
+	return Vector3i(
+		u16to16(f.get_16()),
+		u16to16(f.get_16()),
+		u16to16(f.get_16())
+	)
+	
+func _read_bbshort(f : FileAccess) -> AABB :
+	var min := _read_qvec3_16(f) * unit_scale
+	var max := _read_qvec3_16(f) * unit_scale
+	max -= min
+	#return AABB(min, max)
+	min.x += max.x
+	return AABB(
+		_qnor_to_vec3(min),
+		Vector3(max.x, max.z, max.y)
+	)
+	
 static func _qnor_to_vec3_read(f : FileAccess) -> Vector3 :
-	return _qnor_to_vec3(_read_vec3(f))
+	return _qnor_to_vec3(_read_qvec3(f))
 	
 func _qpos_to_vec3_read(f : FileAccess) -> Vector3 :
-	return _qnor_to_vec3(_read_vec3(f)) * unit_scale
+	return _qnor_to_vec3(_read_qvec3(f)) * unit_scale
+	
+func _qpos_to_vec3_read16(f : FileAccess) -> Vector3 :
+	return _qnor_to_vec3(_read_qvec3_16(f)) * unit_scale
 	
 func _qpos_to_vec3(q : Vector3) -> Vector3 :
 	return _qnor_to_vec3(q) * unit_scale
@@ -48,7 +74,9 @@ const ENTRY_LIST := [
 	
 enum LoadSection {
 	VERTICES, EDGES, LEDGES, PLANES, MIPTEXTURES,
-	TEXINFOS, MODELS, FACES, CLIPNODES,
+	TEXINFOS, MODELS, FACES,
+	
+	BSPNODES, CLIPNODES,
 	
 	ENTITIES, # TODO : separate these sections to the MAP parsing part (?)
 		
@@ -65,6 +93,7 @@ var sections := {
 	LoadSection.TEXINFOS : [_read_texinfo, 'texinfo'],
 	LoadSection.MODELS : [_read_models, 'models'],
 	LoadSection.FACES : [_read_faces, 'faces'],
+	LoadSection.BSPNODES : [_read_bspnodes, 'nodes'],
 	LoadSection.CLIPNODES : [_read_clipnodes, 'clipnodes'],
 	LoadSection.ENTITIES : [_read_entities, 'entities'],
 	
@@ -84,6 +113,7 @@ var textures : Array[Material]
 var texinfos : Array[Array]
 var models : Array[Array]
 var faces : Array[Array]
+var bspnodes : Array[Array]
 var clipnodes : Array[Array]
 var entities : Array[Array]
 
@@ -300,6 +330,21 @@ func _read_faces() -> float :
 	load_index += 1
 	return float(load_index) / faces.size()
 	
+func _read_bspnodes() -> float :
+	if load_index == 0 :
+		file.seek(curr_entry.x)
+		bspnodes.resize(curr_entry.y / 24)
+	bspnodes[load_index] = [
+		file.get_32(), # plane
+		file.get_16(), # front
+		file.get_16(), # back
+		_read_bbshort(file), # boundbox short
+		file.get_16(), file.get_16() # face id, num
+	]
+	#print(bspnodes[load_index][3])
+	load_index += 1
+	return float(load_index) / bspnodes.size()
+	
 func _read_clipnodes() -> float :
 	if load_index == 0 :
 		file.seek(curr_entry.x)
@@ -336,43 +381,6 @@ func _read_entities() -> float :
 		entities_kv.clear()
 		return 1.0
 	return float(load_index) / entities_kv.size()
-		
-const QUAKE_PLAYER_HULL := Vector3(32, 56, 32)
-func _get_plane_tree(nodeindex : int, bucket : Array[Plane], add : bool) :
-	var arr : Array = clipnodes[nodeindex]
-	var plane : Plane = planes[arr[0]]
-	var plane_t : int = planetypes[arr[0]]
-	var front : int = arr[1]
-	var back : int = arr[2]
-	var p := plane
-	
-	# shrinks the boundary back.
-	# because the clip nodes were expanded for handling
-	# a single point collision of the player entity.
-	# I LOVE HOW PERFORMANCE BOOST IT WAS. BUT right now ? NO, thank you.
-	var X := QUAKE_PLAYER_HULL * 0.5 * unit_scale * (
-		# a dumb way to get squared normal
-		(p.normal * 2.0).clamp(-Vector3.ONE, Vector3.ONE)
-	)
-	p.d += sign(-p.d) * X.length()
-	# these WON'T 100% match the original shapes for non-axial planes.
-	
-	var model_center := Vector3()
-	var plane_point := p.normal * p.d
-	var plane_dir := (plane_point - model_center).normalized()
-	if plane_dir.dot(p.normal) > 0 :
-		p.normal *= -1
-		p.d *= -1
-	
-	if add :
-		bucket.append(p)
-	
-	prints(nodeindex, p, arr[1], arr[2], '<>', plane_t)
-	
-	if front != 65535 and front != 65534 :
-		_get_plane_tree(front, bucket, true)
-	if back != 65535 and back != 65534 :
-		_get_plane_tree(back, bucket, true)
 	
 const EPS := 0.000001
 func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
@@ -406,28 +414,124 @@ func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
 						yes = false
 						break
 				if yes :
-					v.y += 4 * unit_scale
+					#v.y += 4 * unit_scale
 					vv.append(v)
 	return vv
+	
+# the buckets are an array of nodes (index)
+var buckets : Array[PackedInt32Array]
+# matches any indexes except themselves
+# when the bucket has derived from their roots
+var bucket_roots : PackedInt32Array
+# if non-zero, the leaf bucket will be get promoted to a convex shape
+var bucket_leaves : PackedByteArray
+func _traverse_plane_tree(
+	nodeindex : int,
+	bucket_index : int,
+	
+) :
+	var arr : Array = bspnodes[nodeindex]
+	#var plane_id : int = arr[0]
+	var front : int = arr[1]
+	var back : int = arr[2]
+	#var face_id : int = arr[5]
+	
+	#prints(nodeindex, planes[plane_id], arr[1], arr[2])
+	#prints(front, back)
+	if (front & 0x8000) == 0 and (back & 0x8000) == 0 :
+		for e in [front, back] :
+			var bucket := PackedInt32Array()
+			bucket.append(nodeindex)
+			buckets.append(bucket)
+			var new_bucket_id := buckets.size() - 1
+			bucket_leaves[bucket_index] = 0
+			bucket_roots.append(bucket_index)
+			bucket_leaves.append(1)
+			_traverse_plane_tree(e, new_bucket_id)
+	else :
+		buckets[bucket_index].append(nodeindex)
+		if front <= 32767 : # front is positive
+			_traverse_plane_tree(front, bucket_index)
+		elif back <= 32767 : # back is positive
+			_traverse_plane_tree(back, bucket_index)
+			
+func ___v(v : Vector3) :
+	var c := MeshInstance3D.new()
+	c.mesh = SphereMesh.new()
+	c.mesh.radius = 0.2
+	c.mesh.height = 0.4
+	c.position = v
+	ext.root.add_child(c)
 
 func _construct_clips() :
 	var model : Array = models[load_index]
-	var node_left : int = model[4]
-	var node_right : int = model[5]
+	var node_left : int = model[3]
+	#var node_right : int = model[5]
 	
-	var arr : Array[Plane]
-	_get_plane_tree(node_left, arr, true)
-	var vv := planes_intersect(arr)
-	print()
+	
+	
+	# dont care about the second node
 	#arr.clear()
 	#_get_plane_tree(node_right, arr, true)
 	
-	var convex := ConvexPolygonShape3D.new()
-	convex.points = vv
+	buckets.append(PackedInt32Array())
+	bucket_roots.append(0)
+	bucket_leaves.append(1)
+	
+	_traverse_plane_tree(node_left, 0)
+#	var ss := StaticBody3D.new()
+#	for i in bspnodes :
+#		print(planes[i[0]])
+#		var aabb : AABB = i[3]
+#		print(aabb)
+#		var cc := CollisionShape3D.new()
+#		var cube := BoxShape3D.new()
+#		cube.size = aabb.size# / 2.0
+#		cc.shape = cube
+#		cc.position = aabb.get_center()
+#		ss.add_child(cc)
+#	ext.root.add_child(ss)
+	for I in buckets.size() :
+		if bucket_leaves[I] == 0 : continue
+		
+		var b : PackedInt32Array = buckets[I]
+		var r : int = bucket_roots[I]
+		var nb : PackedInt32Array = b.duplicate()
+		var pr : int = I
+		
+		while pr != r :
+			nb.append_array(buckets[r])
+			pr = r
+			r = bucket_roots[r]
+			
+		
+		var size := nb.size()
+		if size == 0 : continue
+		
+		var center : Vector3
+		
+		# HOW CAN I FIND THE ACCURATE CENTER OF NODES ???
+		
+		#print(bspnodes[b[-1]][3])
+		print(center)
+		var new_planes : Array[Plane]
+		new_planes.resize(nb.size())
+		for i in nb.size() :
+			var p : Plane = planes[bspnodes[nb[i]][0]]
 
-	var node := ext._get_collision_shape_node(load_index, 0)
-	node.shape = convex
-
+			new_planes[i] = p
+		var vv := planes_intersect(new_planes)
+		
+		var convex := ConvexPolygonShape3D.new()
+		convex.points = vv
+		
+		var node := ext._get_collision_shape_node(load_index, 0)
+		node.shape = convex
+	
+	buckets.clear()
+	bucket_roots.clear()
+	bucket_leaves.clear()
+	
 	load_index += 1
 	if load_index == models.size() :
 		return true
@@ -641,9 +745,12 @@ func _build_regions() -> float :
 			surface_tool.set_material(s)
 			if s is ShaderMaterial :
 				s.set_shader_parameter(&'lmp', lmtex)
+			
 			var tsize : Vector2 = (
 				s.get_meta(&'size') if s else Vector2()
 			)
+			s = StandardMaterial3D.new()
+			surface_tool.set_material(s)
 			for t in indexes :
 				var surface : Array = surfaces[t]
 				var verts : PackedVector3Array = surface[0]

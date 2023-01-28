@@ -18,6 +18,12 @@ config/icon="res://icon.svg"
 [debug]
 
 gdscript/warnings/enable=false
+shapes/collision/shape_color=Color(4, 0, 0, 1)
+shapes/collision/contact_color=Color(1, 0.2, 0.101961, 0.8)
+
+[editor]
+
+export/convert_text_resources_to_binary=true
 
 [input]
 
