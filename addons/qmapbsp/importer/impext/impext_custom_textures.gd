@@ -1,6 +1,6 @@
 ## A simple extension for loading textures from FileSystem
-extends QmapbspImporterExtension
-class_name QmapbspImporterExtensionCustomTextures
+extends QmapbspWorldImporter
+class_name QmapbspWorldImporterCustomTextures
 
 # VVV - override your own - VVV #
 
@@ -12,7 +12,7 @@ func _get_extensions() -> PackedStringArray :
 	])
 	
 ## Returns the texture directory path that contains texture resources
-func _get_texture_dir() -> String :
+func _texture_get_dir() -> String :
 	return "res://textures/"
 	
 ## Constructs new material from textures that were recognized as Texture2D
@@ -24,12 +24,12 @@ func _construct_new_material(texture : Texture2D) -> Material :
 #################################################
 var _created_textures : Dictionary # <name, Material>
 
-func _get_texture(name : String, size : Vector2i) -> Material :
+func _texture_get(name : String, size : Vector2i) -> Material :
 	var existed : Material = _created_textures.get(name, null)
 	if existed : return existed
 	
 	var exts := _get_extensions()
-	var texdir := _get_texture_dir()
+	var texdir := _texture_get_dir()
 	var rsc : Resource
 	
 	# finding the best resource file for this texture

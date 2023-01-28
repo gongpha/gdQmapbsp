@@ -56,9 +56,9 @@ func _import(
 		return FileAccess.get_open_error()
 		
 	var extp : String = options.get("extended_importer", "")
-	var ext : QmapbspImporterExtension
+	var ext : QmapbspWorldImporter
 	if extp.is_empty() :
-		ext = QmapbspImporterExtension.new()
+		ext = QmapbspWorldImporter.new()
 	else :
 		ext = load(extp).new()
 	var node := Node3D.new()

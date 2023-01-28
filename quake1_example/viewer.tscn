@@ -5,7 +5,7 @@
 [ext_resource type="Script" path="res://quake1_example/menu.gd" id="3_044qv"]
 [ext_resource type="Shader" path="res://quake1_example/viewer_fade.gdshader" id="5_upbmq"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_xk2yp"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ijepj"]
 shader = ExtResource("5_upbmq")
 
 [node name="viewer" type="Control"]
@@ -31,7 +31,7 @@ pivot_offset = Vector2(160, 0)
 script = ExtResource("3_044qv")
 
 [node name="fade" type="ColorRect" parent="menu"]
-material = SubResource("ShaderMaterial_xk2yp")
+material = SubResource("ShaderMaterial_ijepj")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

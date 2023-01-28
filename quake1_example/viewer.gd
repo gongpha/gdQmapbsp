@@ -4,7 +4,7 @@ class_name QmapbspViewer
 @export var iterations : int = 2048
 
 var hub : QmapbspQuake1Hub
-var parser : QmapbspBSPParser
+var parser : QmapbspWorldImporterQuake1
 var map : Node3D
 var player : QmapbspPlayer
 @onready var console : QmapbspConsole = $console
@@ -33,11 +33,14 @@ func play_by_node() :
 		player.around.rotation = pspawn.rotation
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-func play_by_path(path : String, pal : PackedColorArray) -> void :
+func play_by_path(
+	path : String,
+	mappath : String,
+	pal : PackedColorArray
+) -> void :
 	menu.hide()
 	
-	parser = QmapbspBSPParser.new()
-	var ext := QmapbspImporterExtensionQuake1.new()
+	parser = QmapbspWorldImporterQuake1.new()
 	map = Node3D.new()
 	console.printv("Loading %s" % path)
 	console.printv("Loading a map %s times per frame." % iterations)
@@ -47,14 +50,16 @@ func play_by_path(path : String, pal : PackedColorArray) -> void :
 		console.printv("This example performs at a low value,")
 		console.printv("So you could read this message")
 		console.printv("before it was pushed by percentage spam.")
-	ext.pal = pal
-	ext.root = map
+	parser.pal = pal
+	parser.root = map
 	
 	var f := FileAccess.open(path, FileAccess.READ)
 	if FileAccess.get_open_error() != OK :
 		console.printv("Cannot open BSP file")
-	
-	var ret := parser.begin_read_file(f, ext)
+	var retc : Array
+	var ret := parser.begin_load_absolute(
+		path, mappath, retc
+	)
 	if ret != StringName() :
 		console.printv("Cannot open BSP file : %s" % ret)
 	set_process(true)
@@ -70,11 +75,13 @@ func _process(delta) :
 			console.printv('-> %d%%' % prog)
 			oldprog = prog
 		
-		if reti == ERR_FILE_EOF :
+		if reti == &'END' :
 			set_process(false)
 			parser = null # free the mem
 			play_by_node()
 			break
+		elif reti != StringName() :
+			breakpoint
 
 func toggle_noclip() :
 	if !player : return
