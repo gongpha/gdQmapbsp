@@ -3,12 +3,13 @@ class_name QmapbspMAPParser
 
 #var enable_collision_shapes : bool = false
 signal tell_collision_shapes(
-	entity_curr_idx : int, shape : Shape3D, origin : Vector3
+	entity_curr_idx : int, entity_curr_brush_idx : int, shape : Shape3D, origin : Vector3
 )
 
-func begin_file(f : FileAccess) :
+func begin_file(f : FileAccess) -> StringName :
 	super(f)
 	mapf = QmapbspMapFormat.begin_from_text(f.get_as_text(true))
+	return StringName()
 
 func _GatheringAllEntities() -> float :
 	var err : int = mapf.poll(__ret)
@@ -26,14 +27,19 @@ func _brush_found() :
 	#if enable_collision_shapes :
 	var vertices := planes_intersect(mapf.brush_planes)
 	var V := Vector3()
-	for v in vertices :
+	for i in vertices.size() :
+		var v := vertices[i]
+		v = _qpos_to_vec3(v * -1)
+		vertices[i] = v
 		V += v
 	V /= vertices.size()
 	for i in vertices.size() :
 		vertices[i] -= V
 	var shape := ConvexPolygonShape3D.new()
 	shape.points = vertices
-	tell_collision_shapes.emit(entity_curr_idx, shape, V)
+	tell_collision_shapes.emit(
+		entity_curr_idx, entity_curr_brush_idx, shape, V
+	)
 	
 const EPS := 0.000001
 func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
@@ -67,7 +73,4 @@ func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
 						break
 				if yes :
 					vv.append(v)
-					print(v)
-			print("JJJJJJJJJJJJJJJJJ")
-		print("IIIIIIIIIIIIIIIII")
 	return vv

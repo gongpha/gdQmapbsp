@@ -122,7 +122,7 @@ func _input(event : InputEvent) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
 		return
 		
-	if Input.is_action_pressed(&'q1_toggle_noclip') :
+	if Input.is_action_just_pressed(&'q1_toggle_noclip') :
 		toggle_noclip()
 	
 	if event is InputEventMouseMotion :

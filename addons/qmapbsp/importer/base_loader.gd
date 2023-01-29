@@ -3,6 +3,7 @@ class_name QmapbspBaseLoader
 
 var load_section : int
 var section_keys : Array
+var section_ratios : PackedFloat32Array
 var load_index : int
 
 var curr_section : Array
@@ -17,6 +18,22 @@ var __error : StringName
 var __ret : Array
 
 func _init() :
+	section_ratios.resize(__sections.size())
+	var V : Array = __sections.values()
+	var total : float = 0.0
+	for i in V.size() :
+		var v = V[i]
+		var r : float
+		if v is Array :
+			r = v[1]
+			
+		else :
+			r = 1.0
+		total += r
+		section_ratios[i] = r
+	for i in V.size() :
+		section_ratios[i] /= total
+		
 	section_keys = __sections.keys()
 	_update_load_section()
 
@@ -28,20 +45,27 @@ func poll(known_delta : float = INF) -> StringName :
 		load_section += 1
 		local_progress = 0.0
 		if load_section == __end :
+			_end()
 			return &'END'
 		_update_load_section()
 		load_index = 0
 	return StringName()
 	
 func _update_load_section() :
-	curr_section_call = __sections[section_keys[load_section]]
-	#curr_section_call = curr_section[0]
+	var that = __sections[section_keys[load_section]]
+	if that is Array :
+		curr_section_call = that[0]
+		return
+	curr_section_call = that
 
 func get_progress() -> float :
-	var stp := 1.0 / __end
+	if load_section >= __end : return 1.0
+	#var stp := 1.0 / __end
 	var sec := float(load_section) / __end
-	var scp : float = local_progress * stp
+	var scp : float = local_progress * section_ratios[load_section]
 	return scp + sec
 	
 func get_local_progress() -> float :
 	return local_progress
+
+func _end() : pass

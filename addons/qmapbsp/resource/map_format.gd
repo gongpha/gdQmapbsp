@@ -32,6 +32,17 @@ var brush_offsets2_valve : PackedColorArray
 var brush_rotations : PackedFloat32Array
 var brush_scales : PackedVector2Array
 
+func export_brush() -> Array :
+	return [
+		brush_planes,
+		brush_textures,
+		brush_offsets,
+		brush_offsets1_valve,
+		brush_offsets2_valve,
+		brush_rotations,
+		brush_scales,
+	]
+
 func poll(result : Array) -> int :
 	var parsing : int = 0
 	var str_begin : int
@@ -76,17 +87,20 @@ func poll(result : Array) -> int :
 							return PollResult.BEGIN_ENTITY
 						elif level == 2 :
 							# begin brush
-							brush_planes.clear()
-							brush_textures.clear()
-							brush_offsets.clear()
-							brush_rotations.clear()
-							brush_scales.clear()
+							brush_planes = []
+							brush_textures = PackedStringArray()
+							brush_offsets = PackedVector2Array()
+							brush_offsets1_valve = PackedColorArray()
+							brush_offsets2_valve = PackedColorArray()
+							brush_rotations = PackedFloat32Array()
+							brush_scales = PackedVector2Array()
 						else :
 							result.append(&'UNEXPECTED_LEVEL')
 							return PollResult.ERR
 							
 					0x7d : # }
 						level -= 1
+						i += 1
 						if level < 0 :
 							result.append(&'UNMATCHED_BRACES')
 							return PollResult.ERR
@@ -94,7 +108,6 @@ func poll(result : Array) -> int :
 							return PollResult.END_ENTITY
 						elif level == 1 :
 							return PollResult.FOUND_BRUSH
-						i += 1
 					0x22 : # "
 						if !tell_skip_entity_entries :
 							str_begin = i + 1

@@ -53,12 +53,9 @@ func play_by_path(
 	parser.pal = pal
 	parser.root = map
 	
-	var f := FileAccess.open(path, FileAccess.READ)
-	if FileAccess.get_open_error() != OK :
-		console.printv("Cannot open BSP file")
 	var retc : Array
 	var ret := parser.begin_load_absolute(
-		path, mappath, retc
+		mappath, path, retc
 	)
 	if ret != StringName() :
 		console.printv("Cannot open BSP file : %s" % ret)

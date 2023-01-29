@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://quake1_example/class/worldspawn.gd" id="1_3n35g"]
 
 [sub_resource type="Environment" id="Environment_dlsko"]
-background_mode = 4
 ambient_light_source = 1
 reflected_light_source = 1
 

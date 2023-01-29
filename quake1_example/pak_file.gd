@@ -104,7 +104,11 @@ func _poll_read_file() -> StringName :
 					convert_entries.append([&'lmp_pic', res[0]])
 		_ :
 			rsc = QmapbspRawFile.new()
-			rsc.raw = loadrsc_f.get_buffer(datasize)
+			var mpath := "user://packcache/".path_join(path)
+			var f := FileAccess.open(mpath, FileAccess.WRITE)
+			if f :
+				f.store_buffer(loadrsc_f.get_buffer(datasize))
+			rsc.raw_path = mpath
 	
 	if rsc :
 		_save_entry(loadrsc_index, rsc)

@@ -25,6 +25,9 @@ func _ready() :
 	cfg.load("user://quake1.cfg")
 	pathshow.text = cfg.get_value("pak", "pakpath", "")
 	pathshow_map.text = cfg.get_value("pak", "mappath", "")
+	
+	DirAccess.remove_absolute("user://packcache/")
+	DirAccess.make_dir_recursive_absolute("user://packcache/")
 
 var dialog_for_maps : bool
 
@@ -205,19 +208,6 @@ func load_as_texture(pakpath : String) -> ImageTexture :
 		c_textures[pakpath] = itex
 	return itex
 
-func export_raw_file(pakpath : String, to : String) -> StringName :
-	var path := to.path_join(pakpath)
-	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if !f :
-		pass
-	var rf = load_resource(pakpath)
-	if rf is QmapbspRawFile :
-		f.store_buffer(rf.raw)
-		return StringName()
-	return &'NOT_A_RAW_FILE'
-	
-
 
 func _on_bsponly_toggled(yes : bool) :
 	texview_root.visible = !yes
@@ -260,8 +250,6 @@ func _play_bsp(pakpath : String) :
 	mapname = pathshow_map.text.path_join(mapname)
 	if !FileAccess.file_exists(mapname) :
 		return
-		
-	export_raw_file(pakpath, "user://packcache/")
 	
 	viewer = preload("res://quake1_example/viewer.tscn").instantiate()
 	viewer.hub = self
