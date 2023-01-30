@@ -1,10 +1,12 @@
 extends CharacterBody3D
-class_name QmapbspPlayer
+class_name QmapbspQuakePlayer
 
 # THESE VALUES WERE APPROXIMATELY MEASURED
 # TO MATCH AN ORIGINAL AS CLOSE AS POSSIBLE >/\<
 
 # my definition is 32 units/1 meter
+
+var viewer : QmapbspQuakeViewer
 
 @export var max_speed : float = 10
 @export var max_air_speed : float = 0.5
@@ -27,6 +29,26 @@ var wish_jump : bool = false
 var auto_jump : bool = true
 var smooth_y : float
 
+func teleport_to(dest : Node3D, play_sound : bool = false) :
+	global_position = dest.global_position
+	var old := around.rotation
+	around.rotation = dest.rotation
+	old = around.rotation - old
+	velocity = velocity.rotated(Vector3.UP, old.y)
+	if play_sound :
+		var p := AudioStreamPlayer3D.new()
+		p.stream = (
+			viewer.hub.load_audio('misc/r_tele%d.wav' % (randi() % 5 + 1))
+		)
+		
+		p.finished.connect(func() :
+			p.queue_free()
+			)
+		viewer.add_child(p)
+		p.global_position = global_position
+		p.play()
+		
+
 func accelerate(in_speed : float, delta : float) -> void :
 	velocity += wishdir * (
 		clamp(in_speed - velocity.dot(wishdir), 0, accel * delta)
@@ -47,19 +69,7 @@ func move_ground(delta : float) -> void :
 	friction(delta)
 	accelerate(max_speed, delta)
 	
-	var w := (velocity / max_speed) * Vector3(1.0, 0.0, 1.0) * delta
-	var ws := w * max_speed
-	
-	# stair stuffs
-	var shape : BoxShape3D = staircast.shape
-	shape.size = Vector3(
-		1.0 + ws.length(), shape.size.y, 1.0 + ws.length()
-	)
-	
-	staircast.position = Vector3(
-		ws.x, 0.175 + stairstep - 0.75, ws.z
-	)
-	
+	_stairs(delta)
 	# test ceiling
 	staircast.target_position.y = 0.66 + stairstep
 	staircast.force_shapecast_update()
@@ -75,10 +85,27 @@ func move_ground(delta : float) -> void :
 				# 0.688 is an initial value of around.y
 	
 	move_and_slide()
+	_coltest()
+	
+func _stairs(delta : float) :
+	var w := (velocity / max_speed) * Vector3(2.0, 0.0, 2.0) * delta
+	var ws := w * max_speed
+	
+	# stair stuffs
+	var shape : BoxShape3D = staircast.shape
+	shape.size = Vector3(
+		1.0 + ws.length(), shape.size.y, 1.0 + ws.length()
+	)
+	
+	staircast.position = Vector3(
+		ws.x, 0.175 + stairstep - 0.75, ws.z
+	)
 
 func move_air(delta : float) -> void :
 	accelerate(max_air_speed, delta)
+	_stairs(delta)
 	move_and_slide()
+	_coltest()
 	
 func move_noclip(delta : float) -> void :
 	friction(delta)
@@ -126,6 +153,16 @@ func _physics_process(delta : float) -> void :
 	else :
 		smooth_y /= 1.5
 		around.position.y = smooth_y + 0.688
+		
+func _coltest() :
+	for i in get_slide_collision_count() :
+		var k := get_slide_collision(i)
+		for j in k.get_collision_count() :
+			var obj := k.get_collider(j)
+			if obj.has_method(&'_player_touch') :
+				obj._player_touch(self)
+				return
+		
 		
 func _input(event : InputEvent) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :

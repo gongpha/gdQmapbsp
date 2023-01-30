@@ -44,11 +44,15 @@ func _new_entity_node(classname : String) -> Node :
 	var node : Node = super(classname)
 	if !node : return null
 	
+	if classname == 'worldspawn' :
+		viewer.worldspawn = node
+	
 	if node.has_signal(&'emit_message_state') :
 		node.connect(&'emit_message_state',
 			viewer._emit_message_state.bind(node)
 		)
 	node.set_meta(&'viewer', viewer)
+	node.set_meta(&'scale', _get_unit_scale_f())
 	
 	return node
 

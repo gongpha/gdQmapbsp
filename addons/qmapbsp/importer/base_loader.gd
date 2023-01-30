@@ -4,6 +4,7 @@ class_name QmapbspBaseLoader
 var load_section : int
 var section_keys : Array
 var section_ratios : PackedFloat32Array
+var section_ratio_totals : PackedFloat32Array
 var load_index : int
 
 var curr_section : Array
@@ -19,6 +20,7 @@ var __ret : Array
 
 func _init() :
 	section_ratios.resize(__sections.size())
+	section_ratio_totals.resize(__sections.size())
 	var V : Array = __sections.values()
 	var total : float = 0.0
 	for i in V.size() :
@@ -33,6 +35,12 @@ func _init() :
 		section_ratios[i] = r
 	for i in V.size() :
 		section_ratios[i] /= total
+		
+	for i in section_ratio_totals.size() - 1 :
+		var t : float = section_ratios[i]
+		if i > 0 :
+			t += section_ratios[i - 1]
+		section_ratio_totals[i + 1] = t
 		
 	section_keys = __sections.keys()
 	_update_load_section()
@@ -61,7 +69,7 @@ func _update_load_section() :
 func get_progress() -> float :
 	if load_section >= __end : return 1.0
 	#var stp := 1.0 / __end
-	var sec := float(load_section) / __end
+	var sec := section_ratio_totals[load_section]
 	var scp : float = local_progress * section_ratios[load_section]
 	return scp + sec
 	

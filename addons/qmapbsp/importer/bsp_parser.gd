@@ -78,28 +78,31 @@ var clipnodes : Array[Array]
 var entities : Array[Array]
 
 var import_tasks := [
-	_read_vertices,
-	_read_edges,
-	_read_ledges,
-	_read_planes,
-	_read_mip_textures,
-	_read_texinfo,
-	_read_models,
-	_read_faces
+	[_read_vertices, 64],
+	[_read_edges, 64],
+	[_read_ledges, 64],
+	[_read_planes, 64],
+	[_read_mip_textures, 16],
+	[_read_texinfo, 64],
+	[_read_models, 64],
+	[_read_faces, 64]
 ]
 var import_curr_index : int = 0
-var import_curr_func : Callable = import_tasks[0]
+var import_curr_func : Callable = import_tasks[0][0]
+var import_curr_ite : int = import_tasks[0][1]
 var import_local_progress : float = 0.0
 
 func _ImportingData() -> float :
-	import_local_progress = import_curr_func.call()
-	if import_local_progress >= 1.0 :
-		import_curr_index += 1
-		import_local_progress = 0.0
-		if import_curr_index == import_tasks.size() :
-			return 1.0
-		import_curr_func = import_tasks[import_curr_index]
-		load_index = 0
+	for I in import_curr_ite :
+		import_local_progress = import_curr_func.call()
+		if import_local_progress >= 1.0 :
+			import_curr_index += 1
+			import_local_progress = 0.0
+			if import_curr_index == import_tasks.size() :
+				return 1.0
+			import_curr_func = import_tasks[import_curr_index][0]
+			import_curr_ite = import_tasks[import_curr_index][1]
+			load_index = 0
 	return import_get_progress()
 
 func import_get_progress() -> float :

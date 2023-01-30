@@ -1,12 +1,13 @@
 extends Control
 class_name QmapbspQuakeViewer
 
-@export var iterations : int = 2048
+@export var iterations : int = 64
 
 var hub : QmapbspQuake1Hub
 var parser : QmapbspWorldImporterQuake1
 var map : QmapbspQuakeWorld
-var player : QmapbspPlayer
+var player : QmapbspQuakePlayer
+var worldspawn : QmapbspQuakeWorldspawn
 @onready var console : QmapbspConsole = $console
 @onready var menu : QmapbspMenu = $menu
 @onready var message : QmapbspQuakeViewerMessage = $message
@@ -33,8 +34,11 @@ func _ready() :
 	message.hub = hub
 	
 	var t : ImageTexture = hub.load_as_texture("gfx/loading.lmp")
-	loading.texture = t
-	loading.pivot_offset = t.get_size() / 2
+	$loading/loading.texture = t
+	$loading/loading.pivot_offset = t.get_size() / 2
+	loading.texture = hub.load_as_texture("gfx/conback.lmp")
+	
+	$"message/talk".stream = hub.load_audio("misc/talk.wav")
 
 func play_by_node() :
 	loading.hide()
@@ -43,6 +47,7 @@ func play_by_node() :
 		console.toggle()
 	
 	player = preload("res://quake1_example/scene/player.tscn").instantiate()
+	player.viewer = self
 	add_child(player)
 	var pspawn : Node3D = get_tree().get_first_node_in_group(&'player_spawn')
 	if pspawn :
@@ -51,6 +56,7 @@ func play_by_node() :
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	menu.hide()
 	message.clear()
 	
@@ -120,11 +126,15 @@ func toggle_noclip() :
 
 func change_level(mapname : String) :
 	loading.show()
+	console.down(0.6)
 	
 	play_by_mapname.call_deferred(mapname, true)
 
 func set_skill(s : int) :
 	print(s)
+	
+func trigger_targets(targetname : String, activator : Node3D) :
+	get_tree().call_group('T_' + targetname, &'_trigger', activator)
 	
 func killtarget(targetname : String) :
 	for n in get_tree().get_nodes_in_group('T_' + targetname) :

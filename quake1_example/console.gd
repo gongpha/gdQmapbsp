@@ -38,11 +38,18 @@ func exec_line(line : String) :
 func add_command(n : StringName, call : Callable) :
 	cmds[n] = call
 	
-func down() :
-	anchor_top = -0.0
-	anchor_bottom = 1.0
+func down(d : float = 1.0) :
 	showing = true
+	if tween :
+		tween.kill()
+	tween = create_tween()
+	tween.set_parallel()
+	anchor_top = -1.0
+	anchor_bottom = 0.0
 	show()
+	tween.tween_property(self, ^'anchor_bottom', 1.0, d)
+	tween.tween_property(self, ^'anchor_top', 0.0, d)
+	control.queue_redraw()
 	
 func toggle() :
 	showing = !showing

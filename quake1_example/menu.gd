@@ -225,6 +225,7 @@ func _unhandled_input(event : InputEvent) :
 		else :
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		viewer.message.visible = !visible
+		get_tree().paused = !get_tree().paused
 		
 		var back : String = menu_dict.get('back', '')
 		if !back.is_empty() :

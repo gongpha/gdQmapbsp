@@ -110,7 +110,7 @@ func _process(delta : float) :
 				prog.hide()
 				set_process(false)
 				load.disabled = false
-				status.text = 'Double-click on files to play'
+				status.text = 'Double-click on a file to play'
 				_show_tree(bsponly.button_pressed)
 				return
 			
@@ -272,6 +272,7 @@ func _on_path_text_submitted(new_text) :
 func back() :
 	viewer.queue_free()
 	viewer = null
+	get_tree().paused = false
 	tabs.show()
 	
 func restart() :

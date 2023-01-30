@@ -33,6 +33,9 @@ func _message() :
 		_show_message_start(message)
 
 func _trigger(b : Node3D) :
+	var target : String = props.get("target", '')
+	if !target.is_empty() :
+		v.trigger_targets(target, b)
 	var killtarget : String = props.get("killtarget", '')
 	if !killtarget.is_empty() :
 		v.killtarget(killtarget)
