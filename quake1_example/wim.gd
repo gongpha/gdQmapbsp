@@ -2,6 +2,7 @@
 extends QmapbspWorldImporterBasic
 class_name QmapbspWorldImporterQuake1
 
+var viewer : QmapbspQuakeViewer
 var pal : PackedColorArray
 func _get_bsp_palette() -> PackedColorArray : return pal
 
@@ -26,6 +27,7 @@ func _entity_node_directory_path() -> String :
 #	col.position = meshin.position
 #	root.add_child(col)
 #
+
 var skies : Dictionary # <name : ShaderMaterial>
 
 func _texture_get_material_for_integrated(name : String, itex : ImageTexture) -> Material :
@@ -37,3 +39,25 @@ func _texture_get_material_for_integrated(name : String, itex : ImageTexture) ->
 			skies[name] = sky
 		return sky
 	return super(name, itex)
+
+func _new_entity_node(classname : String) -> Node :
+	var node : Node = super(classname)
+	if !node : return null
+	
+	if node.has_signal(&'emit_message_state') :
+		node.connect(&'emit_message_state',
+			viewer._emit_message_state.bind(node)
+		)
+	node.set_meta(&'viewer', viewer)
+	
+	return node
+
+func _get_entity_node(id : int) -> Node :
+	var node := super(id)
+	if !node : return null
+	
+	var dict : Dictionary = entity_props.get(id, {})
+	if dict.has('targetname') :
+		node.add_to_group('T_' + dict['targetname'])
+	return node
+		

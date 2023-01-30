@@ -38,6 +38,12 @@ func exec_line(line : String) :
 func add_command(n : StringName, call : Callable) :
 	cmds[n] = call
 	
+func down() :
+	anchor_top = -0.0
+	anchor_bottom = 1.0
+	showing = true
+	show()
+	
 func toggle() :
 	showing = !showing
 	tween = create_tween()

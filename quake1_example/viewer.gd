@@ -1,14 +1,23 @@
 extends Control
-class_name QmapbspViewer
+class_name QmapbspQuakeViewer
 
 @export var iterations : int = 2048
 
 var hub : QmapbspQuake1Hub
 var parser : QmapbspWorldImporterQuake1
-var map : Node3D
+var map : QmapbspQuakeWorld
 var player : QmapbspPlayer
 @onready var console : QmapbspConsole = $console
 @onready var menu : QmapbspMenu = $menu
+@onready var message : QmapbspQuakeViewerMessage = $message
+@onready var loading : TextureRect = $loading
+
+var pal : PackedColorArray
+var bspdir : String
+var mapdir : String
+var map_upper : bool = false
+
+var registered : bool = false
 
 func _ready() :
 	console.hub = hub
@@ -20,10 +29,18 @@ func _ready() :
 	menu.init()
 	menu.menu_canvas.hub = hub
 	menu.cursor.hub = hub
+	
+	message.hub = hub
+	
+	var t : ImageTexture = hub.load_as_texture("gfx/loading.lmp")
+	loading.texture = t
+	loading.pivot_offset = t.get_size() / 2
 
 func play_by_node() :
+	loading.hide()
 	add_child(map)
-	console.toggle()
+	if console.showing :
+		console.toggle()
 	
 	player = preload("res://quake1_example/scene/player.tscn").instantiate()
 	add_child(player)
@@ -33,16 +50,22 @@ func play_by_node() :
 		player.around.rotation = pspawn.rotation
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-func play_by_path(
-	path : String,
-	mappath : String,
-	pal : PackedColorArray
-) -> void :
+func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	menu.hide()
+	message.clear()
+	
+	if !no_console :
+		console.down()
+	
+	if map :
+		map.free()
+		player.free()
+	oldprog = 0
 	
 	parser = QmapbspWorldImporterQuake1.new()
-	map = Node3D.new()
-	console.printv("Loading %s" % path)
+	parser.viewer = self
+	map = QmapbspQuakeWorld.new()
+	console.printv("Loading %s" % mapname)
 	console.printv("Loading a map %s times per frame." % iterations)
 	if iterations <= 32 :
 		console.printv("If you feel this was too slow,")
@@ -53,15 +76,24 @@ func play_by_path(
 	parser.pal = pal
 	parser.root = map
 	
+	var mappath := mapdir.path_join((
+		mapname.to_upper() + '.MAP' if map_upper else mapname + '.map'
+	))
+	if !FileAccess.file_exists(mappath) :
+		return false
+	
 	var retc : Array
 	var ret := parser.begin_load_absolute(
-		mappath, path, retc
+		mappath,
+		bspdir.path_join('/maps/' + mapname + '.bsp'),
+		retc
 	)
 	if ret != StringName() :
 		console.printv("Cannot open BSP file : %s" % ret)
 	set_process(true)
+	return true
 
-var oldprog : int = 0
+var oldprog : int
 
 func _process(delta) :
 	for I in iterations :
@@ -83,3 +115,20 @@ func _process(delta) :
 func toggle_noclip() :
 	if !player : return
 	player.toggle_noclip()
+
+###################################################
+
+func change_level(mapname : String) :
+	loading.show()
+	
+	play_by_mapname.call_deferred(mapname, true)
+
+func set_skill(s : int) :
+	print(s)
+	
+func killtarget(targetname : String) :
+	for n in get_tree().get_nodes_in_group('T_' + targetname) :
+		n.queue_free()
+
+func _emit_message_state(msg : String, show : bool, from : Node) :
+	message.set_emitter(msg, show, from)

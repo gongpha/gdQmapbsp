@@ -1,0 +1,2 @@
+extends QmapbspQuakeFunctionBrush
+class_name QmapbspQuakeFunctionDoorIllusionary

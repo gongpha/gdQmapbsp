@@ -47,23 +47,32 @@ func move_ground(delta : float) -> void :
 	friction(delta)
 	accelerate(max_speed, delta)
 	
-	var w := wishdir * delta
+	var w := (velocity / max_speed) * Vector3(1.0, 0.0, 1.0) * delta
 	var ws := w * max_speed
 	
 	# stair stuffs
+	var shape : BoxShape3D = staircast.shape
+	shape.size = Vector3(
+		1.0 + ws.length(), shape.size.y, 1.0 + ws.length()
+	)
 	
 	staircast.position = Vector3(
 		ws.x, 0.175 + stairstep - 0.75, ws.z
 	)
-	staircast.target_position.y = -stairstep
 	
-	if staircast.get_collision_count() > 0 :
-		var height := staircast.get_collision_point(0).y - (global_position.y - 0.75)
-		if height < stairstep :
-			position.y += height * 1.25 # additional bonus
-			smooth_y = -height
-			around.position.y = -height + 0.688
-			# 0.688 is an initial value of around.y
+	# test ceiling
+	staircast.target_position.y = 0.66 + stairstep
+	staircast.force_shapecast_update()
+	if staircast.get_collision_count() == 0 :
+		staircast.target_position.y = -stairstep
+		staircast.force_shapecast_update()
+		if staircast.get_collision_count() > 0 :
+			var height := staircast.get_collision_point(0).y - (global_position.y - 0.75)
+			if height < stairstep :
+				position.y += height * 1.25 # additional bonus
+				smooth_y = -height
+				around.position.y = -height + 0.688
+				# 0.688 is an initial value of around.y
 	
 	move_and_slide()
 

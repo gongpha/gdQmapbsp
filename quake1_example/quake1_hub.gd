@@ -16,7 +16,9 @@ class_name QmapbspQuake1Hub
 @onready var texinfo : Label = $"tabs/PAK Viewer/vbox/hbox3/texview/info"
 @onready var mapupper : CheckBox = $"tabs/PAK Viewer/vbox/mapupper"
 
-var viewer : QmapbspViewer
+@onready var s_registered : CheckBox = %"s_registered"
+
+var viewer : QmapbspQuakeViewer
 var last_play : String
 
 func _ready() :
@@ -243,25 +245,25 @@ func _show_tex(tex : Texture2D) :
 	texinfo.text = "(%d, %d)" % [tex.get_width(), tex.get_height()]
 
 func _play_bsp(pakpath : String) :
-	var mapname := pakpath.get_basename().split('/')[-1] + '.map'
-	if mapupper.toggled :
-		mapname = mapname.to_upper()
-		
-	mapname = pathshow_map.text.path_join(mapname)
-	if !FileAccess.file_exists(mapname) :
-		return
+	var mapname := pakpath.get_basename().split('/')[-1]
 	
 	viewer = preload("res://quake1_example/viewer.tscn").instantiate()
 	viewer.hub = self
+	viewer.registered = s_registered.button_pressed
+
 	last_play = pakpath
 	add_child(viewer)
-	tabs.hide()
 	
-	viewer.play_by_path.call_deferred(
-		"user://packcache/".path_join(pakpath),
-		mapname,
-		global_pal
-	)
+	
+	viewer.bspdir = "user://packcache/"
+	viewer.mapdir = pathshow_map.text
+	viewer.pal = global_pal
+	viewer.map_upper = s_registered.button_pressed
+	
+	if viewer.play_by_mapname(mapname) :
+		tabs.hide()
+	else :
+		viewer.free()
 
 
 func _on_path_text_submitted(new_text) :

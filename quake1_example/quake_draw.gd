@@ -4,11 +4,22 @@ class_name QmapbspQuakeDraw
 var hub : QmapbspQuake1Hub
 
 func draw_quake_text(where : Vector2, text : String,
-	add : int = 0, scale_ := Vector2.ONE
+	add : int = 0, scale_ := Vector2.ONE, center : bool = false
 ) :
+	if text.contains('\n') :
+		var nls := text.split('\n')
+		for i in nls.size() :
+			draw_quake_text(where + Vector2(
+				0.0, i * 8 * scale_.y
+			), nls[i], add, scale_, center)
+		return
+		
+	if center :
+		where -= Vector2(8 * text.length() * 0.5, 0.0) * scale_.x
+	var scale_c : float = 8 * scale_.x
 	for i in text.length() :
 		draw_quake_character(where, text.unicode_at(i) + add, scale_)
-		where.x += 8 * scale_.x;
+		where.x += scale_c
 		
 const SLIDER_RANGE := 10
 func draw_slider(where : Vector2, call : Callable,

@@ -1,2 +1,2 @@
-extends Area3D
+extends QmapbspQuakeTrigger
 class_name QmapbspQuakeTriggerMultiple

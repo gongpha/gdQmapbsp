@@ -1,0 +1,2 @@
+extends QmapbspQuakeTrigger
+class_name QmapbspQuakeTriggerCounter

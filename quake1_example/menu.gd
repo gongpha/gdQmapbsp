@@ -2,7 +2,7 @@ extends Control
 class_name QmapbspMenu
 
 var hub : QmapbspQuake1Hub
-var viewer : QmapbspViewer
+var viewer : QmapbspQuakeViewer
 var menu_canvas : QmapbspQuakeDraw
 var cursor : Control
 var cursor_frames : Array[Texture]
@@ -138,8 +138,6 @@ func _process(delta : float) :
 	cursor.queue_redraw()
 	
 func init() :
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	
 	menuui_player = AudioStreamPlayer.new()
 	menuui_player.name = &"ENTERSOUND"
 	add_child(menuui_player)
@@ -226,6 +224,7 @@ func _unhandled_input(event : InputEvent) :
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		else :
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		viewer.message.visible = !visible
 		
 		var back : String = menu_dict.get('back', '')
 		if !back.is_empty() :

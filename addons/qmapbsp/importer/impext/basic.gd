@@ -20,6 +20,11 @@ func _entity_your_mesh(
 ) -> void :
 	var node := _get_entity_node(ent_id)
 	
+	if !(
+		node._is_brush_visible() if 
+		node.has_method(&'_is_brush_visible') else true
+	) : return
+	
 	var meshin := MeshInstance3D.new()
 	meshin.mesh = mesh
 	meshin.name = 'meshin%04d' % brush_id
@@ -90,6 +95,8 @@ func _get_entity_node(id : int) -> Node :
 	if !node :
 		node = QmapbspUnknownClassname.new()
 		node.props = dict
+	elif node.has_method(&'_get_properties') :
+		node._get_properties(dict)
 		
 	if dict.has("model") :
 		dict['__qmapbsp_has_brush'] = true
