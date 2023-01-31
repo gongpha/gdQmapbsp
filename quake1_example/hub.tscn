@@ -23,6 +23,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PAK Viewer" type="Control" parent="tabs"]
+visible = false
 layout_mode = 2
 
 [node name="vbox" type="VBoxContainer" parent="tabs/PAK Viewer"]
@@ -130,11 +131,10 @@ visible = false
 layout_mode = 2
 max_value = 1.0
 
-[node name="Settings" type="Control" parent="tabs"]
-visible = false
+[node name="Viewer Settings" type="Control" parent="tabs"]
 layout_mode = 2
 
-[node name="vbox" type="VBoxContainer" parent="tabs/Settings"]
+[node name="vbox" type="VBoxContainer" parent="tabs/Viewer Settings"]
 layout_mode = 1
 anchors_preset = -1
 offset_left = 24.0
@@ -142,11 +142,31 @@ offset_top = 24.0
 offset_right = -24.0
 offset_bottom = -24.0
 
-[node name="s_registered" type="CheckBox" parent="tabs/Settings/vbox"]
+[node name="s_registered" type="CheckBox" parent="tabs/Viewer Settings/vbox"]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
 text = "Registered"
+
+[node name="s_difficulity" type="OptionButton" parent="tabs/Viewer Settings/vbox"]
+unique_name_in_owner = true
+layout_mode = 2
+item_count = 6
+selected = 1
+popup/item_0/text = "Easy"
+popup/item_0/id = 0
+popup/item_1/text = "Normal"
+popup/item_1/id = 1
+popup/item_2/text = "Hard"
+popup/item_2/id = 2
+popup/item_3/text = "Nightmare"
+popup/item_3/id = 3
+popup/item_3/disabled = true
+popup/item_4/text = ""
+popup/item_4/id = 1024
+popup/item_4/separator = true
+popup/item_5/text = "Deathmatch"
+popup/item_5/id = 4
 
 [node name="dialog" type="FileDialog" parent="."]
 title = "Open a Directory"

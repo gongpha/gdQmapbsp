@@ -104,6 +104,10 @@ func _ImportingData() -> float :
 			import_curr_ite = import_tasks[import_curr_index][1]
 			load_index = 0
 	return import_get_progress()
+	
+func _BuildingDataCustom() -> float :
+	wim._custom_work_bsp(self)
+	return 1.0
 
 func import_get_progress() -> float :
 	var stp := 1.0 / import_tasks.size()
@@ -321,7 +325,7 @@ func _model_geo() -> bool :
 		face_indexf = model[8]
 		unit_scale_f = 1.0 / unit_scale
 		region_size = wim._get_region_size()
-	elif loc_load_index == face_count :
+	if loc_load_index == face_count :
 		loc_load_index = 0
 		return true
 		
@@ -409,7 +413,9 @@ func _model_geo() -> bool :
 		region_or_alone = Vector3i((centroid / (
 			region_size * unit_scale_f
 		) + Vector3(0.5, 0.5, 0.5)).floor())
-	else : region_or_alone = 0
+	else : region_or_alone = wim._model_get_region(
+		load_index, face_array_index, texture
+	)
 	
 	var lsize : Vector2
 	var lid := -1
@@ -507,11 +513,12 @@ func _build_geo() -> bool :
 			return true # orphan model ?
 		regions = entity_geo[entity_geo_keys[load_index]]
 		region_keys = regions.keys()
-	elif loc_load_index == region_keys.size() :
+	if loc_load_index == region_keys.size() :
 		region_keys.clear()
 		return true
 		
-	var rarray : Array = regions[region_keys[loc_load_index]]
+	var r = region_keys[loc_load_index]
+	var rarray : Array = regions[r]
 	var surfaces : Array[Array] = rarray[0]
 	var texdict : Dictionary = rarray[1]
 	var center : Vector3 = rarray[2] / rarray[4]
@@ -567,7 +574,7 @@ func _build_geo() -> bool :
 			)
 		surface_tool.generate_tangents()
 		mesh = surface_tool.commit(mesh)
-	wim._entity_your_mesh(target_ent, loc_load_index, mesh, center)
+	wim._entity_your_mesh(target_ent, loc_load_index, mesh, center, r)
 	loc_load_index += 1
 	return false
 

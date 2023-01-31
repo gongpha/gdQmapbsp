@@ -13,42 +13,49 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 	entity_props[id] = entity
 	_get_entity_node(id)
 	
+var last_added_meshin : MeshInstance3D
 func _entity_your_mesh(
 	ent_id : int,
 	brush_id : int,
-	mesh : ArrayMesh, origin : Vector3
+	mesh : ArrayMesh, origin : Vector3,
+	region
 ) -> void :
 	var node := _get_entity_node(ent_id)
+	if !node : return
 	
 	if !(
 		node._is_brush_visible() if 
 		node.has_method(&'_is_brush_visible') else true
 	) : return
 	
-	var meshin := MeshInstance3D.new()
-	meshin.mesh = mesh
-	meshin.name = 'meshin%04d' % brush_id
+	last_added_meshin = MeshInstance3D.new()
+	last_added_meshin.mesh = mesh
+	last_added_meshin.name = 'meshin%04d' % brush_id
 	if ent_id == 0 :
-		meshin.position = origin
+		last_added_meshin.position = origin
 	else :
 		_recenter(node, origin)
-	node.add_child(meshin)
+	node.add_child(last_added_meshin)
 
+var last_added_col : CollisionShape3D
 func _entity_your_shape(
 	ent_id : int,
 	brush_id : int,
-	shape : Shape3D, origin : Vector3
+	shape : Shape3D, origin : Vector3,
+	
+	known_texture_names : PackedStringArray
 ) -> void :
 	var node := _get_entity_node(ent_id)
+	if !node : return
 	
-	var col := CollisionShape3D.new()
-	col.shape = shape
-	col.name = 'col%04d' % brush_id
+	last_added_col = CollisionShape3D.new()
+	last_added_col.shape = shape
+	last_added_col.name = 'col%04d' % brush_id
 	if ent_id == 0 :
-		col.position = origin
+		last_added_col.position = origin
 	else :
 		_recenter(node, origin)
-	node.add_child(col)
+	node.add_child(last_added_col)
 	
 	if entity_is_brush.size() < ent_id + 1 :
 		# extend
@@ -107,7 +114,7 @@ func _get_entity_node(id : int) -> Node :
 		
 		if !dict.get('__qmapbsp_has_brush', false) : # it isn't a brush entity
 			var angle : int = dict.get('angle', 0)
-			node.rotation_degrees.y = 90.0 + angle
+			node.rotation_degrees.y = angle
 	if node.has_method(&'_ent_props') :
 		node._ent_props(dict)
 	root.add_child(node)

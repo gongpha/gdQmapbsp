@@ -38,7 +38,8 @@ func _brush_found() :
 	var shape := ConvexPolygonShape3D.new()
 	shape.points = vertices
 	tell_collision_shapes.emit(
-		entity_curr_idx, entity_curr_brush_idx, shape, V
+		entity_curr_idx, entity_curr_brush_idx, shape, V,
+		mapf.brush_textures
 	)
 	
 const EPS := 0.000001

@@ -32,6 +32,9 @@ func _ConstructingData() -> float :
 	
 func _BuildingData() -> float :
 	return 1.0
+	
+func _BuildingDataCustom() -> float :
+	return 1.0
 
 var kv : Dictionary
 var brushes : Array
@@ -75,6 +78,7 @@ func __sections__() -> Dictionary :
 		&'IMPORTING_DATA' : _ImportingData,
 		&'CONSTRUCTING_DATA' : _ConstructingData,
 		&'BUILDING_DATA' : _BuildingData,
+		&'BUILDING_DATA_CUSTOM' : _BuildingDataCustom,
 	}
 
 static func _qnor_to_vec3(q : Vector3) -> Vector3 :

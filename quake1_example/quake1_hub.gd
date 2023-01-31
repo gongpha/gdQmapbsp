@@ -17,6 +17,7 @@ class_name QmapbspQuake1Hub
 @onready var mapupper : CheckBox = $"tabs/PAK Viewer/vbox/mapupper"
 
 @onready var s_registered : CheckBox = %"s_registered"
+@onready var difficulity : OptionButton = %"s_difficulity"
 
 var viewer : QmapbspQuakeViewer
 var last_play : String
@@ -259,6 +260,7 @@ func _play_bsp(pakpath : String) :
 	viewer.mapdir = pathshow_map.text
 	viewer.pal = global_pal
 	viewer.map_upper = s_registered.button_pressed
+	viewer.skill = difficulity.get_selected_id()
 	
 	if viewer.play_by_mapname(mapname) :
 		tabs.hide()

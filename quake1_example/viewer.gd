@@ -19,6 +19,7 @@ var mapdir : String
 var map_upper : bool = false
 
 var registered : bool = false
+var skill : int = 1
 
 func _ready() :
 	console.hub = hub
@@ -43,6 +44,12 @@ func _ready() :
 func play_by_node() :
 	loading.hide()
 	add_child(map)
+	
+	for n in get_tree().get_nodes_in_group(&'entities') :
+		if !n.has_method(&'_map_ready') : continue
+		n._map_ready()
+	#get_tree().call_group(&'entities', &'_map_ready')
+	
 	if console.showing :
 		console.toggle()
 	
@@ -131,7 +138,7 @@ func change_level(mapname : String) :
 	play_by_mapname.call_deferred(mapname, true)
 
 func set_skill(s : int) :
-	print(s)
+	skill = s
 	
 func trigger_targets(targetname : String, activator : Node3D) :
 	get_tree().call_group('T_' + targetname, &'_trigger', activator)
@@ -142,3 +149,7 @@ func killtarget(targetname : String) :
 
 func _emit_message_state(msg : String, show : bool, from : Node) :
 	message.set_emitter(msg, show, from)
+
+func emit_message_once(msg : String, from : Node) :
+	message.set_emitter(msg, true, from)
+	message.set_emitter('', false, message.current_emitter)

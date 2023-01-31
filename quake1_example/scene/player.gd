@@ -21,13 +21,19 @@ var noclip : bool = false
 
 @onready var around : Node3D = $around
 @onready var head : Node3D = $around/head
-@onready var camera : Camera3D = $around/head/camera
+@onready var camera : Camera3D = $around/head/cam
 @onready var staircast : ShapeCast3D = $staircast
+@onready var jump : AudioStreamPlayer3D = $jump
 
 var wishdir : Vector3
 var wish_jump : bool = false
 var auto_jump : bool = true
 var smooth_y : float
+
+var fluid : QmapbspQuakeFluidVolume
+
+func _ready() :
+	jump.stream = viewer.hub.load_audio("player/plyrjmp8.wav")
 
 func teleport_to(dest : Node3D, play_sound : bool = false) :
 	global_position = dest.global_position
@@ -74,7 +80,7 @@ func move_ground(delta : float) -> void :
 	staircast.target_position.y = 0.66 + stairstep
 	staircast.force_shapecast_update()
 	if staircast.get_collision_count() == 0 :
-		staircast.target_position.y = -stairstep
+		staircast.target_position.y = -stairstep - 0.688 # (?)
 		staircast.force_shapecast_update()
 		if staircast.get_collision_count() > 0 :
 			var height := staircast.get_collision_point(0).y - (global_position.y - 0.75)
@@ -136,17 +142,31 @@ func _physics_process(delta : float) -> void :
 		if Input.is_action_just_released(&"q1_jump") :
 			wish_jump = false
 	
-	if is_on_floor() :
+	if fluid :
 		if wish_jump :
 			velocity.y = jump_up
 			move_air(delta)
-			wish_jump = false
 		else :
-			velocity.y = 0
-			move_ground(delta)
+			if is_on_floor() :
+				velocity.y = 0
+				move_ground(delta)
+			else :
+				velocity.y -= gravity * delta * 0.25
+				move_air(delta)
+			
 	else :
-		velocity.y -= gravity * delta
-		move_air(delta)
+		if is_on_floor() :
+			if wish_jump :
+				jump.play()
+				velocity.y = jump_up
+				move_air(delta)
+				wish_jump = false
+			else :
+				velocity.y = 0
+				move_ground(delta)
+		else :
+			velocity.y -= gravity * delta
+			move_air(delta)
 	
 	if is_zero_approx(smooth_y) :
 		smooth_y = 0.0
@@ -160,7 +180,7 @@ func _coltest() :
 		for j in k.get_collision_count() :
 			var obj := k.get_collider(j)
 			if obj.has_method(&'_player_touch') :
-				obj._player_touch(self)
+				obj._player_touch(self, k.get_position(j), k.get_normal(j))
 				return
 		
 		
@@ -179,6 +199,12 @@ func _input(event : InputEvent) -> void :
 		var hrot = head.rotation
 		hrot.x = clamp(hrot.x, -PI/2, PI/2)
 		head.rotation = hrot
+		
+func _fluid_enter(f : QmapbspQuakeFluidVolume) :
+	fluid = f
+	
+func _fluid_exit(f : QmapbspQuakeFluidVolume) :
+	if f == fluid : fluid = null
 
 #########################################
 

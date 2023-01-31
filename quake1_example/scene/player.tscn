@@ -1,11 +1,11 @@
 [gd_scene load_steps=4 format=3 uid="uid://bjrvl643qpvsm"]
 
-[ext_resource type="Script" path="res://quake1_example/scene/player.gd" id="1_d2oyp"]
+[ext_resource type="Script" path="res://quake1_example/scene/player.gd" id="1_wxpe5"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_c5ge2"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_vynei"]
 size = Vector3(1, 1.5, 1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_y748x"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_t01ca"]
 resource_local_to_scene = true
 size = Vector3(1, 0.175, 1)
 
@@ -13,10 +13,10 @@ size = Vector3(1, 0.175, 1)
 collision_layer = 3
 floor_constant_speed = true
 floor_snap_length = 0.2
-script = ExtResource("1_d2oyp")
+script = ExtResource("1_wxpe5")
 
 [node name="col" type="CollisionShape3D" parent="."]
-shape = SubResource("BoxShape3D_c5ge2")
+shape = SubResource("BoxShape3D_vynei")
 
 [node name="around" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.688, 0)
@@ -29,5 +29,8 @@ current = true
 
 [node name="staircast" type="ShapeCast3D" parent="."]
 enabled = false
-shape = SubResource("BoxShape3D_y748x")
+shape = SubResource("BoxShape3D_t01ca")
+target_position = Vector3(0, -0.688, 0)
 max_results = 4
+
+[node name="jump" type="AudioStreamPlayer3D" parent="."]

@@ -5,7 +5,7 @@ var v : QmapbspQuakeViewer
 func _is_brush_visible() -> bool : return false
 func _get_properties(dict : Dictionary) : props = dict
 
-signal emit_message_state(m : String)
+signal emit_message_state(m : String, show : bool)
 
 func _show_message_start(msg : String) :
 	emit_message_state.emit(msg, true)

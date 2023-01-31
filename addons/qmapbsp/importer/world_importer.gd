@@ -33,18 +33,31 @@ func _texture_get_material_for_integrated(
 	return null
 
 ###########################################
+
+func _model_get_region(
+	model_id : int,
+	face_index : int, facemat : Material
+) :
+	return 0
+
+###########################################
 # entities (models & worldspawn)
 	
+
 func _entity_your_mesh(
 	ent_id : int,
 	brush_id : int,
-	mesh : ArrayMesh, origin : Vector3
+	mesh : ArrayMesh, origin : Vector3,
+	region
 ) -> void : pass
-
+# The brush_id of (_entity_your_mesh) and (_entity_your_shape) is different !
+# Do not reference these ids are the same object 
 func _entity_your_shape(
 	ent_id : int,
 	brush_id : int,
-	shape : Shape3D, origin : Vector3
+	shape : Shape3D, origin : Vector3,
+	
+	known_texture_names : PackedStringArray
 ) -> void :
 	pass
 	
@@ -68,9 +81,16 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 				/ _get_unit_scale_f()
 			)
 		)
-		entity['angle'] = QmapbspMapFormat.expect_int(entity.get('angle', ''))
-	# TODO : Add more essential properties i.e. spawnflag
+		var angle : int = QmapbspMapFormat.expect_int(entity.get('angle', ''))
+		if angle >= 0 : angle += 90
+		entity['angle'] = angle
+		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
 	
+#########################################
+
+func _custom_work_bsp(bsp : QmapbspBSPParser) -> void :
+	return
+
 #########################################
 
 func __sections__() -> Dictionary : return {
@@ -78,12 +98,14 @@ func __sections__() -> Dictionary : return {
 	&'IMPORTING_DATA' : _ImportingData,
 	&'CONSTRUCTING_DATA' : _ConstructingData,
 	&'BUILDING_DATA' : _BuildingData,
+	&'BUILDING_DATA_CUSTOM' : [_BuildingDataCustom, 0.1],
 }
 
 func _GatheringAllEntities() -> float : return _race(0)
 func _ImportingData() -> float : return _race(1)
 func _ConstructingData() -> float : return _race(2)
 func _BuildingData() -> float : return _race(3)
+func _BuildingDataCustom() -> float : return _race(4)
 	
 var mapp : QmapbspMAPParser
 var bspp : QmapbspBSPParser
