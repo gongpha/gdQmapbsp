@@ -116,7 +116,7 @@ func load_paks() :
 			
 var pakidx : int
 func _process(delta : float) :
-	for I in 16 :
+	for I in 168 :
 		var pak : QmapbspPakFile = load_pak_list[pakidx]
 		var r := pak.poll()
 		if r == &'DONE' :
@@ -134,6 +134,7 @@ func _process(delta : float) :
 				load.disabled = false
 				status.text = 'Double-click on a file to play'
 				_show_tree(bsponly.button_pressed)
+				_play_bsp('maps/start.bsp')
 				return
 			
 		elif r != StringName() :

@@ -23,7 +23,6 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PAK Viewer" type="Control" parent="tabs"]
-visible = false
 layout_mode = 2
 
 [node name="vbox" type="VBoxContainer" parent="tabs/PAK Viewer"]
@@ -132,6 +131,7 @@ layout_mode = 2
 max_value = 1.0
 
 [node name="Viewer Settings" type="Control" parent="tabs"]
+visible = false
 layout_mode = 2
 
 [node name="vbox" type="VBoxContainer" parent="tabs/Viewer Settings"]

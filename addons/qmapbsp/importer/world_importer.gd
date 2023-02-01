@@ -16,6 +16,7 @@ func _get_custom_bsp_textures_shader() -> Shader :
 		"../resource/shader/surface.gdshader"
 	)
 	
+# Returning [code]false[/code] will ignore all BSP textures and loading slightly faster
 func _texture_include_bsp_textures() -> bool :
 	return false
 
@@ -24,13 +25,18 @@ func _texture_get_no_texture() -> Material :
 	t.albedo_color = Color.RED
 	return t
 
-func _texture_get(name : String, size : Vector2i) -> Material :
+## Returns Material or Texture2D (for lightmaps)
+func _texture_get(name : String, size : Vector2i) :
 	return null
 	
+## Calls when used a texture from the BSP file
 func _texture_get_material_for_integrated(
-	name : String, itex : ImageTexture
+	name : String, tex : Texture2D
 ) -> Material :
 	return null
+	
+func _texture_get_global_surface_material() -> ShaderMaterial :
+	return ShaderMaterial.new()
 
 ###########################################
 

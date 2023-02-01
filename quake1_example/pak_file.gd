@@ -128,6 +128,8 @@ static func _make_image(
 	transparent : int = 255
 ) -> Image :
 	var size : Vector2i = entrydata[0]
+	if size.x == 0 or size.y == 0 :
+		return null
 	var data : PackedByteArray = entrydata[1]
 	var im := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
 	var TRANSPARENT := Color(Color(), 0.0)

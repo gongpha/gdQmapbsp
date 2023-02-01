@@ -31,6 +31,7 @@ func _entity_your_mesh(
 	last_added_meshin = MeshInstance3D.new()
 	last_added_meshin.mesh = mesh
 	last_added_meshin.name = 'meshin%04d' % brush_id
+	last_added_meshin.set_meta(&'_qmapbsp_region', region)
 	if ent_id == 0 :
 		last_added_meshin.position = origin
 	else :

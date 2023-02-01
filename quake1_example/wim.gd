@@ -1,32 +1,23 @@
-## An example extension that loads Quake1 maps from their pak files
+## An example extension that loads Quake1 maps from pak files
 extends QmapbspWorldImporterBasic
 class_name QmapbspWorldImporterQuake1
 
 var viewer : QmapbspQuakeViewer
+var surface : ShaderMaterial
 var pal : PackedColorArray
 func _get_bsp_palette() -> PackedColorArray : return pal
 
 func _texture_include_bsp_textures() -> bool : return true
 
+func _texture_get_global_surface_material() -> ShaderMaterial :
+	surface = ShaderMaterial.new()
+	var node : Node = entity_nodes.get(0)
+	if node is QmapbspQuakeWorldspawn :
+		node.surface = surface
+	return surface
+
 func _entity_node_directory_path() -> String :
 	return "res://quake1_example/class/"
-
-#func _on_brush_mesh_updated(region_or_model_id, meshin : MeshInstance3D) :
-#	var shape : Shape3D
-##	var root : Node
-#	if region_or_model_id is Vector3i :
-#		shape = meshin.mesh.create_trimesh_shape()
-##		root = entities_owner[0] # worldspawn
-##	else :
-##		shape = meshin.mesh.create_convex_shape()
-##		root = entities_owner[region_or_model_id]
-#
-#	var col := CollisionShape3D.new()
-#	col.shape = shape
-#	col.name = &'generated_col'
-#	col.position = meshin.position
-#	root.add_child(col)
-#
 
 var specials : Dictionary # <name : ShaderMaterial>
 var worldspawn_fluid_brush : PackedInt32Array
@@ -40,12 +31,14 @@ func _new_fluid_area() :
 	fluid_area.name = &"FLUID"
 	root.add_child(fluid_area)
 
-func _texture_get_material_for_integrated(name : String, itex : ImageTexture) -> Material :
+func _texture_get_material_for_integrated(
+	name : String, tex : Texture2D
+) -> Material :
 	if name.begins_with('sky') :
 		var sky : ShaderMaterial = specials.get(name)
 		if !sky :
 			sky = load("res://quake1_example/material/sky.tres")
-			sky.set_shader_parameter(&'skytex', itex)
+			sky.set_shader_parameter(&'skytex', tex)
 			if name == 'sky4' :
 				sky.set_shader_parameter(&'threshold', 0.4)
 			specials[name] = sky
@@ -55,11 +48,11 @@ func _texture_get_material_for_integrated(name : String, itex : ImageTexture) ->
 		if !fluid :
 			fluid = ShaderMaterial.new()
 			fluid.shader = preload("res://quake1_example/material/fluid.gdshader")
-			fluid.set_shader_parameter(&'tex', itex)
+			fluid.set_shader_parameter(&'tex', tex)
 			fluid.set_meta(&'fluid', true)
 			specials[name] = fluid
 		return fluid
-	return super(name, itex)
+	return super(name, tex)
 	
 func _model_get_region(
 	model_id : int,
@@ -131,6 +124,9 @@ func _new_entity_node(classname : String) -> Node :
 	node.set_meta(&'viewer', viewer)
 	node.set_meta(&'scale', _get_unit_scale_f())
 	node.add_to_group(&'entities')
+	
+	#if node is QmapbspQuakeWorldspawn :
+	#	node.surface = surface
 	
 	return node
 
