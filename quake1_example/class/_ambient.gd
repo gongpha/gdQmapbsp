@@ -18,7 +18,7 @@ func _ready() :
 	viewer = get_meta(&'viewer')
 
 func _map_ready() :
-	unit_size = 5.0
+	unit_size = 1.0
 	stream = viewer.hub.load_audio(_audiopath())
 	finished.connect(func() : play())
 	play()

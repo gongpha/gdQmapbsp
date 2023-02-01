@@ -73,7 +73,7 @@ func _entity_your_properties(id : int, entity : Dictionary) -> void :
 	
 ## Offers essential properties on each entity
 func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
-	var classname : String = entity.get('classname')
+	var classname : String = entity.get('classname', '')
 	if id != 0 :
 		entity['origin'] = (
 			QmapbspBaseParser._qnor_to_vec3(

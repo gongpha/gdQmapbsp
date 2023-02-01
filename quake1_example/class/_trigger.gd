@@ -33,6 +33,15 @@ func _message() :
 		_show_message_start(message)
 
 func _trigger(b : Node3D) :
+	var delay : float = props.get('delay', '0').to_float()
+	if delay > 0 :
+		get_tree().create_timer(delay, false).timeout.connect(
+			_trigger_now.bind(b)
+		)
+	else :
+		_trigger_now(b)
+	
+func _trigger_now(b : Node3D) :
 	var target : String = props.get("target", '')
 	if !target.is_empty() :
 		v.trigger_targets(target, b)

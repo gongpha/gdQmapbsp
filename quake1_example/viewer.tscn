@@ -2,12 +2,12 @@
 
 [ext_resource type="PackedScene" uid="uid://dvlurm3ntglha" path="res://quake1_example/console.tscn" id="1_1r65e"]
 [ext_resource type="Script" path="res://quake1_example/viewer.gd" id="1_whe0i"]
+[ext_resource type="Script" path="res://quake1_example/hud.gd" id="2_16dr5"]
 [ext_resource type="Script" path="res://quake1_example/menu.gd" id="3_044qv"]
 [ext_resource type="Script" path="res://quake1_example/message.gd" id="5_6jblb"]
 [ext_resource type="Shader" path="res://quake1_example/viewer_fade.gdshader" id="5_upbmq"]
-[ext_resource type="Script" path="res://quake1_example/hud.gd" id="6_a4jeh"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_8d40b"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xn8bx"]
 shader = ExtResource("5_upbmq")
 
 [node name="viewer" type="Control"]
@@ -48,7 +48,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("6_a4jeh")
+script = ExtResource("2_16dr5")
 
 [node name="console" parent="." instance=ExtResource("1_1r65e")]
 layout_mode = 1
@@ -64,7 +64,7 @@ pivot_offset = Vector2(160, 0)
 script = ExtResource("3_044qv")
 
 [node name="fade" type="ColorRect" parent="menu"]
-material = SubResource("ShaderMaterial_8d40b")
+material = SubResource("ShaderMaterial_xn8bx")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

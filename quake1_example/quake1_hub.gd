@@ -59,6 +59,7 @@ var c_raw : Dictionary
 var global_pal : PackedColorArray
 
 var load_pak_list : Array[QmapbspPakFile]
+var tracklist : Dictionary
 
 func find_pak() -> StringName :
 	var paknam : int = 0
@@ -68,6 +69,12 @@ func find_pak() -> StringName :
 	c_raw.clear()
 	global_pal.clear()
 	load_pak_list.clear()
+	
+	var tracklist_path := pathshow.text.path_join('tracklist.cfg')
+	if FileAccess.file_exists(tracklist_path) :
+		var f := FileAccess.open(tracklist_path, FileAccess.READ)
+		if f :
+			_parse_tracks(f)
 	
 	while true :
 		var path : String = pathshow.text.path_join('pak%d.pak' % paknam)
@@ -85,6 +92,20 @@ func find_pak() -> StringName :
 	load_paks()
 	pakidx = 0
 	return StringName()
+	
+func _parse_tracks(f : FileAccess) :
+	# "track list configuration used by the QuakeForge engine"
+	# this is a low-effort parsing. so don't expect the accurate results U//<"
+	for l in f.get_as_text().split('\n') :
+		if l.lstrip(' \t').begins_with('//') : continue
+		if l.lstrip(' \t').begins_with('{') : continue
+		if l.lstrip(' \t').begins_with('}') : continue
+		var L := l.strip_edges().rstrip('";').split(' ')
+		if L.size() < 3 : continue
+		var s := pathshow.text.path_join(L[2].substr(1))
+		if s.ends_with('.ogg') :
+			s = s.substr(0, s.length() - 3) + 'mp3'
+		tracklist[L[0].to_int()] = s
 	
 func load_paks() :
 	var cfg := ConfigFile.new()
@@ -255,7 +276,7 @@ func _play_bsp(pakpath : String) :
 	last_play = pakpath
 	add_child(viewer)
 	
-	
+	viewer.tracklist = tracklist
 	viewer.bspdir = "user://packcache/"
 	viewer.mapdir = pathshow_map.text
 	viewer.pal = global_pal

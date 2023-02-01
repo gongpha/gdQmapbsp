@@ -82,7 +82,7 @@ func move_ground(delta : float) -> void :
 	if staircast.get_collision_count() == 0 :
 		staircast.target_position.y = -stairstep - 0.688 # (?)
 		staircast.force_shapecast_update()
-		if staircast.get_collision_count() > 0 :
+		if staircast.get_collision_count() > 0 and staircast.get_collision_normal(0).y >= 0.8 :
 			var height := staircast.get_collision_point(0).y - (global_position.y - 0.75)
 			if height < stairstep :
 				position.y += height * 1.25 # additional bonus
@@ -143,6 +143,7 @@ func _physics_process(delta : float) -> void :
 			wish_jump = false
 	
 	if fluid :
+		# trash movement ;)
 		if wish_jump :
 			velocity.y = jump_up
 			move_air(delta)

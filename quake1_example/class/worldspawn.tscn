@@ -8,7 +8,10 @@ ambient_light_source = 1
 reflected_light_source = 1
 
 [node name="worldspawn" type="StaticBody3D"]
+process_mode = 3
 script = ExtResource("1_3n35g")
 
 [node name="wenv" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_dlsko")
+
+[node name="music" type="AudioStreamPlayer" parent="."]

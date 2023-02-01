@@ -5,7 +5,6 @@ class_name QmapbspQuakeFunctionDoor
 # maybe not accurate to the original approach
 
 var tween : Tween
-var aabb : AABB
 var add : Vector3
 var dura : float
 var wait : int
@@ -46,13 +45,6 @@ func _map_ready() :
 func _starts_open() :
 	if props.get('spawnflags', 0) & 0b01 :
 		_open_direct()
-	
-func _gen_aabb() :
-	#aabb.position = global_position
-	for m in get_children() :
-		if m is GeometryInstance3D :
-			aabb = aabb.merge(m.get_aabb())
-	aabb.position += global_position
 			
 func _add_link(n : QmapbspQuakeFunctionDoor) :
 	if n == self : return
@@ -63,7 +55,7 @@ func _def_lip() -> String : return '8'
 func _def_wait() -> String : return '-1'
 func _def_speed() -> String : return '100'
 
-func _linking() -> bool :
+func _no_linking() -> bool :
 	return props.get('spawnflags', 0) & 0b100
 	
 func _get_angle() -> int :
@@ -79,7 +71,7 @@ func _calc_add() :
 			for n in get_tree().get_nodes_in_group(&'doors') :
 				#if n.calc_ : continue
 				n._calc_add()
-				if _linking() :
+				if _no_linking() :
 					continue
 					
 				if (

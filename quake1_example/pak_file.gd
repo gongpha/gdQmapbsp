@@ -93,10 +93,10 @@ func _poll_read_file() -> StringName :
 			if wad is StringName : return wad
 			wad.pal = global_pal
 			rsc = wad
-		'mdl' :
-			var mdl = QmapbspMDLFile.load_from_file(loadrsc_f, global_pal)
-			if mdl is StringName : return wad
-			rsc = mdl
+#		'mdl' :
+#			var mdl = QmapbspMDLFile.load_from_file(loadrsc_f, global_pal)
+#			if mdl is StringName : return mdl
+#			rsc = mdl
 		'lmp' :
 			var res : Array
 			var ret := QmapbspLmpFile.load_from_file(path, loadrsc_f, res)

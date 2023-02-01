@@ -10,7 +10,7 @@ func _gen_aabb() :
 	aabb.size.y *= -1
 	
 func _def_lip() -> String : return '-8' # >O_O<
-func _linking() -> bool : return false
+func _no_linking() -> bool : return false
 func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 	if open and nor.y > 0.9 :
 		_trigger(p)

@@ -18,6 +18,8 @@ var pal : PackedColorArray
 var bspdir : String
 var mapdir : String
 var map_upper : bool = false
+var tracklist : Dictionary
+var trackcaches : Dictionary # <sounds : AudioStreamMP3>
 
 var registered : bool = false
 var skill : int = 1
@@ -158,3 +160,17 @@ func _emit_message_state(msg : String, show : bool, from : Node) :
 func emit_message_once(msg : String, from : Node) :
 	message.set_emitter(msg, true, from)
 	message.set_emitter('', false, message.current_emitter)
+
+func get_music(sounds : int) -> AudioStreamMP3 :
+	var mp3 : AudioStreamMP3 = trackcaches.get(sounds)
+	if mp3 : return mp3
+	
+	var path : String = tracklist.get(sounds, '')
+	var f := FileAccess.open(path, FileAccess.READ)
+	if !f : return null
+	
+	mp3 = AudioStreamMP3.new()
+	mp3.data = f.get_buffer(f.get_length())
+	trackcaches[sounds] = mp3
+	return mp3
+	
