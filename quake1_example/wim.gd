@@ -46,6 +46,8 @@ func _texture_get_material_for_integrated(name : String, itex : ImageTexture) ->
 		if !sky :
 			sky = load("res://quake1_example/material/sky.tres")
 			sky.set_shader_parameter(&'skytex', itex)
+			if name == 'sky4' :
+				sky.set_shader_parameter(&'threshold', 0.4)
 			specials[name] = sky
 		return sky
 	elif name.begins_with('*') :
@@ -103,7 +105,7 @@ func _entity_your_shape(
 			# MOVE
 			last_added_col.get_parent().remove_child(last_added_col)
 			fluid_area.add_child(last_added_col)
-			last_added_col.global_position = origin
+			last_added_col.position = origin
 
 	
 	#if ent_id == 0 and last_added_col :
@@ -153,5 +155,5 @@ func _get_entity_node(id : int) -> Node :
 		node.add_to_group('T_' + dict['targetname'])
 	return node
 		
-func _custom_work_bsp(bsp : QmapbspBSPParser) -> void :
+func _custom_work_bsp(bsp : RefCounted) -> void :
 	return

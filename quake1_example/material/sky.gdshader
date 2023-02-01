@@ -2,6 +2,7 @@ shader_type spatial;
 render_mode unshaded, shadows_disabled;
 
 uniform sampler2D skytex;
+uniform float threshold = 0.1;
 
 void fragment()
 {
@@ -19,7 +20,7 @@ void fragment()
 	)).xyz;
 	
 	vec3 tf = t1;
-	if ((t1.x + t1.y + t1.z) / 3.0 < 0.1) {
+	if ((t1.x + t1.y + t1.z) / 3.0 < threshold) {
 		tf = t2;
 	}
 	ALBEDO = tf;

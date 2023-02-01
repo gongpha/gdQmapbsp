@@ -12,6 +12,7 @@ var worldspawn : QmapbspQuakeWorldspawn
 @onready var menu : QmapbspMenu = $menu
 @onready var message : QmapbspQuakeViewerMessage = $message
 @onready var loading : TextureRect = $loading
+@onready var hud : QmapbspQuakeHUD = $hud
 
 var pal : PackedColorArray
 var bspdir : String
@@ -22,6 +23,8 @@ var registered : bool = false
 var skill : int = 1
 
 func _ready() :
+	hud.setup(self)
+	
 	console.hub = hub
 	console.setup(hub)
 	set_process(false)
@@ -42,6 +45,7 @@ func _ready() :
 	$"message/talk".stream = hub.load_audio("misc/talk.wav")
 
 func play_by_node() :
+	hud.show()
 	loading.hide()
 	add_child(map)
 	
@@ -65,6 +69,7 @@ func play_by_node() :
 func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	menu.hide()
+	hud.hide()
 	message.clear()
 	
 	if !no_console :

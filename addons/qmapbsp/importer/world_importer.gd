@@ -88,7 +88,7 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 	
 #########################################
 
-func _custom_work_bsp(bsp : QmapbspBSPParser) -> void :
+func _custom_work_bsp(bsp : RefCounted) -> void :
 	return
 
 #########################################

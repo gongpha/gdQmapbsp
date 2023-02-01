@@ -5,3 +5,4 @@
 [resource]
 render_priority = 0
 shader = ExtResource("1_k4c4m")
+shader_parameter/threshold = 0.1
