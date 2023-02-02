@@ -39,7 +39,7 @@ func _init() :
 	for i in section_ratio_totals.size() - 1 :
 		var t : float = section_ratios[i]
 		if i > 0 :
-			t += section_ratios[i - 1]
+			t += section_ratio_totals[i]
 		section_ratio_totals[i + 1] = t
 		
 	section_keys = __sections.keys()
