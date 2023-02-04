@@ -43,8 +43,6 @@ func _ready() :
 	$loading/loading.texture = t
 	$loading/loading.pivot_offset = t.get_size() / 2
 	loading.texture = hub.load_as_texture("gfx/conback.lmp")
-	
-	$"message/talk".stream = hub.load_audio("misc/talk.wav")
 
 func play_by_node() :
 	hud.show()
@@ -155,11 +153,15 @@ func killtarget(targetname : String) :
 		n.queue_free()
 
 func _emit_message_state(msg : String, show : bool, from : Node) :
+	if show :
+		message.set_talk_sound(hub.load_audio("misc/talk.wav"))
+	else :
+		if message.current_emitter != from : return
 	message.set_emitter(msg, show, from)
 
 func emit_message_once(msg : String, from : Node) :
-	message.set_emitter(msg, true, from)
-	message.set_emitter('', false, message.current_emitter)
+	message.set_talk_sound(hub.load_audio("misc/talk.wav"))
+	message.set_emitter(msg, true, null)
 
 func get_music(sounds : int) -> AudioStreamMP3 :
 	var mp3 : AudioStreamMP3 = trackcaches.get(sounds)
@@ -174,3 +176,6 @@ func get_music(sounds : int) -> AudioStreamMP3 :
 	trackcaches[sounds] = mp3
 	return mp3
 	
+func found_secret() :
+	message.set_talk_sound(hub.load_audio("misc/secret.wav"))
+	message.set_emitter("You found a secret area!", true, null)

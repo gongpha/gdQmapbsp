@@ -21,12 +21,12 @@ signal emit_message_once(m : String)
 
 # according to the QC file
 var audio_paths := [
-	['misc/null.wav', 'misc/null.wav'],
+	['misc/null.wav', ''],
 	['doors/drclos4.wav', 'doors/doormv1.wav'],
 	['doors/hydro1.wav', 'doors/hydro2.wav'],
 	['doors/stndr1.wav', 'doors/stndr2.wav'],
 	['doors/ddoor1.wav', 'doors/ddoor2.wav'],
-	['misc/null.wav', 'misc/null.wav'],
+	['misc/null.wav', ''],
 ]
 
 var func_door := [
@@ -132,7 +132,9 @@ func _motion_f(destroy_tween : bool = false) :
 		
 func _play_snd(idx : int) :
 	_make_player()
-	player.stream = viewer.hub.load_audio(streams[idx])
+	var s : String = streams[idx]
+	if s.is_empty() : return
+	player.stream = viewer.hub.load_audio(s)
 	player.play()
 	
 func _audf() :

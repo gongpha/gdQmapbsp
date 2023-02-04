@@ -11,6 +11,7 @@ const SCALE := Vector2(3, 3)
 var health := 100
 
 func _draw() :
+	return
 	var t : ImageTexture
 	var ts : Vector2
 	t = faces[0]

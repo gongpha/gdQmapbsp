@@ -1,8 +1,8 @@
 shader_type spatial;
 render_mode unshaded, shadows_disabled, depth_prepass_alpha;
 
-uniform sampler2D tex;
-uniform float alpha = 0.6;
+uniform sampler2D tex : source_color;
+uniform float alpha = 0.8;
 
 const float AMP = 0.1;
 

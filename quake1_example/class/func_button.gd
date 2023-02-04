@@ -19,7 +19,7 @@ func _play_snd(idx : int) :
 func _get_sounds(sounds : int) :
 	if sounds == 0 :
 		streams = [
-			'buttons/airbut1.wav', 'buttons/null.wav'
+			'buttons/airbut1.wav', ''
 		]
 	else :
 		super(sounds)

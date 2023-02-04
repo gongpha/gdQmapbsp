@@ -134,7 +134,6 @@ func _process(delta : float) :
 				load.disabled = false
 				status.text = 'Double-click on a file to play'
 				_show_tree(bsponly.button_pressed)
-				_play_bsp('maps/start.bsp')
 				return
 			
 		elif r != StringName() :

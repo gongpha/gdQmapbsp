@@ -1,2 +1,2 @@
-extends QmapbspQuakeFunctionBrush
+extends QmapbspQuakeFunctionDoor
 class_name QmapbspQuakeFunctionDoorSecret

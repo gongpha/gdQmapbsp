@@ -9,7 +9,7 @@ func _start() : pass
 	
 # for loading textures from the wad/bsp file
 func _get_bsp_palette() -> PackedColorArray : return PackedColorArray()
-func _get_region_size() -> float : return 0.5
+func _get_region_size() -> float : return 0.6
 func _get_unit_scale_f() -> float : return 32.0
 func _get_custom_bsp_textures_shader() -> Shader :
 	return preload(

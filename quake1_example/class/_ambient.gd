@@ -8,11 +8,8 @@ func _get_properties(dict : Dictionary) : props = dict
 
 signal emit_message_state(m : String, show : bool)
 
-func _show_message_start(msg : String) :
-	emit_message_state.emit(msg, true)
-	
-func _show_message_end() :
-	emit_message_state.emit('', false)
+func _show_message_start(msg : String) : return
+func _show_message_end() : return
 
 func _ready() :
 	viewer = get_meta(&'viewer')

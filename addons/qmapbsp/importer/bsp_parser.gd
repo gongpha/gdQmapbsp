@@ -270,6 +270,16 @@ func _read_models() -> float :
 	]
 	load_index += 1
 	return float(load_index) / models.size()
+	
+const B15 = 1 << 15
+const B16 = 1 << 16
+const B31 = 1 << 31
+const B32 = 1 << 32
+
+func u32toi32(u : int) -> int :
+	return (u + B31) % B32 - B31
+func u16toi16(u : int) -> int :
+	return (u + B15) % B16 - B15
 
 func _read_faces() -> float :
 	if load_index == 0 :
@@ -285,7 +295,7 @@ func _read_faces() -> float :
 		file.get_8(), # lightmap type
 		file.get_8(), # lightmap offset
 		file.get_8(), file.get_8(), # light
-		file.get_32(), # lightmap
+		u32toi32(file.get_32()), # lightmap
 	]
 	load_index += 1
 	return float(load_index) / faces.size()
@@ -355,8 +365,12 @@ func _model_geo() -> bool :
 	var face_array_index : int = face_indexf + loc_load_index
 	var face : Array = faces[face_array_index]
 	
+	#if face[5] >= 1 and face[5] <= 8 :
+	#	face[6] = 0
+	#print(face[5])
+	
 	#if face[5] == 255 :
-	#	prints(face[5], face[6], face[7], face[8], face[9])
+		#prints(face[5], face[6], face[7], face[8], face[9])
 	#	loc_load_index += 1
 	#	return false
 	
@@ -451,7 +465,12 @@ func _model_geo() -> bool :
 		load_index, face_array_index, texture
 	)
 	
+	#if !(region_or_alone is Vector3i and region_or_alone == Vector3i(0, 0, 3)) :
+	#	loc_load_index += 1
+	#	return false
+	
 	var lsize : Vector2
+	var lstyle : int = 1
 	var lid := -1
 	
 	if read_miptextures :
@@ -459,9 +478,13 @@ func _model_geo() -> bool :
 		var max : Vector2i = (uv_max / 16.0).ceil()
 		var extent := (max - min) * 16
 		lsize = Vector2((extent.x >> 4) + 1, (extent.y >> 4) + 1)
-		var lim := _gen_lightmap(lightmapdata, face[9], lsize)
+		var retlst : PackedByteArray
+		var lim := _gen_lightmap(lightmapdata, face[9], lsize, [
+			face[5], face[6], face[7], face[8]
+		], retlst)
+		lstyle = retlst[0]
 		if lim :
-			lid = ip.add(lsize, lim)
+			lid = ip.add(lim.get_size(), lim)
 		else :
 			lid = unlit
 			
@@ -483,7 +506,7 @@ func _model_geo() -> bool :
 			face_vertices, face_normals, face_uvs,
 			lsize, lid, face_uvrs, Color(
 				face[5], face[6], face[7], face[8]
-			)
+			), lstyle
 		])
 		var texdict : Dictionary = arr[1]
 		if texdict.has(texturekey) :
@@ -499,7 +522,7 @@ func _model_geo() -> bool :
 					face_vertices, face_normals, face_uvs,
 					lsize, lid, face_uvrs, Color(
 						face[5], face[6], face[7], face[8]
-					)
+					), lstyle
 				]
 			],
 			{texturekey : PackedInt32Array([0])},
@@ -570,7 +593,7 @@ func _build_geo() -> bool :
 		
 	var r = region_keys[loc_load_index]
 	var rarray : Array = regions[r]
-	var surfaces : Array[Array] = rarray[0]
+	var surfaces : Array = rarray[0]
 	var texdict : Dictionary = rarray[1]
 	var center : Vector3 = rarray[2] / rarray[4]
 	var extents : Vector3 = rarray[3]
@@ -610,17 +633,19 @@ func _build_geo() -> bool :
 			var verts : PackedVector3Array = surface[0]
 			var lid : int = surface[4]
 			var uvs : PackedVector2Array = surface[2]
+			var lsize : Vector2 = surface[3]
 			var nors : PackedVector3Array = surface[1]
 			var uvrs : PackedVector2Array = surface[5]
 			#var cols : PackedColorArray = surface[6]
 			var lights : Color = surface[6]
+			var lstyle : int = surface[7]
 			
 			var ADD := func(i : int) :
 				C_UV.call(uvs[i])
 				C_UV2.call(uvrs[i])
 				C_NM.call(nors[i])
 				if is_global :
-					C_CT.call(0, Color(s, UUU, UUU, UUU))
+					C_CT.call(0, Color(s, lstyle, lsize.x / lightmap_size.x, UUU))
 					C_CT.call(1, lights)
 				C_VT.call(verts[i] - center)
 			
@@ -638,7 +663,6 @@ func _build_geo() -> bool :
 					for i in uvrs.size() :
 						uvrs[i] = (uvrs[i] * fsize) + offset
 				else :
-					var lsize : Vector2 = surface[3]
 					var fsize := (lsize / lightmap_size)
 					
 					for i in uvrs.size() :
@@ -694,13 +718,34 @@ func _make_im_from_pal(
 		), known_palette[p])
 	return im
 
+const MAX_LIGHTMAPS := 4
 func _gen_lightmap(
-	lightmapdata : PackedByteArray, offset : int, size : Vector2i
+	lightmapdata : PackedByteArray, offset : int, size : Vector2i,
+	lightstyles : PackedByteArray, ret_lstyle : PackedByteArray
 ) -> Image :
-	if offset == 4294967295 :
+	if offset == -1 :
+		ret_lstyle.append(0)
 		return null
-	var c := lightmapdata.slice(offset, offset + size.x * size.y)
-	return Image.create_from_data(
-		size.x, size.y, false, Image.FORMAT_L8,
-		c
-	)
+	var lightmaps : int = 0
+	var ist : int = 0 # bitmask
+	for i in MAX_LIGHTMAPS :
+		if lightstyles[i] == 255 : continue
+		lightmaps += 1
+		ist |= 1 << i
+		
+	var im := Image.create(size.x * lightmaps, size.y, false, Image.FORMAT_L8)
+	var xpos : int = 0
+	for l in MAX_LIGHTMAPS :
+		if lightstyles[l] == 255 : continue
+		var new := offset + size.x * size.y
+		
+		var c := lightmapdata.slice(offset, new)
+		var sim := Image.create_from_data(
+			size.x, size.y, false, Image.FORMAT_L8,
+			c
+		)
+		im.blit_rect(sim, Rect2i(0.0, 0.0, size.x, size.y), Vector2(xpos * size.x, 0.0))
+		offset = new
+		xpos += 1
+	ret_lstyle.append(ist)
+	return im
