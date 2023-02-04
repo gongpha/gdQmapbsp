@@ -1,6 +1,44 @@
-[gd_scene load_steps=2 format=3 uid="uid://dvlurm3ntglha"]
+[gd_scene load_steps=5 format=3 uid="uid://dvlurm3ntglha"]
 
 [ext_resource type="Script" path="res://quake1_example/console.gd" id="1_tic73"]
+
+[sub_resource type="Animation" id="Animation_sgl1c"]
+resource_name = "aniloop"
+length = 0.2
+loop_mode = 2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(4, 4, 0, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_vukfu"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_a4dt3"]
+_data = {
+"RESET": SubResource("Animation_vukfu"),
+"aniloop": SubResource("Animation_sgl1c")
+}
 
 [node name="console" type="Control"]
 layout_mode = 3
@@ -10,3 +48,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_tic73")
+
+[node name="disc" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -72.0
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(3, 3)
+pivot_offset = Vector2(24, 24)
+
+[node name="ani" type="AnimationPlayer" parent="disc"]
+autoplay = "aniloop"
+libraries = {
+"": SubResource("AnimationLibrary_a4dt3")
+}

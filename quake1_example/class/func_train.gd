@@ -1,8 +1,6 @@
 extends QmapbspQuakeFunctionBrush
 class_name QmapbspQuakeFunctionTrain
 
-# use tweens instead of pathfollow3d
-
 var tween : Tween
 var curve : Curve3D
 var corner : Vector3
@@ -61,7 +59,7 @@ func _start(c : Curve3D) :
 		var nextpos := c.get_point_position(i)
 		var dura : float = (
 			poscursor.distance_to(nextpos)
-		) / (props.get('speed', 40).to_int() / s)
+		) / (props.get('speed', '64').to_int() / s)
 		poscursor = nextpos
 		tween.tween_property(self, ^'position',
 			nextpos + corner,

@@ -298,6 +298,6 @@ func back() :
 	get_tree().paused = false
 	tabs.show()
 	
-func restart() :
+func change_to(to := last_play) :
 	back()
-	_play_bsp.call_deferred(last_play)
+	_play_bsp.call_deferred(to)

@@ -60,7 +60,7 @@ layout_mode = 2
 [node name="000" type="LinkButton" parent="tabs/PAK Viewer/vbox/hbox4"]
 layout_mode = 2
 tooltip_text = "Download Quake1 MAP sources"
-text = "Augment MAP Directory"
+text = "MAP Directory"
 underline = 1
 uri = "https://rome.ro/s/quake_map_source.zip"
 

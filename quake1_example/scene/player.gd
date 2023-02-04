@@ -122,8 +122,6 @@ func _physics_process(delta : float) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
 		return
 		
-	
-		
 	wishdir = (head if noclip else around).global_transform.basis * Vector3((
 		Input.get_axis(&"q1_move_left", &"q1_move_right")
 	), 0, (

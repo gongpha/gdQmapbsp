@@ -14,12 +14,15 @@ var worldspawn : QmapbspQuakeWorldspawn
 @onready var loading : TextureRect = $loading
 @onready var hud : QmapbspQuakeHUD = $hud
 
+var current_mapname : String
 var pal : PackedColorArray
 var bspdir : String
 var mapdir : String
 var map_upper : bool = false
 var tracklist : Dictionary
 var trackcaches : Dictionary # <sounds : AudioStreamMP3>
+	
+var world_surface : ShaderMaterial
 
 var registered : bool = false
 var skill : int = 1
@@ -46,8 +49,10 @@ func _ready() :
 
 func play_by_node() :
 	hud.show()
+	message.show()
 	loading.hide()
 	add_child(map)
+	
 	
 	for n in get_tree().get_nodes_in_group(&'entities') :
 		if !n.has_method(&'_map_ready') : continue
@@ -68,9 +73,11 @@ func play_by_node() :
 
 func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	current_mapname = mapname
 	menu.hide()
 	hud.hide()
 	message.clear()
+	get_tree().paused = false
 	
 	if !no_console :
 		console.down()
@@ -138,7 +145,7 @@ func toggle_noclip() :
 
 func change_level(mapname : String) :
 	loading.show()
-	console.down(0.6)
+	console.down()
 	
 	play_by_mapname.call_deferred(mapname, true)
 
@@ -179,3 +186,27 @@ func get_music(sounds : int) -> AudioStreamMP3 :
 func found_secret() :
 	message.set_talk_sound(hub.load_audio("misc/secret.wav"))
 	message.set_emitter("You found a secret area!", true, null)
+
+var mode : int = 0
+func switch_render_mode() :
+	if mode == 2 :
+		mode = 0
+	else :
+		mode += 1
+	world_surface.set_shader_parameter(&'mode', mode)
+
+var lightmap_boost : float = 4.0
+var lightmap_boost_min : float = 0.0
+var lightmap_boost_max : float = 32.0
+func add_lightmap_boost(add : int) :
+	lightmap_boost = clamp(
+		lightmap_boost + add * 2.0,
+		lightmap_boost_min, lightmap_boost_max
+	)
+	world_surface.set_shader_parameter(&'lmboost', lightmap_boost)
+func get_lightmap_boost_val() -> float :
+	return inverse_lerp(lightmap_boost_min, lightmap_boost_max, lightmap_boost)
+var region_highlighting : bool = false
+func toggle_region_highlighting() -> void :
+	region_highlighting = !region_highlighting
+	world_surface.set_shader_parameter(&'regionhl', region_highlighting)

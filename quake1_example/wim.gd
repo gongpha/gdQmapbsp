@@ -11,6 +11,10 @@ func _texture_include_bsp_textures() -> bool : return true
 
 func _texture_get_global_surface_material() -> ShaderMaterial :
 	surface = ShaderMaterial.new()
+	viewer.world_surface = surface
+	surface.set_shader_parameter(&'mode', viewer.mode)
+	surface.set_shader_parameter(&'lmboost', viewer.lightmap_boost)
+	surface.set_shader_parameter(&'regionhl', viewer.region_highlighting)
 	var node : Node = entity_nodes.get(0)
 	if node is QmapbspQuakeWorldspawn :
 		node.surface = surface
@@ -77,6 +81,10 @@ func _entity_your_mesh(
 		last_added_meshin.get_parent().remove_child(last_added_meshin)
 		fluid_area.add_child(last_added_meshin)
 		last_added_meshin.global_position = origin
+	if region is Vector3i :
+		last_added_meshin.set_instance_shader_parameter(
+			&'region', region
+		)
 		
 func _entity_your_shape(
 	ent_id : int,

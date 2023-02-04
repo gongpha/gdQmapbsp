@@ -84,12 +84,12 @@ var global_textures : Array[Texture2D]
 const GLOBAL_TEXTURE_LIMIT := 256 # NOT AN ACTUAL LIMIT
 
 var import_tasks := [
-	[_read_vertices, 64],
-	[_read_edges, 64],
-	[_read_ledges, 64],
-	[_read_planes, 64],
+	[_read_vertices, 128],
+	[_read_edges, 128],
+	[_read_ledges, 128],
+	[_read_planes, 128],
 	[_read_mip_textures, 16],
-	[_read_texinfo, 64],
+	[_read_texinfo, 128],
 	[_read_models, 64],
 	[_read_faces, 64]
 ]
@@ -319,16 +319,17 @@ func _ConstructingData() -> float : # per model
 				]
 			))
 	
-	if wim._entity_prefers_bsp_geometry(load_index) :
-		if _model_geo() :
+	for I in 32 :
+		if wim._entity_prefers_bsp_geometry(load_index) :
+			if _model_geo() :
+				load_index += 1
+				loc_load_index = 0
+		else :
 			load_index += 1
-			loc_load_index = 0
-	else :
-		load_index += 1
-			
-	if load_index == models.size() :
-		lightmapdata.clear()
-		return 1.0
+				
+		if load_index == models.size() :
+			lightmapdata.clear()
+			return 1.0
 	return float(load_index) / models.size()
 	
 var loc_load_index : int
@@ -549,24 +550,23 @@ func _BuildingData() -> float :
 		entity_geo_keys = entity_geo.keys()
 		if entity_geo_keys.is_empty() : return 1.0
 	
-	
-	
-	if wim._entity_prefers_bsp_geometry(load_index) :
-		if _build_geo() :
-			loc_load_index = 0
+	for I in 16 :
+		if wim._entity_prefers_bsp_geometry(load_index) :
+			if _build_geo() :
+				loc_load_index = 0
+				load_index += 1
+		else :
 			load_index += 1
-	else :
-		load_index += 1
-	
-	if load_index == entity_geo_keys.size() :
-		entity_geo_keys.clear()
-		pos_list.clear()
-		lightmap_image = null
-		lmtex = null
-		entity_geo.clear()
-		lightmapdata.clear()
-		ip = null
-		return 1.0
+		
+		if load_index == entity_geo_keys.size() :
+			entity_geo_keys.clear()
+			pos_list.clear()
+			lightmap_image = null
+			lmtex = null
+			entity_geo.clear()
+			lightmapdata.clear()
+			ip = null
+			return 1.0
 	return float(load_index) / entity_geo_keys.size()
 	
 const UUU := 0.0 # unused

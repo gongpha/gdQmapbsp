@@ -1,6 +1,9 @@
 shader_type spatial;
 render_mode unshaded;
 
+uniform int mode = 0;
+uniform float lmboost = 4.0;
+uniform bool regionhl = false;
 uniform sampler2D[256] texs : source_color; // not an actual limit
 uniform sampler2D lmp : repeat_disable;
 uniform float[12] lightstyles;
@@ -31,22 +34,34 @@ void vertex() {
 	lwidth = CUSTOM0.z;
 }
 
-void fragment() {
-	vec3 color = texture(texs[texidx], UV).xyz;
-	
+float lightmap(in vec2 uv2) {
 	float lighttotal = 0.0;
 	float lcursor = 0.0;
 	for (int l = 0; l < 4; l++) {
 		if ((lstyles & (1 << l)) == 0) continue;
-		lighttotal += texture(lmp, UV2 + vec2(lwidth * lcursor, 0.0)).x * lights[l];
+		lighttotal += texture(lmp, uv2 + vec2(lwidth * lcursor, 0.0)).x * lights[l];
 		lcursor += 1.0;
 	}
-	ALBEDO = color * (lighttotal * 4.0);
+	return lighttotal;
+}
+
+void fragment() {
+	vec3 color = texture(texs[texidx], UV).xyz;
 	
-//	ALBEDO *= hsv2rgb(
-//		vec3(
-//			float(region.x + region.y + region.z) / 8.0,
-//			0.8, 1.0
-//		)
-//	);
+	if (mode == 0) {
+		ALBEDO = color * (lightmap(UV2) * lmboost);
+	} else if (mode == 1) {
+		ALBEDO = color;
+	} else if (mode == 2) {
+		ALBEDO = vec3(lightmap(UV2));
+	}
+	
+	if (regionhl) {
+		ALBEDO *= hsv2rgb(
+			vec3(
+				float(region.x + region.y + region.z) / 8.0,
+				0.8, 1.0
+			)
+		);
+	}
 }

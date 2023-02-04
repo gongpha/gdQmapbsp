@@ -15,20 +15,37 @@ var menu_items : Array
 var menu_current : StringName
 var menu_dict : Dictionary
 
+const MY_ADJUSTMENT := 32.0
+
 var MENU := {
 	'none' : {},
 	'main' : {
-		title = "gfx/ttl_main.lmp",
+		title = "gfx/p_option.lmp",
 		back = "main",
 		options = [
 			["Toggle noclip (V)", func() :
 				viewer.toggle_noclip()
 				protect3()
 				],
-			["Restart", func() :
-				hub.restart()
+			["Switch rendering mode", func() :
+				viewer.switch_render_mode()
 				],
-			["Back to the hub", func() :
+			["Region highlighting", func() :
+				viewer.toggle_region_highlighting()
+				],
+			["Lightmap boost", func(add : int) :
+				viewer.add_lightmap_boost(add)
+				,
+			func() -> float :
+				return viewer.get_lightmap_boost_val()
+				],
+			["Restart current map", func() :
+				viewer.change_level(viewer.current_mapname)
+				],
+			["Restart the viewer", func() :
+				hub.change_to()
+				],
+			["Back to the PAK Loader", func() :
 				hub.back()
 				],
 		]
@@ -80,11 +97,11 @@ func draw_general_menu(menu_dict : Dictionary) :
 			var y : int = 32 + (i * 8)
 			if o is Array :
 				var s : String = o[0]
-				menu_canvas.draw_quake_text(Vector2(16 + (22 - s.length()) * 8, y), s, 128)
+				menu_canvas.draw_quake_text(Vector2(16 + (22 - s.length()) * 8 + MY_ADJUSTMENT, y), s, 128)
 				var v = o[1]
 				var t = o[2] if o.size() >= 3 else null
 				if t is Callable :
-					menu_canvas.draw_slider(Vector2(220, y), t)
+					menu_canvas.draw_slider(Vector2(220 + MY_ADJUSTMENT, y), t)
 
 func Draw() :
 	draw_general_menu(menu_dict)
@@ -128,7 +145,7 @@ func _cursor_draw() :
 	var f : int
 	if menu_cursor_is_options :
 		f = 12 + (int(Engine.get_frames_drawn() / 40.0) & 1)
-		cursor.draw_quake_character(Vector2(200, 32 + menu_cursor * 8), f)
+		cursor.draw_quake_character(Vector2(200 + MY_ADJUSTMENT, 32 + menu_cursor * 8), f)
 		return
 	f = int(Engine.get_frames_drawn() / 10.0) % 6
 	cursor.draw_texture(cursor_frames[f], Vector2(54, 32 + menu_cursor * 20.0))
@@ -188,34 +205,48 @@ func _unhandled_input(event : InputEvent) :
 		if event.is_action_pressed(&"ui_up") :
 			updownsound()
 			menu_cursor -= 1
+			menu_cursor_prev = menu_cursor
 			if menu_cursor < 0 : menu_cursor = menu_items.size() - 1
 		elif event.is_action_pressed(&"ui_down") :
 			updownsound()
 			menu_cursor += 1
+			menu_cursor_prev = menu_cursor
 			if menu_cursor >= menu_items.size() : menu_cursor = 0
+		elif event.is_action_pressed(&"ui_left") :
+			var that = menu_items[menu_cursor]
+			if that is Array and that.size() == 3 :
+				# slider
+				that[1].call(-1)
+				menu3()
+				menu_canvas.queue_redraw()
+				return
+		elif event.is_action_pressed(&"ui_right") :
+			var that = menu_items[menu_cursor]
+			if that is Array and that.size() == 3 :
+				# slider
+				that[1].call(1)
+				menu3()
+				menu_canvas.queue_redraw()
+				return
 		elif event.is_action_pressed(&"ui_accept") :
 			if menu_items.is_empty() :
 				menu3()
-				return
 			var that = menu_items[menu_cursor]
 			if that is String :
-				menu_cursor_prev = menu_cursor
 				go_to(that)
-				return
 			elif that is Callable :
 				that.call()
-				return
 			elif that is Array :
 				if that.size() == 3 :
 					# slider
-					return
+					that[1].call(1)
 				elif that.size() == 2 :
 					# press
 					var c : Callable = that[1]
 					if c.is_valid() :
 						c.call()
-					return
 			menu3()
+			return
 	if event.is_action_pressed(&"ui_cancel") :
 		if hub.viewer.console.visible : return
 		

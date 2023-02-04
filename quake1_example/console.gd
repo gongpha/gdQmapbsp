@@ -1,6 +1,8 @@
 extends Control
 class_name QmapbspConsole
 
+## it used to function like an actual console. but I removed a lot of this work due to the complexity T^T
+
 var hub : QmapbspQuake1Hub
 
 var enginetext : String = "Qmapbsp Quake1 Example @ Godot 4"
@@ -18,6 +20,8 @@ var cvars : Dictionary
 func setup(hub_ : QmapbspQuake1Hub) :
 	hub = hub_
 	control.hub = hub
+	$disc.texture = hub.load_as_texture("gfx.wad:DISC")
+	#$disc.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 
 func var_set(cvar : String, v) -> void :
 	cvars[cvar] = v
@@ -38,7 +42,7 @@ func exec_line(line : String) :
 func add_command(n : StringName, call : Callable) :
 	cmds[n] = call
 	
-func down(d : float = 1.0) :
+func down(d : float = 0.33) :
 	showing = true
 	if tween :
 		tween.kill()
@@ -88,6 +92,7 @@ func _ready() :
 	control.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	control.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(control)
+	$disc.move_to_front()
 	
 	regex = RegEx.new()
 	regex.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'")
