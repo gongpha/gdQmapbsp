@@ -43,6 +43,22 @@ func _get_import_options(p : String, i : int) -> Array[Dictionary] :
 func _get_option_visibility(path: String, option_name: StringName, options: Dictionary) -> bool :
 	return true
 
+const MIE := "res://addons/qmapbsp/resource/map_import_error.tscn"
+func _save_error(save_path : String, error : StringName, error_ret : Array) :
+	var mie := preload(MIE).instantiate()
+	mie.error = error
+	var strs : PackedStringArray
+	strs.resize(error_ret.size())
+	for i in strs.size() :
+		strs[i] = str(error_ret[i])
+	mie.error_data = '\n'.join(strs)
+	
+	var pscene := PackedScene.new()
+	pscene.pack(mie)
+	var filename := save_path + "." + _get_save_extension()
+	return ResourceSaver.save(pscene, filename)
+
+
 func _import(
 	source_file : String,
 	save_path : String,
@@ -60,7 +76,8 @@ func _import(
 	var t_path : String = options.get("game_config_path", "")
 	if t_path.is_empty() :
 		printerr("No Trenchbroom game config file")
-		return ERR_FILE_CANT_OPEN
+		_save_error(save_path, &"NO_TRENCHBROOM_GAMECFG_FILE", [])
+		return OK
 	wis.game_config = load(t_path)
 	bsp_path = wis._compile_bsp(source_file)
 		
@@ -70,8 +87,9 @@ func _import(
 	wis.owner = node
 	
 	if bsp_path.is_empty() :
+		_save_error(save_path, &"NO_BSP_FILE_COMPILED", [])
 		printerr("No BSP file")
-		return ERR_FILE_CANT_OPEN
+		return OK
 	
 	var ret : Array
 	
@@ -80,9 +98,8 @@ func _import(
 	)
 	
 	if err != StringName() :
-		printerr(err)
-		printerr(ret)
-		return ERR_FILE_CANT_OPEN
+		_save_error(save_path, err, ret)
+		return OK
 	
 	#print(":OWO")
 	#return ERR_ALREADY_EXISTS
@@ -94,17 +111,18 @@ func _import(
 		elif reti != StringName() :
 			err = reti
 			break
-		print(wis.get_progress())
 			
 	if err != StringName() :
+		_save_error(save_path, err, [])
 		printerr(err)
-		return ERR_FILE_CANT_OPEN
+		return OK
 
 	#######################################################
 
 	var pscene := PackedScene.new()
 	if pscene.pack(node) :
-		return ERR_CANT_CREATE
+		_save_error(save_path, &'CANNOT_SAVE_SCENE', [])
+		return OK
 
 	var filename := save_path + "." + _get_save_extension()
 	return ResourceSaver.save(pscene, filename)

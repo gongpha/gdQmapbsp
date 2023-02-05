@@ -9,7 +9,7 @@ var bsp_version : int
 # in
 var scale : float = 1 / 32.0
 var read_miptextures : bool = false # includes textures
-var read_lightmaps : bool = false
+var read_lightmaps : bool = true
 var known_palette : PackedColorArray
 var bsp_shader : Shader
 var known_map_textures : PackedStringArray
