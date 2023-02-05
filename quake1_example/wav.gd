@@ -14,7 +14,6 @@ static func load_from_file(f : FileAccess) :
 	f.get_32()
 	f.get_16()
 	var bitPsam := f.get_16()
-	# Quake usually uses 8 or 16-bit files :/
 	if bitPsam != 8 and bitPsam != 16 : return &'WAV_UNSUPPORTED_BIT_PER_SAMPLE'
 	if chunks > 16 : f.seek(f.get_position() + chunks - 16)
 	if f.get_32() != 0x61746164 : return &'WAV_INVALID_HEADER_DATA'
@@ -23,7 +22,7 @@ static func load_from_file(f : FileAccess) :
 	var data := f.get_buffer(datsize)
 	for i in data.size() : data[i] = data[i] - 128
 	a.data = data
-	a.format = 0 # force 8-bit
+	a.format = 0 # force 8-bit (OO)???
 	a.mix_rate = samrate
 	a.stereo = channel == 2
 	return a

@@ -6,6 +6,8 @@ signal tell_collision_shapes(
 	entity_curr_idx : int, entity_curr_brush_idx : int, shape : Shape3D, origin : Vector3
 )
 
+var known_textures : PackedStringArray
+
 func begin_file(f : FileAccess) -> StringName :
 	super(f)
 	mapf = QmapbspMapFormat.begin_from_text(f.get_as_text(true))
@@ -41,6 +43,9 @@ func _brush_found() :
 		entity_curr_idx, entity_curr_brush_idx, shape, V,
 		mapf.brush_textures
 	)
+	for t in mapf.brush_textures :
+		if known_textures.has(t) : continue
+		known_textures.append(t)
 	
 const EPS := 0.000001
 func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :

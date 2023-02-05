@@ -1,7 +1,7 @@
 extends QmapbspQuakeFunctionBrush
 class_name QmapbspQuakeFunctionDoor
 
-# this is written from scratch. No QuakeC code is applied here
+# this is written from scratch. No QuakeC code was applied here
 # maybe not accurate to the original approach
 
 var tween : Tween

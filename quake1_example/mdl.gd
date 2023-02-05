@@ -1,6 +1,8 @@
 extends Resource
 class_name QmapbspMDLFile
 
+## ded file
+
 var scale : Vector3
 var origin : Vector3
 var radius : float

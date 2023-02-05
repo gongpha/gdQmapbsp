@@ -2,7 +2,7 @@ extends EditorInspectorPlugin
 class_name QmapbspMapInspectorPlugin
 
 func _can_handle(o) -> bool :
-	return o is MapQuake
+	return o is QmapbspMap
 	
 func _parse_begin(o) :
 	var pscene := preload("sub/map_quake_inspepctor_control.tscn")

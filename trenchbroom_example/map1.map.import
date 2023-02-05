@@ -1,0 +1,13 @@
+[remap]
+
+importer="qmapbsp.trenchbroom_map"
+type="PackedScene"
+uid="uid://b1d4ejl7k8ce8"
+valid=false
+
+[deps]
+
+source_file="res://trenchbroom_example/map1.map"
+[params]
+
+game_config_path="res://trenchbroom_example/my_game.tres"

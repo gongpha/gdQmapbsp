@@ -116,7 +116,7 @@ func load_paks() :
 			
 var pakidx : int
 func _process(delta : float) :
-	for I in 168 :
+	for I in 128 :
 		var pak : QmapbspPakFile = load_pak_list[pakidx]
 		var r := pak.poll()
 		if r == &'DONE' :

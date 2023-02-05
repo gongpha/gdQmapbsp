@@ -21,7 +21,6 @@ func setup(hub_ : QmapbspQuake1Hub) :
 	hub = hub_
 	control.hub = hub
 	$disc.texture = hub.load_as_texture("gfx.wad:DISC")
-	#$disc.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 
 func var_set(cvar : String, v) -> void :
 	cvars[cvar] = v

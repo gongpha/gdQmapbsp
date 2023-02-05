@@ -1,5 +1,5 @@
 ## An example extension that loads Quake1 maps from pak files
-extends QmapbspWorldImporterBasic
+extends QmapbspWorldImporterScene
 class_name QmapbspWorldImporterQuake1
 
 var viewer : QmapbspQuakeViewer
@@ -158,6 +158,3 @@ func _get_entity_node(id : int) -> Node :
 	if dict.has('targetname') :
 		node.add_to_group('T_' + dict['targetname'])
 	return node
-		
-func _custom_work_bsp(bsp : RefCounted) -> void :
-	return

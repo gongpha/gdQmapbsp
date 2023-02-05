@@ -1,8 +1,9 @@
 ## A simple extension for loading map into the nodes.
 extends QmapbspWorldImporter
-class_name QmapbspWorldImporterBasic
+class_name QmapbspWorldImporterScene
 
 var root : Node3D
+var owner : Node
 var entity_props : Dictionary # <id : Dict>
 var entity_nodes : Dictionary # <id : Node>
 var entity_is_brush : PackedByteArray # tells if the entitiy has brushes
@@ -37,6 +38,7 @@ func _entity_your_mesh(
 	else :
 		_recenter(node, origin)
 	node.add_child(last_added_meshin)
+	if owner : last_added_meshin.owner = owner
 
 var last_added_col : CollisionShape3D
 func _entity_your_shape(
@@ -57,6 +59,7 @@ func _entity_your_shape(
 	else :
 		_recenter(node, origin)
 	node.add_child(last_added_col)
+	if owner : last_added_col.owner = owner
 	
 	if entity_is_brush.size() < ent_id + 1 :
 		# extend
@@ -105,7 +108,6 @@ func _get_entity_node(id : int) -> Node :
 		node.props = dict
 	elif node.has_method(&'_get_properties') :
 		node._get_properties(dict)
-		
 	if dict.has("model") :
 		dict['__qmapbsp_has_brush'] = true
 		
@@ -119,6 +121,7 @@ func _get_entity_node(id : int) -> Node :
 	if node.has_method(&'_ent_props') :
 		node._ent_props(dict)
 	root.add_child(node)
+	if owner : node.owner = owner
 	node.name = '%s%04d' % [classname, id]
 	entity_nodes[id] = node
 	return node

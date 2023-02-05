@@ -8,9 +8,11 @@ var bsp_version : int
 
 # in
 var scale : float = 1 / 32.0
-var read_miptextures : bool = false # includes textures, lightmaps and more
+var read_miptextures : bool = false # includes textures
+var read_lightmaps : bool = false
 var known_palette : PackedColorArray
 var bsp_shader : Shader
+var known_map_textures : PackedStringArray
 
 var model_map : Dictionary # <model_id : ent_id>
 
@@ -75,7 +77,7 @@ var texture_ids : PackedByteArray # for built-in bsp material
 var texinfos : Array[Array]
 var models : Array[Array]
 var faces : Array[Array]
-var clipnodes : Array[Array]
+#var clipnodes : Array[Array]
 var entities : Array[Array]
 
 # Built-in BSP material
@@ -188,56 +190,74 @@ func _read_mip_textures() -> float :
 	#var skip_mips : bool = true
 	var texture_offset := mipoffsets[load_index]
 	var mat : Material
-	if texture_offset < 0 :
-		mat = wim.get_no_texture()
-		mat.set_meta(&'size', Vector2i(64, 64))
-	else :
+	
+	var ret
+	var tsize : Vector2i
+	var tname : String
+	if texture_offset >= 0 :
 		var toffset := curr_entry.x + texture_offset
 		file.seek(toffset)
-		var tname := file.get_buffer(16).get_string_from_ascii()
-		var tsize := Vector2i(file.get_32(), file.get_32())
-		var ret = wim._texture_get(
+		tname = file.get_buffer(16).get_string_from_ascii()
+		tsize = Vector2i(file.get_32(), file.get_32())
+		ret = wim._texture_get(
 			tname,
 			tsize
 		)
-		var tex : Texture2D
-		if ret is Texture2D :
-			tex = ret
-		elif ret is Material :
-			mat = ret
-			
-		if !mat and read_miptextures :
-			# use a texture inside the bsp file
-			if !tex :
-				var doffset := file.get_32()
-				file.seek(toffset + doffset)
-				var data := file.get_buffer(tsize.x * tsize.y)
-				var im := _make_im_from_pal(tsize, data)
-				tex = ImageTexture.create_from_image(im)
-			mat = wim._texture_get_material_for_integrated(tname, tex)
-			if !mat :
-				if global_textures.size() >= GLOBAL_TEXTURE_LIMIT :
-					# oof
-					printerr("You hit the texture limit ! (>= 256)")
-				else :
-					texture_ids[load_index] = global_textures.size()
-					global_textures.append(tex)
-				
-				if !global_surface_mat :
-					global_surface_mat = wim._texture_get_global_surface_material()
-					global_surface_mat.shader = bsp_shader
-					# set a texture later
-					global_surface_mat.set_meta(&'apply_lightmaps', true)
-				mat = global_surface_mat
+	elif known_map_textures.size() > load_index :
+		ret = wim._texture_get(
+			known_map_textures[load_index],
+			Vector2i(-1, -1)
+		)
+	else :
+		mat = wim.get_no_texture()
+		mat.set_meta(&'size', Vector2i(64, 64))
+		
+	var tex : Texture2D
+	if ret is Texture2D :
+		tsize = ret.get_size()
+		tex = ret
+	elif ret is Material :
+		if ret is BaseMaterial3D :
+			var t : Texture2D = ret.albedo_texture
+			if t :
+				tsize = t.get_size()
+		mat = ret
+		
+	if !mat and read_miptextures :
+		# use a texture inside the bsp file
+		if !tex and texture_offset >= 0 :
+			var toffset := curr_entry.x + texture_offset
+			var doffset := file.get_32()
+			file.seek(toffset + doffset)
+			var data := file.get_buffer(tsize.x * tsize.y)
+			var im := _make_im_from_pal(tsize, data)
+			tex = ImageTexture.create_from_image(im)
+		mat = wim._texture_get_material_for_integrated(tname, tex)
 		if !mat :
-			mat = wim.get_no_texture()
-		mat.set_meta(&'size', tsize)
-		textures[load_index] = mat
+			if global_textures.size() > GLOBAL_TEXTURE_LIMIT :
+				# oof
+				printerr("You hit the texture limit ! (> 256)")
+			else :
+				texture_ids[load_index] = global_textures.size()
+				global_textures.append(tex)
+			
+			if !global_surface_mat :
+				global_surface_mat = wim._texture_get_global_surface_material()
+				global_surface_mat.shader = bsp_shader
+				# set a texture later
+				global_surface_mat.set_meta(&'apply_lightmaps', true)
+			mat = global_surface_mat
+	if !mat :
+		mat = wim.get_no_texture()
+	mat.set_meta(&'size', tsize)
+	textures[load_index] = mat
 		
 		#for j in (4 if skip_mips else 3) : file.get_32()
 	load_index += 1
 	if load_index == mipoffsets.size() :
 		mipoffsets.clear()
+		if !global_surface_mat :
+			read_lightmaps = false
 		return 1.0
 	return float(load_index) / mipoffsets.size()
 			
@@ -292,9 +312,8 @@ func _read_faces() -> float :
 		file.get_32(), # first edge on the list
 		file.get_16(), # edge count
 		file.get_16(), # tinfo id
-		file.get_8(), # lightmap type
-		file.get_8(), # lightmap offset
-		file.get_8(), file.get_8(), # light
+		file.get_8(), file.get_8(), # LM1, LM2
+		file.get_8(), file.get_8(), # LM3, LM4
 		u32toi32(file.get_32()), # lightmap
 	]
 	load_index += 1
@@ -306,7 +325,7 @@ var ip : QuakeImagePacker
 var unlit : int
 func _ConstructingData() -> float : # per model
 	if load_index == 0 and loc_load_index == 0 :
-		if read_miptextures :
+		if read_lightmaps :
 			var lightmaps_e : Vector2i = entries.lightmaps
 			file.seek(lightmaps_e.x)
 			lightmapdata = file.get_buffer(lightmaps_e.y)
@@ -352,7 +371,6 @@ func _model_geo() -> bool :
 		bound_max = model[1]
 		
 		extents = (bound_max - bound_min) / 2
-		
 		extents = Vector3(abs(extents.x), abs(extents.y), abs(extents.z))
 		
 		face_count = model[9]
@@ -365,15 +383,6 @@ func _model_geo() -> bool :
 		
 	var face_array_index : int = face_indexf + loc_load_index
 	var face : Array = faces[face_array_index]
-	
-	#if face[5] >= 1 and face[5] <= 8 :
-	#	face[6] = 0
-	#print(face[5])
-	
-	#if face[5] == 255 :
-		#prints(face[5], face[6], face[7], face[8], face[9])
-	#	loc_load_index += 1
-	#	return false
 	
 	var face_vertices : PackedVector3Array
 	var face_normals : PackedVector3Array
@@ -388,7 +397,7 @@ func _model_geo() -> bool :
 	face_normals.resize(edge_count)
 	face_uvs.resize(edge_count)
 	#face_colors.resize(edge_count)
-	if read_miptextures :
+	if read_lightmaps :
 		face_uvrs.resize(edge_count)
 	
 	var centroid : Vector3
@@ -397,7 +406,7 @@ func _model_geo() -> bool :
 	var texture : Material = textures[texture_info[4]] # from texture index
 
 	var tsize : Vector2i
-	if texture == global_surface_mat :
+	if texture == global_surface_mat and texture != null :
 		tsize = global_textures[texture_ids[texture_info[4]]].get_size()
 	else :
 		tsize = texture.get_meta(&'size') if texture else Vector2i()
@@ -406,7 +415,6 @@ func _model_geo() -> bool :
 		1.0 / (tsize.x * unit_scale),
 		1.0 / (tsize.y * unit_scale)
 	)
-	#var tscale := tsize
 
 	var plane_normal : Vector3 = planes[face[0]].normal * (
 		# flip if it's backface (behind the plane)
@@ -440,7 +448,7 @@ func _model_geo() -> bool :
 		)
 		face_uvs[k] = uv
 		
-		if read_miptextures :
+		if read_lightmaps :
 			uv = Vector2(
 				vert.dot(t_s) * unit_scale_f +
 				f_s,
@@ -466,15 +474,11 @@ func _model_geo() -> bool :
 		load_index, face_array_index, texture
 	)
 	
-	#if !(region_or_alone is Vector3i and region_or_alone == Vector3i(0, 0, 3)) :
-	#	loc_load_index += 1
-	#	return false
-	
 	var lsize : Vector2
 	var lstyle : int = 1
 	var lid := -1
 	
-	if read_miptextures :
+	if read_lightmaps :
 		var min : Vector2i = (uv_min / 16.0).floor()
 		var max : Vector2i = (uv_max / 16.0).ceil()
 		var extent := (max - min) * 16
@@ -542,7 +546,7 @@ var lightmap_size : Vector2
 var lmtex : ImageTexture
 func _BuildingData() -> float :
 	if load_index == 0 and loc_load_index == 0 :
-		if read_miptextures :
+		if read_lightmaps :
 			lightmap_image = ip.commit(Image.FORMAT_L8, pos_list)
 			lightmap_size = lightmap_image.get_size()
 			lmtex = ImageTexture.create_from_image(lightmap_image)
@@ -642,7 +646,8 @@ func _build_geo() -> bool :
 			
 			var ADD := func(i : int) :
 				C_UV.call(uvs[i])
-				C_UV2.call(uvrs[i])
+				if !uvrs.is_empty() :
+					C_UV2.call(uvrs[i])
 				C_NM.call(nors[i])
 				if is_global :
 					C_CT.call(0, Color(s, lstyle, lsize.x / lightmap_size.x, UUU))
@@ -651,13 +656,13 @@ func _build_geo() -> bool :
 			
 			var pos : Vector2
 			var offset : Vector2
-			if read_miptextures :
+			if read_lightmaps :
 				pos = pos_list[lid]
 				offset = (
 					pos / lightmap_size
 				)
 			
-			if read_miptextures :
+			if read_lightmaps :
 				if lid == unlit :
 					var fsize := (Vector2(2, 2) / lightmap_size)
 					for i in uvrs.size() :

@@ -3,10 +3,11 @@ extends EditorPlugin
 
 const PATH := "res://addons/qmapbsp/"
 const PLUGIN_PATHS := [
-	"importer/bsp_importer.gd",
-	"importer/map_importer.gd",
 	"inspector/map_inspector.gd",
+	"trenchbroom/game_config_inspector.gd",
+	"trenchbroom/map_importer.gd",
 ]
+
 var plugins : Array[RefCounted] # []
 
 func _enter_tree() :
@@ -17,7 +18,6 @@ func _enter_tree() :
 			add_import_plugin(plugin)
 		elif plugin is EditorInspectorPlugin :
 			add_inspector_plugin(plugin)
-
 
 func _exit_tree() :
 	for i in plugins :

@@ -3,7 +3,7 @@ class_name QmapbspWorldImporter
 
 ## An abstract extension.
 ## Provides only fundamental properties.
-## For loading the map into the nodes, see [QmapbspWorldImporterBasic].
+## For loading the map into the nodes, see [QmapbspWorldImporterScene].
 
 func _start() : pass
 	
@@ -25,11 +25,12 @@ func _texture_get_no_texture() -> Material :
 	t.albedo_color = Color.RED
 	return t
 
-## Returns Material or Texture2D (for lightmaps)
+## Returns [Material] or [Texture2D] (for lightmaps)
 func _texture_get(name : String, size : Vector2i) :
 	return null
 	
-## Calls when used a texture from the BSP file
+## Calls when using a texture from the BSP file or textures from [code]_texture_get[/code]
+## that return [Texture2D]
 func _texture_get_material_for_integrated(
 	name : String, tex : Texture2D
 ) -> Material :
@@ -56,7 +57,7 @@ func _entity_your_mesh(
 	mesh : ArrayMesh, origin : Vector3,
 	region
 ) -> void : pass
-# The brush_id of (_entity_your_mesh) and (_entity_your_shape) is different !
+# The brush_id of [code]_entity_your_mesh[/code] and [code]_entity_your_shape[/code] are different !
 # Do not reference these ids are the same object 
 func _entity_your_shape(
 	ent_id : int,
@@ -108,7 +109,9 @@ func __sections__() -> Dictionary : return {
 }
 
 func _GatheringAllEntities() -> float : return _race(0)
-func _ImportingData() -> float : return _race(1)
+func _ImportingData() -> float :
+	bspp.known_map_textures = mapp.known_textures
+	return _race(1)
 func _ConstructingData() -> float : return _race(2)
 func _BuildingData() -> float : return _race(3)
 func _BuildingDataCustom() -> float : return _race(4)

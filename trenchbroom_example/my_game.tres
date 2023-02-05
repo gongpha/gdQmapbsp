@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="QmapbspTrenchbroomGameConfigResource" load_steps=3 format=3 uid="uid://c78vigdmlrdpg"]
+
+[ext_resource type="Script" path="res://addons/qmapbsp/trenchbroom/game_config_resource.gd" id="1_pj0cu"]
+[ext_resource type="Resource" uid="uid://d3djx5mad2mq1" path="res://trenchbroom_example/usercfg.tres" id="2_mulf6"]
+
+[resource]
+script = ExtResource("1_pj0cu")
+usercfg = ExtResource("2_mulf6")
+name = "Qmapbsp Test Game"
+icon = "res://trenchbroom_example/icon.png"
+textures_dir = "res://trenchbroom_example/textures"

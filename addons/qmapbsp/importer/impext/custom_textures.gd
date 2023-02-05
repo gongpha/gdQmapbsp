@@ -1,5 +1,5 @@
 ## A simple extension for loading textures from FileSystem
-extends QmapbspWorldImporter
+extends QmapbspWorldImporterScene
 class_name QmapbspWorldImporterCustomTextures
 
 # VVV - override your own - VVV #
@@ -23,6 +23,8 @@ func _construct_new_material(texture : Texture2D) -> Material :
 	
 #################################################
 var _created_textures : Dictionary # <name, Material>
+
+func _texture_include_bsp_textures() -> bool : return true
 
 func _texture_get(name : String, size : Vector2i) -> Material :
 	var existed : Material = _created_textures.get(name, null)
