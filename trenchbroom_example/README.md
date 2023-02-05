@@ -13,7 +13,7 @@ Create a new `QmapbspTrenchbroomGameConfigResource` resource then put your confi
 
 Then hit `Export configs to Trenchbroom` button to export configurations to Trenchbroom.
 
-To make MAP files know your game configuration. Go to `Project Settings → Import Defaults → Game Config Path` and put your game configuration resource file path here.
+To make MAP files know your game configuration. Go to `Project Settings → Import Defaults → Qmapbsp Trenchbroom → Game Config Path` and put your game configuration resource file path here.
 
 ## Importing entities
 For now, Qmapbsp exports a plain FGD file to Trenchbroom to avoid errors. You will have to write entity properties manually in Trenchbroom. And extend the `_entity_node_directory_path` method in `QmapbspWorldImporterTrenchbroom` script file with your entity script directory path. [(See the Quake example)](https://github.com/gongpha/gdQmapbsp/tree/master/quake1_example/class) Then put in the `custom_trenchbroom_world_importer` field
