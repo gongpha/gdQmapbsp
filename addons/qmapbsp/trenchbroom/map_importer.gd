@@ -72,13 +72,17 @@ func _import(
 		
 	var wis : QmapbspWorldImporterTrenchbroom
 	var bsp_path : String
-	wis = QmapbspWorldImporterTrenchbroom.new()
 	var t_path : String = options.get("game_config_path", "")
 	if t_path.is_empty() :
 		printerr("No Trenchbroom game config file")
 		_save_error(save_path, &"NO_TRENCHBROOM_GAMECFG_FILE", [])
 		return OK
-	wis.game_config = load(t_path)
+	var gamecfg : QmapbspTrenchbroomGameConfigResource = load(t_path)
+	if gamecfg.custom_trenchbroom_world_importer :
+		wis = gamecfg.custom_trenchbroom_world_importer.new()
+	else :
+		wis = QmapbspWorldImporterTrenchbroom.new()
+	wis.game_config = gamecfg
 	bsp_path = wis._compile_bsp(source_file)
 		
 	var node := Node3D.new()

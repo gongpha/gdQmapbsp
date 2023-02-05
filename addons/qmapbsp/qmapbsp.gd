@@ -3,7 +3,7 @@ extends EditorPlugin
 
 const PATH := "res://addons/qmapbsp/"
 const PLUGIN_PATHS := [
-	"inspector/map_inspector.gd",
+	#"inspector/map_inspector.gd",
 	"trenchbroom/game_config_inspector.gd",
 	"trenchbroom/map_importer.gd",
 ]

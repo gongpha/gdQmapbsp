@@ -2,6 +2,7 @@ extends Control
 class_name QmapbspQuake1Hub
 
 @onready var tabs : TabContainer = $tabs
+@onready var background : TextureRect = $background
 @onready var dialog : FileDialog = $dialog
 @onready var pathshow : LineEdit = $"tabs/PAK Viewer/vbox/hbox/path"
 @onready var pathshow_map : LineEdit = $"tabs/PAK Viewer/vbox/hbox4/path"
@@ -285,6 +286,7 @@ func _play_bsp(pakpath : String) :
 	
 	if viewer.play_by_mapname(mapname) :
 		tabs.hide()
+		background.hide()
 	else :
 		viewer.free()
 
@@ -297,6 +299,7 @@ func back() :
 	viewer = null
 	get_tree().paused = false
 	tabs.show()
+	background.show()
 	
 func change_to(to := last_play) :
 	back()

@@ -6,6 +6,7 @@ class_name QmapbspTrenchbroomGameConfigResource
 @export var name : String
 @export_file("*.png") var icon
 @export_dir var textures_dir : String
+@export var custom_trenchbroom_world_importer : Script
 
 func export_cfg() :
 	if !usercfg :

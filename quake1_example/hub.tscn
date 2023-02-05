@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://b4fsmrslaowwn"]
+[gd_scene load_steps=4 format=3 uid="uid://b4fsmrslaowwn"]
 
 [ext_resource type="Script" path="res://quake1_example/quake1_hub.gd" id="1_2c1wm"]
+[ext_resource type="Texture2D" uid="uid://dwa5a34uawid4" path="res://quake1_example/background.png" id="1_q0fs5"]
 [ext_resource type="Texture2D" uid="uid://ddgo0qldm1jtp" path="res://icon.svg" id="2_c3pq6"]
 
 [node name="hub" type="Control"]
@@ -11,6 +12,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_2c1wm")
+
+[node name="background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_q0fs5")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="tabs" type="TabContainer" parent="."]
 layout_mode = 1
@@ -48,6 +60,8 @@ text = "Mod Directory"
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = ".../Quake/ID1/*.pak"
+caret_blink = true
+caret_blink_interval = 0.5
 
 [node name="browse" type="Button" parent="tabs/PAK Viewer/vbox/hbox"]
 custom_minimum_size = Vector2(64, 0)
@@ -68,6 +82,8 @@ uri = "https://rome.ro/s/quake_map_source.zip"
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = ".../QuakeMapSource/*.map"
+caret_blink = true
+caret_blink_interval = 0.5
 
 [node name="browse" type="Button" parent="tabs/PAK Viewer/vbox/hbox4"]
 custom_minimum_size = Vector2(64, 0)
@@ -179,9 +195,9 @@ show_hidden_files = true
 [node name="wavplay" type="AudioStreamPlayer" parent="."]
 
 [connection signal="text_submitted" from="tabs/PAK Viewer/vbox/hbox/path" to="." method="_on_path_text_submitted"]
-[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox/browse" to="." method="_on_browse_pressed" binds= [false]]
+[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox/browse" to="." method="_on_browse_pressed"]
 [connection signal="text_submitted" from="tabs/PAK Viewer/vbox/hbox4/path" to="." method="_on_path_text_submitted"]
-[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox4/browse" to="." method="_on_browse_pressed" binds= [true]]
+[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox4/browse" to="." method="_on_browse_pressed"]
 [connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox2/load" to="." method="_on_load_pressed"]
 [connection signal="toggled" from="tabs/PAK Viewer/vbox/hbox2/bsponly" to="." method="_on_bsponly_toggled"]
 [connection signal="item_activated" from="tabs/PAK Viewer/vbox/hbox3/tree" to="." method="_on_tree_item_activated"]
