@@ -18,6 +18,8 @@ func _compile(map_filepath : String) -> String :
 	))
 	out = out.get_basename() + ".bsp"
 	OS.execute(qbsp_path, [
+		'-wrbrushesonly',
+		'-notex',
 		ProjectSettings.globalize_path(map_filepath),
 		out
 	], o)

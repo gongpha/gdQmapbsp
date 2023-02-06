@@ -2,8 +2,11 @@
 extends QmapbspWorldImporter
 class_name QmapbspWorldImporterScene
 
+# Inputs (can be assign on the outside of the class)
 var root : Node3D
 var owner : Node
+
+
 var entity_props : Dictionary # <id : Dict>
 var entity_nodes : Dictionary # <id : Node>
 var entity_is_brush : PackedByteArray # tells if the entitiy has brushes
@@ -102,6 +105,8 @@ func _get_entity_node(id : int) -> Node :
 	# new node
 	var dict : Dictionary = entity_props.get(id, {})
 	var classname : String = dict.get('classname', '')
+	if classname == "func_group" :
+		classname = "worldspawn"
 	node = _new_entity_node(classname)
 	if !node :
 		node = QmapbspUnknownClassname.new()

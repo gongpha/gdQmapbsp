@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bdflddgnbfthh"
-path.s3tc="res://.godot/imported/simple3.png-90371b4a1d698d0e096c206fc0f53a51.s3tc.ctex"
+uid="uid://cl8aohp8wrfif"
+path.s3tc="res://.godot/imported/simple.png-968df4e5897230b962dd310db5c11fa3.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://trenchbroom_example/textures/simple3.png"
-dest_files=["res://.godot/imported/simple3.png-90371b4a1d698d0e096c206fc0f53a51.s3tc.ctex"]
+source_file="res://trenchbroom_example/textures/subfolder/simple.png"
+dest_files=["res://.godot/imported/simple.png-968df4e5897230b962dd310db5c11fa3.s3tc.ctex"]
 
 [params]
 
