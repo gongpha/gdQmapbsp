@@ -80,7 +80,7 @@ func move_ground(delta : float) -> void :
 	staircast.target_position.y = 0.66 + stairstep
 	staircast.force_shapecast_update()
 	if staircast.get_collision_count() == 0 :
-		staircast.target_position.y = -stairstep - 0.688 # (?)
+		staircast.target_position.y = -stairstep - 0.1 # (?)
 		staircast.force_shapecast_update()
 		if staircast.get_collision_count() > 0 and staircast.get_collision_normal(0).y >= 0.8 :
 			var height := staircast.get_collision_point(0).y - (global_position.y - 0.75)

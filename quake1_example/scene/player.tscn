@@ -2,21 +2,21 @@
 
 [ext_resource type="Script" path="res://quake1_example/scene/player.gd" id="1_wxpe5"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_vl6f1"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_c8hfp"]
 size = Vector3(1, 1.5, 1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_vdn18"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_qf3qb"]
 resource_local_to_scene = true
 size = Vector3(1, 0.175, 1)
 
 [node name="player" type="CharacterBody3D"]
 collision_layer = 3
 floor_constant_speed = true
-floor_snap_length = 0.2
+floor_snap_length = 0.4
 script = ExtResource("1_wxpe5")
 
 [node name="col" type="CollisionShape3D" parent="."]
-shape = SubResource("BoxShape3D_vl6f1")
+shape = SubResource("BoxShape3D_c8hfp")
 
 [node name="around" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.688, 0)
@@ -28,8 +28,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.202, 0)
 current = true
 
 [node name="staircast" type="ShapeCast3D" parent="."]
-enabled = false
-shape = SubResource("BoxShape3D_vdn18")
+shape = SubResource("BoxShape3D_qf3qb")
 target_position = Vector3(0, -0.688, 0)
 max_results = 4
 

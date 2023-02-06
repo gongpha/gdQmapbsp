@@ -195,9 +195,9 @@ show_hidden_files = true
 [node name="wavplay" type="AudioStreamPlayer" parent="."]
 
 [connection signal="text_submitted" from="tabs/PAK Viewer/vbox/hbox/path" to="." method="_on_path_text_submitted"]
-[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox/browse" to="." method="_on_browse_pressed"]
+[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox/browse" to="." method="_on_browse_pressed" binds= [false]]
 [connection signal="text_submitted" from="tabs/PAK Viewer/vbox/hbox4/path" to="." method="_on_path_text_submitted"]
-[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox4/browse" to="." method="_on_browse_pressed"]
+[connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox4/browse" to="." method="_on_browse_pressed" binds= [true]]
 [connection signal="pressed" from="tabs/PAK Viewer/vbox/hbox2/load" to="." method="_on_load_pressed"]
 [connection signal="toggled" from="tabs/PAK Viewer/vbox/hbox2/bsponly" to="." method="_on_bsponly_toggled"]
 [connection signal="item_activated" from="tabs/PAK Viewer/vbox/hbox3/tree" to="." method="_on_tree_item_activated"]
