@@ -8,22 +8,12 @@ signal tell_collision_shapes(
 
 var known_textures : PackedStringArray
 
+var parsed_shapes : Array[Array] # [shape, origin, textures]
+
 func begin_file(f : FileAccess) -> StringName :
 	super(f)
 	mapf = QmapbspMapFormat.begin_from_text(f.get_as_text(true))
 	return StringName()
-
-func _GatheringAllEntities() -> float :
-	var err : int = mapf.poll(__ret)
-	_mapf_after_poll(err)
-	
-	var prog := _mapf_prog()
-	if prog >= 1.0 :
-		entities_kv.clear()
-		#mapf = null
-		kv = {}
-		return 1.0
-	return prog
 
 func _brush_found() :
 	#if enable_collision_shapes :
@@ -39,13 +29,26 @@ func _brush_found() :
 		vertices[i] -= V
 	var shape := ConvexPolygonShape3D.new()
 	shape.points = vertices
-	tell_collision_shapes.emit(
-		entity_curr_idx, entity_curr_brush_idx, shape, V,
-		mapf.brush_textures
-	)
+#	tell_collision_shapes.emit(
+#		entity_curr_idx, 
+#	)
+#	parsed_shapes[entity_curr_idx] = [
+#		entity_curr_brush_idx, shape, V,
+#		mapf.brush_textures
+#	]
+	parsed_shapes.append([shape, V, mapf.brush_textures.duplicate()])
+	
 	for t in mapf.brush_textures :
 		if known_textures.has(t) : continue
 		known_textures.append(t)
+		
+func _end_entity(idx : int) :
+	for i in parsed_shapes.size() :
+		var arr : Array = parsed_shapes[i]
+		tell_collision_shapes.emit(
+			idx, i, arr[0], arr[1], arr[2]
+		)
+	parsed_shapes.clear()
 	
 const EPS := 0.000001
 func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :

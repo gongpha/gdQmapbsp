@@ -20,8 +20,10 @@ func _texture_get_global_surface_material() -> ShaderMaterial :
 		node.surface = surface
 	return surface
 
-func _entity_node_directory_path() -> String :
-	return "res://quake1_example/class/"
+func _entity_node_directory_paths() -> PackedStringArray :
+	return PackedStringArray(
+		["res://quake1_example/class/"]
+	) + super()
 
 var specials : Dictionary # <name : ShaderMaterial>
 var worldspawn_fluid_brush : PackedInt32Array

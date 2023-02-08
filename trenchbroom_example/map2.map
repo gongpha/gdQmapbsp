@@ -1079,3 +1079,27 @@
 ( -68.28718707889936 -112 64 ) ( -64 -96 96 ) ( -64 -96 64 ) subfolder/simple 0 0 0 0 0
 }
 }
+// entity 2
+{
+"classname" "test_sphere"
+"origin" "628 -204 100"
+"visible" "1"
+}
+// entity 3
+{
+"classname" "test_sphere"
+"origin" "420 -204 100"
+"visible" "1"
+}
+// entity 4
+{
+"classname" "test_sphere"
+"origin" "420 -92 100"
+"visible" "1"
+"radius" "2"
+}
+// entity 5
+{
+"classname" "light"
+"origin" "532 -60 100"
+}

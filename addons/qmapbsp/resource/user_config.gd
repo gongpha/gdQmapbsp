@@ -9,6 +9,5 @@ class_name QmapbspUserConfig
 @export_group("Trenchbroom", "tb_")
 @export_global_dir var tb_path : String
 
-
 func _init() :
 	resource_name = "USERCONFIG"

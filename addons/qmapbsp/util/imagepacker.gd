@@ -1,5 +1,5 @@
 extends RefCounted
-class_name QuakeImagePacker
+class_name QmapbspImagePacker
 
 var stack_size : PackedVector2Array
 var stack_data : Array[Image]

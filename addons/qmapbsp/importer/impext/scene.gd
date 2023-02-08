@@ -79,24 +79,28 @@ func _recenter(n : Node3D, new_center_pos : Vector3) -> void :
 		if c is Node3D :
 			c.position += add
 
-func _entity_node_directory_path() -> String :
-	return "res://addons/qmapbsp/class/"
+func _entity_node_directory_paths() -> PackedStringArray :
+	return [
+		"res://addons/qmapbsp/class/"
+	]
 
 func _new_entity_node(classname : String) -> Node :
-	var dir := _entity_node_directory_path()
-	var rscpath := dir.path_join("%s.tscn") % classname
-	if ResourceLoader.exists(rscpath) :
-		return load(rscpath).instantiate()
-	rscpath = dir.path_join("%s.scn") % classname
-	if ResourceLoader.exists(rscpath) :
-		return load(rscpath).instantiate()
-	rscpath = dir.path_join("%s.gd") % classname
-	if !ResourceLoader.exists(rscpath) :
-		return null
-	var scr : Script = load(rscpath)
-	if !scr :
-		return null
-	return scr.new()
+	var dirs := _entity_node_directory_paths()
+	for d in dirs :
+		var rscpath := d.path_join("%s.tscn") % classname
+		if ResourceLoader.exists(rscpath) :
+			return load(rscpath).instantiate()
+		rscpath = d.path_join("%s.scn") % classname
+		if ResourceLoader.exists(rscpath) :
+			return load(rscpath).instantiate()
+		rscpath = d.path_join("%s.gd") % classname
+		if !ResourceLoader.exists(rscpath) :
+			continue
+		var scr : Script = load(rscpath)
+		if !scr :
+			continue
+		return scr.new()
+	return null
 
 func _get_entity_node(id : int) -> Node :
 	var node : Node = entity_nodes.get(id, null)
@@ -105,8 +109,6 @@ func _get_entity_node(id : int) -> Node :
 	# new node
 	var dict : Dictionary = entity_props.get(id, {})
 	var classname : String = dict.get('classname', '')
-	if classname == "func_group" :
-		classname = "worldspawn"
 	node = _new_entity_node(classname)
 	if !node :
 		node = QmapbspUnknownClassname.new()
@@ -116,6 +118,7 @@ func _get_entity_node(id : int) -> Node :
 	if dict.has("model") :
 		dict['__qmapbsp_has_brush'] = true
 		
+	node.name = '%s%04d' % [classname, id]
 	if node is Node3D and id != 0 :
 		var origin : Vector3 = dict.get('origin', Vector3())
 		node.position = origin
@@ -123,11 +126,12 @@ func _get_entity_node(id : int) -> Node :
 		if !dict.get('__qmapbsp_has_brush', false) : # it isn't a brush entity
 			var angle : int = dict.get('angle', 0)
 			node.rotation_degrees.y = angle
-	if node.has_method(&'_ent_props') :
-		node._ent_props(dict)
+	if node.has_method(&'_ent_props_pre') :
+		node._ent_props_pre(dict)
 	root.add_child(node)
+	if node.has_method(&'_ent_props_post') :
+		node._ent_props_post(dict)
 	if owner : node.owner = owner
-	node.name = '%s%04d' % [classname, id]
 	entity_nodes[id] = node
 	return node
 

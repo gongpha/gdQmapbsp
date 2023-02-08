@@ -40,17 +40,7 @@ func _GatheringAllEntities() -> float :
 		mapf = QmapbspMapFormat.begin_from_text(b)
 		#mapf.tell_skip_entity_brushes = true
 
-	var ret : Dictionary
-
-	var err := mapf.poll(__ret)
-	_mapf_after_poll(err)
-	var prog := _mapf_prog()
-	if prog >= 1.0 :
-		entities_kv.clear()
-		#mapf = null
-		kv = {}
-		return 1.0
-	return prog
+	return super()
 	
 func _brush_found() :
 	# impossible to reach here
@@ -321,7 +311,7 @@ func _read_faces() -> float :
 	
 var entity_geo : Dictionary # <model_id : <region or 0 : [...]> >
 var lightmapdata : PackedByteArray
-var ip : QuakeImagePacker
+var ip : QmapbspImagePacker
 var unlit : int
 func _ConstructingData() -> float : # per model
 	if load_index == 0 and loc_load_index == 0 :
@@ -329,7 +319,7 @@ func _ConstructingData() -> float : # per model
 			var lightmaps_e : Vector2i = entries.lightmaps
 			file.seek(lightmaps_e.x)
 			lightmapdata = file.get_buffer(lightmaps_e.y)
-			ip = QuakeImagePacker.new()
+			ip = QmapbspImagePacker.new()
 			
 			# for unlit surfaces
 			unlit = ip.add(Vector2i(2, 2),
@@ -693,6 +683,9 @@ func _build_geo() -> bool :
 	wim._entity_your_mesh(target_ent, loc_load_index, mesh, center, r)
 	loc_load_index += 1
 	return false
+	
+func _end_entity(idx : int) :
+	tell_entity_props.emit(idx, entity_dict)
 
 ##############################################
 

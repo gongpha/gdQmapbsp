@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://b240v1psxwvew"]
+
+[ext_resource type="Script" path="res://trenchbroom_example/classes/test_sphere.gd" id="1_s3wf2"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_p31m1"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_bae44"]
+
+[node name="test_sphere" type="RigidBody3D"]
+script = ExtResource("1_s3wf2")
+
+[node name="col" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_p31m1")
+
+[node name="mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_bae44")

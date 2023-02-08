@@ -11,10 +11,6 @@ var unit_scale : float = 1.0 / 32
 signal tell_entity_props(id : int, props : Dictionary)
 
 # entities
-var entity_curr_idx : int = -1
-var entity_curr_brush_idx : int = -1
-var entity_sent_kv : bool = false
-var entities_kv : Array[Dictionary]
 var mapf : QmapbspMapFormat
 
 func begin_file(f : FileAccess) -> StringName :
@@ -22,7 +18,13 @@ func begin_file(f : FileAccess) -> StringName :
 	return StringName()
 
 func _GatheringAllEntities() -> float :
-	return 1.0
+	var err : int = mapf.poll(__ret)
+	var end := _mapf_after_poll(err)
+	
+	if end :
+		entity_dict = {}
+		return 1.0
+	return min(_mapf_prog(), 0.99)
 	
 func _ImportingData() -> float :
 	return 1.0
@@ -36,36 +38,38 @@ func _BuildingData() -> float :
 func _BuildingDataCustom() -> float :
 	return 1.0
 
-var kv : Dictionary
+var entity_idx := 0
+var entity_dict : Dictionary
 var brushes : Array
-func _mapf_after_poll(pollr : int) :
+func _mapf_after_poll(pollr : int) -> bool :
 	match pollr :
 		QmapbspMapFormat.PollResult.ERR :
 			__error = &'MAP_PARSE_ERROR'
 		QmapbspMapFormat.PollResult.BEGIN_ENTITY :
-			entity_sent_kv = false
-			entity_curr_idx += 1
+			entity_dict = {}
 		QmapbspMapFormat.PollResult.END_ENTITY :
-			load_index += 1
-			if !entity_sent_kv :
-				tell_entity_props.emit(entity_curr_idx, kv)
-				entity_sent_kv = true
-			kv = {}
+			if entity_dict.get('classname') == 'func_group' :
+				# ignore func_group entity
+				_end_entity(0) # treat as Worldspawn
+			else :
+				_end_entity(entity_idx)
+			entity_idx += 1
+			
 		QmapbspMapFormat.PollResult.FOUND_KEYVALUE :
 			var k : String = mapf.out[0]
 			var v : String = mapf.out[1]
-			kv[k] = v
+			entity_dict[k] = v
 			if k == 'mapversion' and v == '220' :
 				mapf.tell_valve_format = true
 		QmapbspMapFormat.PollResult.FOUND_BRUSH :
-			kv['__qmapbsp_has_brush'] = true
-			if !entity_sent_kv :
-				tell_entity_props.emit(entity_curr_idx, kv)
-				entity_sent_kv = true
-			entity_curr_brush_idx += 1
+			entity_dict['__qmapbsp_has_brush'] = true
 			_brush_found()
+		QmapbspMapFormat.PollResult.END :
+			return true
+	return false
 			
-func _brush_found() : pass
+func _brush_found() -> void : return
+func _end_entity(idx : int) -> void : return
 			
 func _mapf_prog() -> float :
 	return float(mapf.i) / mapf.src.length()

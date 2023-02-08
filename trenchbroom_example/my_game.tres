@@ -9,3 +9,17 @@ usercfg = ExtResource("2_mulf6")
 name = "Qmapbsp Test Game"
 icon = "res://trenchbroom_example/icon.png"
 textures_dir = "res://trenchbroom_example/textures"
+ent_entity_script_directory = "res://trenchbroom_example/classes"
+ent_export_to_fgd_file = true
+_entity_properties_def = {
+"light": {
+"attenuation": 1.0,
+"color": Color(1, 1, 1, 1),
+"energy": 1.0,
+"range": 5.0,
+"specular": 0.5
+},
+"test_sphere": {
+"radius": 0.5
+}
+}
