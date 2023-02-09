@@ -26,7 +26,7 @@ var _created_textures : Dictionary # <name, Material>
 
 func _texture_include_bsp_textures() -> bool : return true
 
-func _texture_get(name : String, size : Vector2i) -> Material :
+func _texture_get(name : String, size : Vector2i) :
 	var existed : Material = _created_textures.get(name, null)
 	if existed : return existed
 	
@@ -43,7 +43,8 @@ func _texture_get(name : String, size : Vector2i) -> Material :
 			rsc = _construct_new_material(rsc)
 			_created_textures[name] = rsc
 			break
-		elif rsc is Texture2D : break
+		elif rsc is Material :
+			break
 		rsc = null
 		continue
 	if !rsc : return super(name, size)

@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://dcjdwq2ynhbsw"]
+
+[ext_resource type="Texture2D" uid="uid://c01t14gva4vnf" path="res://trenchbroom_example/textures/subfolder/fence1.png" id="1_jkpvw"]
+
+[resource]
+transparency = 1
+albedo_texture = ExtResource("1_jkpvw")
+metadata/size = Vector2i(128, 128)

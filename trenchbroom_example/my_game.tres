@@ -8,9 +8,11 @@ script = ExtResource("1_pj0cu")
 usercfg = ExtResource("2_mulf6")
 name = "Qmapbsp Test Game"
 icon = "res://trenchbroom_example/icon.png"
-textures_dir = "res://trenchbroom_example/textures"
+textures_directory = "res://trenchbroom_example/textures"
 ent_entity_script_directory = "res://trenchbroom_example/classes"
 ent_export_to_fgd_file = true
+def_face_offset = Vector2(0, 0)
+def_face_scale = Vector2(1, 1)
 _entity_properties_def = {
 "light": {
 "attenuation": 1.0,

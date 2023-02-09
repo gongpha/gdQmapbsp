@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b6ywi1t3jkas8"]
+
+[resource]
+transparency = 1
+albedo_color = Color(1, 1, 1, 0.109804)
+metadata/size = Vector2i(0, 0)

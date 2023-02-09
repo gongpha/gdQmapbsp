@@ -10,7 +10,7 @@ func _compile_bsp(mappath : String) -> String :
 	return cmplwf._compile(mappath)
 
 func _texture_get_dir() -> String :
-	return game_config.textures_dir
+	return game_config.textures_directory
 
 func _entity_node_directory_paths() -> PackedStringArray :
 	return PackedStringArray(

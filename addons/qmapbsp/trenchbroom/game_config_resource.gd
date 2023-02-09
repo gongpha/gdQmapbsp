@@ -5,11 +5,17 @@ class_name QmapbspTrenchbroomGameConfigResource
 @export var usercfg : QmapbspUserConfig
 @export var name : String
 @export_file("*.png") var icon
-@export_dir var textures_dir : String
-@export var custom_trenchbroom_world_importer : Script
+@export_dir var textures_directory : String
 @export_group("Entities", "ent_")
 @export_dir var ent_entity_script_directory : String
 @export var ent_export_to_fgd_file : bool = true
+
+@export_group("Default values", "def_")
+@export var def_face_offset := Vector2(0, 0)
+@export var def_face_scale := Vector2(1, 1)
+
+@export_group("Advanced configurations")
+@export var custom_trenchbroom_world_importer : Script
 
 @export_group("Generated", "_")
 @export var _entity_properties_def : Dictionary
@@ -45,8 +51,15 @@ func export_cfg() :
 	var gt := GAMECONFIG_TEMPLATE.duplicate(true)
 	gt["name"] = name
 	gt["textures"]["package"]["root"] = (
-		textures_dir.replace("res://", "") # TODO : please fix
+		textures_directory.replace("res://", "") # TODO : please fix
 	)
+	gt["faceattribs"]["defaults"]["scale"] = [
+		def_face_scale.x, def_face_scale.y
+	]
+	gt["faceattribs"]["defaults"]["offset"] = [
+		def_face_offset.x, def_face_offset.y
+	]
+	
 	
 	var cfg := FileAccess.open(dirpath.path_join("GameConfig.cfg"), FileAccess.WRITE)
 	cfg.store_string(JSON.stringify(gt, "\t", false))
@@ -171,7 +184,10 @@ const GAMECONFIG_TEMPLATE := {
 	},
 	"faceattribs" : {
 		"surfaceflags" : [],
-		"contentflags" : []
+		"contentflags" : [],
+		"defaults" : {
+			"scale" : [1, 1]
+		}
 	}
 }
 
@@ -184,6 +200,11 @@ const FGD_TEMPLATE := """
 @baseclass base(Angle) size(-8 -8 -8, 8 8 8) color(255 128 128) = Node3D [
 	visible(boolean) : "Visible" : 1 : "The node's visibility"
 ]
+
+@SolidClass = func_detail_fence []
+
+////////////////////////////
+
 """
 
 

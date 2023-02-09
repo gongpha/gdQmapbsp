@@ -1,0 +1,15 @@
+[remap]
+
+importer="qmapbsp.trenchbroom_map"
+type="PackedScene"
+uid="uid://b1cnk32jw81u2"
+path="res://.godot/imported/map3.map-0a326dc349df04c09d261e17a5241643.scn"
+
+[deps]
+
+source_file="res://trenchbroom_example/map3.map"
+dest_files=["res://.godot/imported/map3.map-0a326dc349df04c09d261e17a5241643.scn"]
+
+[params]
+
+game_config_path="res://trenchbroom_example/my_game.tres"

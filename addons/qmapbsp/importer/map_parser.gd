@@ -16,27 +16,20 @@ func begin_file(f : FileAccess) -> StringName :
 	return StringName()
 
 func _brush_found() :
-	#if enable_collision_shapes :
-	var vertices := planes_intersect(mapf.brush_planes)
-	var V := Vector3()
-	for i in vertices.size() :
-		var v := vertices[i]
-		v = _qpos_to_vec3(v * -1)
-		vertices[i] = v
-		V += v
-	V /= vertices.size()
-	for i in vertices.size() :
-		vertices[i] -= V
-	var shape := ConvexPolygonShape3D.new()
-	shape.points = vertices
-#	tell_collision_shapes.emit(
-#		entity_curr_idx, 
-#	)
-#	parsed_shapes[entity_curr_idx] = [
-#		entity_curr_brush_idx, shape, V,
-#		mapf.brush_textures
-#	]
-	parsed_shapes.append([shape, V, mapf.brush_textures.duplicate()])
+	if !entity_is_illusionary :
+		var vertices := planes_intersect(mapf.brush_planes)
+		var V := Vector3()
+		for i in vertices.size() :
+			var v := vertices[i]
+			v = _qpos_to_vec3(v * -1)
+			vertices[i] = v
+			V += v
+		V /= vertices.size()
+		for i in vertices.size() :
+			vertices[i] -= V
+		var shape := ConvexPolygonShape3D.new()
+		shape.points = vertices
+		parsed_shapes.append([shape, V, mapf.brush_textures.duplicate()])
 	
 	for t in mapf.brush_textures :
 		if known_textures.has(t) : continue

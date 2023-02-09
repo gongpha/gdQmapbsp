@@ -1,7 +1,7 @@
 @tool
 extends RigidBody3D
 
-func _ent_props_post(d : Dictionary) :
+func _qmapbsp_ent_props_post(d : Dictionary) :
 	var radius : float = d.get('radius', 0.5)
 	if radius != 0.5 :
 		# clone

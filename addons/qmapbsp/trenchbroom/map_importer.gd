@@ -105,8 +105,6 @@ func _import(
 		_save_error(save_path, err, ret)
 		return OK
 	
-	#print(":OWO")
-	#return ERR_ALREADY_EXISTS
 	err = StringName()
 	while true :
 		var reti := wis.poll()

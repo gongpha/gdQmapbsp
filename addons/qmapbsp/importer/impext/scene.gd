@@ -126,11 +126,11 @@ func _get_entity_node(id : int) -> Node :
 		if !dict.get('__qmapbsp_has_brush', false) : # it isn't a brush entity
 			var angle : int = dict.get('angle', 0)
 			node.rotation_degrees.y = angle
-	if node.has_method(&'_ent_props_pre') :
-		node._ent_props_pre(dict)
+	if node.has_method(&'_qmapbsp_ent_props_pre') :
+		node._qmapbsp_ent_props_pre(dict)
 	root.add_child(node)
-	if node.has_method(&'_ent_props_post') :
-		node._ent_props_post(dict)
+	if node.has_method(&'_qmapbsp_ent_props_post') :
+		node._qmapbsp_ent_props_post(dict)
 	if owner : node.owner = owner
 	entity_nodes[id] = node
 	return node
