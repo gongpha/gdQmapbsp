@@ -16,19 +16,77 @@ func begin_file(f : FileAccess) -> StringName :
 	return StringName()
 
 func _brush_found() :
+	var shape : Shape3D
+	var V := Vector3()
+	var aabb : AABB
 	if !entity_is_illusionary :
-		var vertices := planes_intersect(mapf.brush_planes)
-		var V := Vector3()
-		for i in vertices.size() :
-			var v := vertices[i]
-			v = _qpos_to_vec3(v * -1)
-			vertices[i] = v
-			V += v
-		V /= vertices.size()
-		for i in vertices.size() :
-			vertices[i] -= V
-		var shape := ConvexPolygonShape3D.new()
-		shape.points = vertices
+		var planes : Array[Plane] = mapf.brush_planes
+		var is_box := true
+		if planes.size() == 6 :
+			# if it was a box. create a box shape instead of a convex shape.
+			var x := Vector2(INF, -INF) # min, max
+			var y := x
+			var z := x
+			for i in 6 :
+				var plane := planes[i]
+				var d := plane.d
+				match plane.normal :
+					Vector3(1, 0, 0) :
+						x = Vector2(
+							min(plane.d, x.x),
+							max(plane.d, x.y),
+						)
+					Vector3(-1, 0, 0) :
+						x = Vector2(
+							min(-plane.d, x.x),
+							max(-plane.d, x.y),
+						)
+					Vector3(0, 1, 0) :
+						y = Vector2(
+							min(plane.d, y.x),
+							max(plane.d, y.y),
+						)
+					Vector3(0, -1, 0) :
+						y = Vector2(
+							min(-plane.d, y.x),
+							max(-plane.d, y.y),
+						)
+					Vector3(0, 0, 1) :
+						z = Vector2(
+							min(plane.d, z.x),
+							max(plane.d, z.y),
+						)
+					Vector3(0, 0, -1) :
+						z = Vector2(
+							min(-plane.d, z.x),
+							max(-plane.d, z.y),
+						)
+					_ :
+						is_box = false
+						break
+			aabb.position = _qpos_to_vec3(Vector3(x.x, y.x, z.x))
+			
+			aabb = aabb.expand(_qpos_to_vec3(Vector3(x.y, y.y, z.y)))
+		else : is_box = false
+		
+		if is_box :
+			shape = BoxShape3D.new()
+			V = aabb.get_center()
+			shape.size = aabb.size
+		else :
+			var vertices := planes_intersect(planes)
+			
+			for i in vertices.size() :
+				var v := vertices[i]
+				v = _qpos_to_vec3(v * -1)
+				vertices[i] = v
+				V += v
+			V /= vertices.size()
+			for i in vertices.size() :
+				vertices[i] -= V
+			shape = ConvexPolygonShape3D.new()
+			shape.points = vertices
+			
 		parsed_shapes.append([shape, V, mapf.brush_textures.duplicate()])
 	
 	for t in mapf.brush_textures :
