@@ -11,10 +11,21 @@ icon = "res://trenchbroom_example/icon.png"
 textures_directory = "res://trenchbroom_example/textures"
 ent_entity_script_directory = "res://trenchbroom_example/classes"
 ent_export_to_fgd_file = true
+use_bsp_lightmap = false
+lightmap_texel = 1.0
+inverse_scale_factor = 32.0
+mesh_splitting_size = 64.0
 def_face_offset = Vector2(0, 0)
 def_face_scale = Vector2(1, 1)
 _entity_properties_def = {
 "light": {
+"attenuation": 1.0,
+"color": Color(1, 1, 1, 1),
+"energy": 1.0,
+"range": 5.0,
+"specular": 0.5
+},
+"light_static": {
 "attenuation": 1.0,
 "color": Color(1, 1, 1, 1),
 "energy": 1.0,

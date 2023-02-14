@@ -10,6 +10,15 @@ class_name QmapbspTrenchbroomGameConfigResource
 @export_dir var ent_entity_script_directory : String
 @export var ent_export_to_fgd_file : bool = true
 
+@export_group("Building")
+## If [code]true[/code], the importer will omit internal lightmap loading.
+## and unwraps UV2.
+@export var use_bsp_lightmap : bool = false
+@export var lightmap_texel : float = 1.0
+@export var inverse_scale_factor : float = 32.0
+@export var mesh_splitting_size : float = 64.0
+@export var default_material : Material
+
 @export_group("Default values", "def_")
 @export var def_face_offset := Vector2(0, 0)
 @export var def_face_scale := Vector2(1, 1)

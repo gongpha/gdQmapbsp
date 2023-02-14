@@ -4,6 +4,22 @@ class_name QmapbspWorldImporterTrenchbroom
 
 var game_config : QmapbspTrenchbroomGameConfigResource
 
+func _get_unit_scale_f() -> float :
+	return game_config.inverse_scale_factor
+	
+func _get_region_size() -> float :
+	return game_config.mesh_splitting_size
+	
+func _texture_get_no_texture() -> Material :
+	var t := StandardMaterial3D.new()
+	t.albedo_color = Color.RED
+	return t
+	
+func _entity_unwrap_uv2(
+	id : int, brush_id : int, mesh : ArrayMesh
+) -> float :
+	return game_config.lightmap_texel if !game_config.use_bsp_lightmap else -1.0
+
 func _compile_bsp(mappath : String) -> String :
 	var usercfg := game_config.usercfg
 	var cmplwf := usercfg.compilation_workflow
@@ -25,6 +41,18 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 		var v = entity[k]
 		var dv = props[k]
 		if not v is String : continue
-		entity[k] = QmapbspTypeProp.prop_to_var(v, typeof(v))
+		entity[k] = QmapbspTypeProp.prop_to_var(v, typeof(dv))
 	entity.merge(props)
+	
 	super(id, entity)
+	
+func _get_entity_node(id : int) -> Node :
+	var node : Node = entity_nodes.get(id, null)
+	if !node : node = super(id)
+	if !node : return null
+	
+	var dict : Dictionary = entity_props.get(id, {})
+	if node is Node3D :
+		node.visible = dict.get("visible", true)
+	
+	return node

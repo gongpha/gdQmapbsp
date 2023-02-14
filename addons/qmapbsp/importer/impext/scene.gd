@@ -17,6 +17,12 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 	entity_props[id] = entity
 	_get_entity_node(id)
 	
+# return the texel size if unwrapping is preferred. Otherwise return a negative value.
+func _entity_unwrap_uv2(
+	id : int, brush_id : int, mesh : ArrayMesh
+) -> float :
+	return -1.0
+	
 var last_added_meshin : MeshInstance3D
 func _entity_your_mesh(
 	ent_id : int,
@@ -41,7 +47,11 @@ func _entity_your_mesh(
 	else :
 		_recenter(node, origin)
 	node.add_child(last_added_meshin)
+	
 	if owner : last_added_meshin.owner = owner
+	var texel := _entity_unwrap_uv2(ent_id, brush_id, mesh)
+	if texel >= 0.0 :
+		mesh.lightmap_unwrap(Transform3D(), texel)
 
 var last_added_col : CollisionShape3D
 func _entity_your_shape(
