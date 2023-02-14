@@ -11,9 +11,9 @@ func _get_region_size() -> float :
 	return game_config.mesh_splitting_size
 	
 func _texture_get_no_texture() -> Material :
-	var t := StandardMaterial3D.new()
-	t.albedo_color = Color.RED
-	return t
+	var no := game_config.default_material
+	if no : return no
+	return super()
 	
 func _entity_unwrap_uv2(
 	id : int, brush_id : int, mesh : ArrayMesh

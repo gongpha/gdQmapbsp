@@ -64,6 +64,7 @@ func play_by_node() :
 	
 	player = preload("res://quake1_example/scene/player.tscn").instantiate()
 	player.viewer = self
+	hud.player = player
 	add_child(player)
 	var pspawn : Node3D = get_tree().get_first_node_in_group(&'player_spawn')
 	if pspawn :

@@ -5,12 +5,31 @@ var nums : Array[ImageTexture]
 var anums : Array[ImageTexture]
 var faces : Array[ImageTexture]
 
+var player : QmapbspQuakePlayer
+
 const MARGIN : float = 32.0
 const SCALE := Vector2(3, 3)
 
 var health := 100
 
+func _process(delta : float) :
+	queue_redraw()
+
 func _draw() :
+	draw_quake_text(
+		Vector2(16, 16),
+		"fps : %s\ndraw calls : %s\nprimitives : %s\nvelocity : %d" % [
+			Performance.get_monitor(Performance.TIME_FPS),
+			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+			Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
+			player.velocity.length() * 32.0 if is_instance_valid(player) else "N/A"
+		], 0, Vector2(3, 3)
+	)
+	draw_line(Vector2(16, 128), Vector2(16 + (player.velocity.length() / 15.0 * 128.0), 128), Color.TOMATO, 4.0)
+	
+	
+	
+	
 	return
 	var t : ImageTexture
 	var ts : Vector2
@@ -51,6 +70,7 @@ func _draw() :
 
 func setup(viewer : QmapbspQuakeViewer) :
 	var C := viewer.hub.load_as_texture
+	hub = viewer.hub
 	nums = [
 		C.call("gfx.wad:NUM_0"),
 		C.call("gfx.wad:NUM_1"),

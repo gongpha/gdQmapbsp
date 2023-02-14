@@ -41,9 +41,6 @@ grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(3, 3)
 
-[node name="console" parent="." instance=ExtResource("2_qwu1n")]
-layout_mode = 1
-
 [node name="hud" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -52,6 +49,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_16dr5")
+
+[node name="console" parent="." instance=ExtResource("2_qwu1n")]
+layout_mode = 1
 
 [node name="menu" type="Control" parent="."]
 layout_mode = 1

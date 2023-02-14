@@ -11,12 +11,12 @@ class_name QmapbspTrenchbroomGameConfigResource
 @export var ent_export_to_fgd_file : bool = true
 
 @export_group("Building")
-## If [code]true[/code], the importer will omit internal lightmap loading.
+## If [code]false[/code], the importer will omit internal lightmap loading.
 ## and unwraps UV2.
 @export var use_bsp_lightmap : bool = false
 @export var lightmap_texel : float = 1.0
 @export var inverse_scale_factor : float = 32.0
-@export var mesh_splitting_size : float = 64.0
+@export var mesh_splitting_size : float = 32.0 # godot unit
 @export var default_material : Material
 
 @export_group("Default values", "def_")
