@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=3 uid="uid://bfrpdkolpjr3g"]
 
 [ext_resource type="Script" path="res://quake1_example/viewer.gd" id="1_vs1gv"]
-[ext_resource type="Script" path="res://quake1_example/hud.gd" id="2_16dr5"]
 [ext_resource type="PackedScene" uid="uid://dvlurm3ntglha" path="res://quake1_example/console.tscn" id="2_qwu1n"]
+[ext_resource type="Script" path="res://quake1_example/hud.gd" id="2_tj87b"]
 [ext_resource type="Script" path="res://quake1_example/menu.gd" id="3_044qv"]
 [ext_resource type="Script" path="res://quake1_example/message.gd" id="5_6jblb"]
 [ext_resource type="Shader" path="res://quake1_example/viewer_fade.gdshader" id="5_upbmq"]
@@ -48,7 +48,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("2_16dr5")
+script = ExtResource("2_tj87b")
 
 [node name="console" parent="." instance=ExtResource("2_qwu1n")]
 layout_mode = 1

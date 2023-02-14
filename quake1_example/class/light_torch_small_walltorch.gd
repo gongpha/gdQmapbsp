@@ -1,0 +1,2 @@
+extends QmapbspQuakeLight
+class_name QmapbspQuakeLightTorchSmallWalltorch

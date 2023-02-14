@@ -19,6 +19,13 @@ func _texture_get_global_surface_material() -> ShaderMaterial :
 	if node is QmapbspQuakeWorldspawn :
 		node.surface = surface
 	return surface
+	
+func _get_custom_bsp_textures_shader() -> Shader :
+	if viewer.rendering != 0 :
+		return preload(
+			"res://addons/qmapbsp/resource/shader/surface_and_shade.gdshader"
+		)
+	return super()
 
 func _entity_node_directory_paths() -> PackedStringArray :
 	return PackedStringArray(
@@ -48,6 +55,8 @@ func _texture_get_material_for_integrated(
 			if name == 'sky4' :
 				sky.set_shader_parameter(&'threshold', 0.4)
 			specials[name] = sky
+			sky.set_meta(&'sky', true)
+		viewer.skytex = tex
 		return sky
 	elif name.begins_with('*') :
 		var fluid : ShaderMaterial = specials.get(name)
@@ -67,7 +76,9 @@ func _model_get_region(
 	if model_id == 0 :
 		if facemat.get_meta(&'fluid', false) :
 			return 1 # water (or whatever)
-	return 0
+		if facemat.get_meta(&'sky', false) :
+			return 2
+	return super(model_id, face_index, facemat)
 	
 func _entity_your_mesh(
 	ent_id : int,
@@ -76,13 +87,22 @@ func _entity_your_mesh(
 	region
 ) -> void :
 	super(ent_id, brush_id, mesh, origin, region)
-	if ent_id == 0 and region is int and region == 0 :
-		# water (or whatever)
-		_new_fluid_area()
-		# MOVE
-		last_added_meshin.get_parent().remove_child(last_added_meshin)
-		fluid_area.add_child(last_added_meshin)
-		last_added_meshin.global_position = origin
+	if ent_id == 0 :
+		if region is int :
+			match region :
+				1 :
+					# water (or whatever)
+					_new_fluid_area()
+					# MOVE
+					last_added_meshin.get_parent().remove_child(last_added_meshin)
+					fluid_area.add_child(last_added_meshin)
+					last_added_meshin.position = origin
+				2 :
+					# sky
+					if viewer.rendering != 0 :
+						last_added_meshin.queue_free()
+						last_added_meshin = null
+						return
 	if region is Vector3i :
 		last_added_meshin.set_instance_shader_parameter(
 			&'region', region
@@ -121,6 +141,9 @@ func _new_entity_node(classname : String) -> Node :
 	
 	if classname == 'worldspawn' :
 		viewer.worldspawn = node
+	elif classname.begins_with('light') :
+		if viewer.rendering == 0 :
+			node.hide()
 	
 	if node.has_signal(&'emit_message_state') :
 		node.connect(&'emit_message_state',

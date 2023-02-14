@@ -19,6 +19,7 @@ class_name QmapbspQuake1Hub
 
 @onready var s_registered : CheckBox = %"s_registered"
 @onready var difficulity : OptionButton = %"s_difficulity"
+@onready var rendering : OptionButton = %"s_rendering"
 
 var viewer : QmapbspQuakeViewer
 var last_play : String
@@ -283,6 +284,7 @@ func _play_bsp(pakpath : String) :
 	viewer.pal = global_pal
 	viewer.map_upper = s_registered.button_pressed
 	viewer.skill = difficulity.get_selected_id()
+	viewer.set_rendering(rendering.get_selected_id()) 
 	
 	if viewer.play_by_mapname(mapname) :
 		tabs.hide()

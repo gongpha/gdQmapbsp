@@ -61,7 +61,3 @@ q1_toggle_noclip={
 [physics]
 
 common/physics_ticks_per_second=120
-
-[rendering]
-
-renderer/rendering_method="mobile"

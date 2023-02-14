@@ -45,8 +45,17 @@ func _entity_your_mesh(
 	if ent_id == 0 :
 		last_added_meshin.position = origin
 	else :
+		last_added_meshin.gi_mode = GeometryInstance3D.GI_MODE_DYNAMIC
 		_recenter(node, origin)
 	node.add_child(last_added_meshin)
+	
+	var dict : Dictionary = entity_props.get(ent_id, {})
+	if dict.has('__qmapbsp_aabb') :
+		var aabb : AABB = dict['__qmapbsp_aabb']
+		var aabbb := mesh.get_aabb()
+		aabbb.position += origin
+
+		dict['__qmapbsp_aabb'] = aabb.merge(aabbb)
 	
 	if owner : last_added_meshin.owner = owner
 	var texel := _entity_unwrap_uv2(ent_id, brush_id, mesh)
@@ -125,8 +134,9 @@ func _get_entity_node(id : int) -> Node :
 		node.props = dict
 	elif node.has_method(&'_get_properties') :
 		node._get_properties(dict)
-	if dict.has("model") :
+	if dict.has("model") or id == 0 :
 		dict['__qmapbsp_has_brush'] = true
+		dict['__qmapbsp_aabb'] = AABB()
 		
 	node.name = '%s%04d' % [classname, id]
 	if node is Node3D and id != 0 :

@@ -1,0 +1,10 @@
+[gd_resource type="Sky" load_steps=3 format=3 uid="uid://ckv8olny8srk3"]
+
+[ext_resource type="Shader" path="res://quake1_example/material/sky_sky.gdshader" id="1_k5whv"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bo0rt"]
+shader = ExtResource("1_k5whv")
+shader_parameter/threshold = 0.01
+
+[resource]
+sky_material = SubResource("ShaderMaterial_bo0rt")

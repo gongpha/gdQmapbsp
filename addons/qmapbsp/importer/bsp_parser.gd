@@ -455,14 +455,17 @@ func _model_geo() -> bool :
 		
 	var center := centroid
 	centroid /= face_vertices.size()
-	var region_or_alone
-	if wim._entity_prefers_region_partition(load_index) : 
-		region_or_alone = Vector3i((centroid / (
-			region_size
-		) + Vector3(0.5, 0.5, 0.5)).floor())
-	else : region_or_alone = wim._model_get_region(
+	var region_or_alone = wim._model_get_region(
 		load_index, face_array_index, texture
 	)
+	
+	if region_or_alone == null : 
+		if wim._entity_prefers_region_partition(load_index) :
+			region_or_alone = Vector3i((centroid / (
+				region_size
+			) + Vector3(0.5, 0.5, 0.5)).floor())
+		else :
+			region_or_alone = 0
 	
 	var lsize : Vector2
 	var lstyle : int = 1

@@ -1,11 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://dh5c5ghexuj8i"]
+[gd_scene load_steps=4 format=3 uid="uid://dh5c5ghexuj8i"]
 
 [ext_resource type="Script" path="res://quake1_example/class/worldspawn.gd" id="1_3n35g"]
+[ext_resource type="Sky" uid="uid://ckv8olny8srk3" path="res://quake1_example/sky_sky.tres" id="2_salu5"]
 
 [sub_resource type="Environment" id="Environment_dlsko"]
-background_mode = 4
-ambient_light_source = 1
-reflected_light_source = 1
+background_mode = 2
+sky = ExtResource("2_salu5")
+ambient_light_source = 2
+ambient_light_color = Color(0, 1, 1, 1)
+ambient_light_energy = 16.0
+reflected_light_source = 2
+sdfgi_use_occlusion = true
 
 [node name="worldspawn" type="StaticBody3D"]
 script = ExtResource("1_3n35g")

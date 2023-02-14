@@ -45,7 +45,7 @@ func _model_get_region(
 	model_id : int,
 	face_index : int, facemat : Material
 ) :
-	return 0
+	return null
 
 ###########################################
 # entities (models & worldspawn)

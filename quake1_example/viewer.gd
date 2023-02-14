@@ -26,6 +26,9 @@ var world_surface : ShaderMaterial
 
 var registered : bool = false
 var skill : int = 1
+var rendering : int = 0
+
+var skytex : ImageTexture
 
 func _ready() :
 	hud.setup(self)
@@ -46,6 +49,11 @@ func _ready() :
 	$loading/loading.texture = t
 	$loading/loading.pivot_offset = t.get_size() / 2
 	loading.texture = hub.load_as_texture("gfx/conback.lmp")
+	
+func set_rendering(i : int) -> void :
+	rendering = i
+	if i == 1 :
+		lightmap_boost = 8.0
 
 func play_by_node() :
 	hud.show()
