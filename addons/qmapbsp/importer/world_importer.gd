@@ -74,7 +74,6 @@ func _entity_prefers_bsp_geometry(model_id : int) -> bool :
 func _entity_prefers_region_partition(model_id : int) -> bool :
 	return false
 	
-## calls AFTER the above methods
 func _entity_your_properties(id : int, entity : Dictionary) -> void :
 	_entity_your_cooked_properties(id, entity)
 	

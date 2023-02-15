@@ -143,9 +143,9 @@ func poll(result : Array) -> int :
 								return PollResult.ERR
 							
 							brush_planes.append(Plane(
-								Vector3(int(S[1]), int(S[2]), int(S[3])),
-								Vector3(int(S[6]), int(S[7]), int(S[8])),
-								Vector3(int(S[11]), int(S[12]), int(S[13])),
+								Vector3(float(S[1]), float(S[2]), float(S[3])),
+								Vector3(float(S[6]), float(S[7]), float(S[8])),
+								Vector3(float(S[11]), float(S[12]), float(S[13])),
 							))
 							brush_textures.append(S[15])
 							brush_offsets1_valve.append(Color(
@@ -162,12 +162,12 @@ func poll(result : Array) -> int :
 								return PollResult.ERR
 							
 							brush_planes.append(Plane(
-								Vector3(int(S[1]), int(S[2]), int(S[3])),
-								Vector3(int(S[6]), int(S[7]), int(S[8])),
-								Vector3(int(S[11]), int(S[12]), int(S[13])),
+								Vector3(float(S[1]), float(S[2]), float(S[3])),
+								Vector3(float(S[6]), float(S[7]), float(S[8])),
+								Vector3(float(S[11]), float(S[12]), float(S[13])),
 							))
 							brush_textures.append(S[15])
-							brush_offsets.append(Vector2(int(S[16]), int(S[17])))
+							brush_offsets.append(Vector2(float(S[16]), float(S[17])))
 							brush_rotations.append(float(S[18]))
 							brush_scales.append(Vector2(float(S[19]), float(S[20])))
 								

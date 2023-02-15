@@ -102,7 +102,8 @@ func _end_entity(idx : int) :
 	parsed_shapes.clear()
 	
 const EPS := 0.000001
-func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
+# https://math.stackexchange.com/a/1884181
+static func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
 	var vv := PackedVector3Array()
 
 	for i in planes.size() - 2 :

@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://brlmd73yyqoeb"]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="PackedScene" uid="uid://c2sspd5hoamrc" path="res://trenchbroom_example/map4.map" id="1_h6uyr"]
+[ext_resource type="PackedScene" uid="uid://c2sspd5hoamrc" path="res://trenchbroom_example/maps/4_lightmap.map" id="1_h6uyr"]
 
 [node name="map" instance=ExtResource("1_h6uyr")]
 

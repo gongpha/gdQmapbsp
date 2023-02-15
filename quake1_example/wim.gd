@@ -158,9 +158,6 @@ func _new_entity_node(classname : String) -> Node :
 	node.set_meta(&'scale', _get_unit_scale_f())
 	node.add_to_group(&'entities')
 	
-	#if node is QmapbspQuakeWorldspawn :
-	#	node.surface = surface
-	
 	return node
 
 func _get_entity_node(id : int) -> Node :
