@@ -15,7 +15,6 @@ func _map_ready() :
 	var added : PackedStringArray
 	while !t.is_empty() and !added.has(t) :
 		added.append(t)
-		
 		t = 'T_' + t
 		var node := get_tree().get_first_node_in_group(t)
 		if node is QmapbspQuakePathCorner :

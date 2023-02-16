@@ -97,12 +97,12 @@ func _entity_your_mesh(
 					last_added_meshin.get_parent().remove_child(last_added_meshin)
 					fluid_area.add_child(last_added_meshin)
 					last_added_meshin.position = origin
-				2 :
-					# sky
-					if viewer.rendering != 0 :
-						last_added_meshin.queue_free()
-						last_added_meshin = null
-						return
+#				2 :
+#					# sky
+#					if viewer.rendering != 0 :
+#						last_added_meshin.queue_free()
+#						last_added_meshin = null
+#						return
 	if region is Vector3i :
 		last_added_meshin.set_instance_shader_parameter(
 			&'region', region
@@ -134,6 +134,17 @@ func _entity_your_shape(
 	#if ent_id == 0 and last_added_col :
 	#	added_brush[brush_id] = last_added_col
 		
+func _entity_your_occluder(
+	ent_id : int,
+	brush_id : int,
+	occluder : ArrayOccluder3D, origin : Vector3,
+	region
+) -> void :
+	if ent_id == 0 :
+		if region is int :
+			# do not add an occluder to water/sky brushes
+			return
+	super(ent_id, brush_id, occluder, origin, region)
 
 func _new_entity_node(classname : String) -> Node :
 	var node : Node = super(classname)
@@ -180,3 +191,6 @@ func _get_entity_node(id : int) -> Node :
 	if dict.has('targetname') :
 		node.add_to_group('T_' + dict['targetname'])
 	return node
+
+func _entity_prefers_occluder(model_id : int) -> bool :
+	return model_id == 0 and viewer.occlusion_culling

@@ -34,13 +34,13 @@ func _entity_your_mesh(
 	if !node : return
 	
 	if !(
-		node._is_brush_visible() if 
-		node.has_method(&'_is_brush_visible') else true
+		node._qmapbsp_is_brush_visible() if 
+		node.has_method(&'_qmapbsp_is_brush_visible') else true
 	) : return
 	
 	last_added_meshin = MeshInstance3D.new()
 	last_added_meshin.mesh = mesh
-	last_added_meshin.name = 'meshin%04d' % brush_id
+	last_added_meshin.name = 'meshin%d' % brush_id
 	last_added_meshin.set_meta(&'_qmapbsp_region', region)
 	if ent_id == 0 :
 		last_added_meshin.position = origin
@@ -61,6 +61,27 @@ func _entity_your_mesh(
 	var texel := _entity_unwrap_uv2(ent_id, brush_id, mesh)
 	if texel >= 0.0 :
 		mesh.lightmap_unwrap(Transform3D(), texel)
+		
+var last_added_occin : OccluderInstance3D
+func _entity_your_occluder(
+	ent_id : int,
+	brush_id : int,
+	occluder : ArrayOccluder3D, origin : Vector3,
+	region
+) -> void :
+	var node := _get_entity_node(ent_id)
+	if !node : return
+	
+	last_added_occin = OccluderInstance3D.new()
+	last_added_occin.occluder = occluder
+	last_added_occin.name = 'occin%d' % brush_id
+	last_added_occin.set_meta(&'_qmapbsp_region', region)
+	if ent_id == 0 :
+		last_added_occin.position = origin
+	else :
+		_recenter(node, origin)
+	node.add_child(last_added_occin)
+	if owner : last_added_occin.owner = owner
 
 var last_added_col : CollisionShape3D
 func _entity_your_shape(
@@ -73,9 +94,14 @@ func _entity_your_shape(
 	var node := _get_entity_node(ent_id)
 	if !node : return
 	
+	if !(
+		node._qmapbsp_is_brush_solid() if 
+		node.has_method(&'_qmapbsp_is_brush_solid') else true
+	) : return
+	
 	last_added_col = CollisionShape3D.new()
 	last_added_col.shape = shape
-	last_added_col.name = 'col%04d' % brush_id
+	last_added_col.name = 'col%d' % brush_id
 	if ent_id == 0 :
 		last_added_col.position = origin
 	else :
@@ -104,6 +130,10 @@ func _entity_node_directory_paths() -> PackedStringArray :
 	]
 
 func _new_entity_node(classname : String) -> Node :
+	if classname == "func_occluder" :
+		# build occluder
+		var occluder
+	
 	var dirs := _entity_node_directory_paths()
 	for d in dirs :
 		var rscpath := d.path_join("%s.tscn") % classname
@@ -157,3 +187,8 @@ func _get_entity_node(id : int) -> Node :
 
 func _entity_prefers_region_partition(model_id : int) -> bool :
 	return model_id == 0 # worldspawn only
+
+func _entity_prefers_occluder(model_id : int) -> bool :
+	var dict : Dictionary = entity_props.get(model_id, {})
+	if dict.get("classname", "") != "func_occluder" : return false
+	return true

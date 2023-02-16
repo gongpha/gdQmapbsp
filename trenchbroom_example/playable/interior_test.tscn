@@ -1,0 +1,34 @@
+[gd_scene load_steps=5 format=3 uid="uid://brgdlntp1i0so"]
+
+[ext_resource type="PackedScene" uid="uid://c7skj88wu4yv" path="res://trenchbroom_example/maps/5_interior.map" id="1_fqt2g"]
+[ext_resource type="PackedScene" uid="uid://bjrvl643qpvsm" path="res://trenchbroom_example/scenes/player.tscn" id="2_3adn1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rl4fl"]
+resource_local_to_scene = true
+size = Vector3(1, 0.175, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_gt63i"]
+radial_segments = 256
+rings = 128
+
+[node name="visleaves_test" type="Node3D"]
+
+[node name="map" parent="." instance=ExtResource("1_fqt2g")]
+
+[node name="player" parent="." instance=ExtResource("2_3adn1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.760663, -4.06355)
+
+[node name="around" parent="player" index="1"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.688, 0)
+
+[node name="staircast" parent="player" index="2"]
+shape = SubResource("BoxShape3D_rl4fl")
+
+[node name="mesh" type="Node3D" parent="."]
+
+[node name="m1" type="MeshInstance3D" parent="mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.67734, 0.851365, -3.92581)
+mesh = SubResource("SphereMesh_gt63i")
+skeleton = NodePath("../..")
+
+[editable path="player"]

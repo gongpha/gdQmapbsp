@@ -18,6 +18,7 @@ class_name QmapbspQuake1Hub
 @onready var mapupper : CheckBox = $"tabs/PAK Viewer/vbox/mapupper"
 
 @onready var s_registered : CheckBox = %"s_registered"
+@onready var s_occlusion_culling : CheckBox = %"s_occlusion_culling"
 @onready var difficulity : OptionButton = %"s_difficulity"
 @onready var rendering : OptionButton = %"s_rendering"
 
@@ -274,6 +275,7 @@ func _play_bsp(pakpath : String) :
 	viewer = preload("res://quake1_example/viewer.tscn").instantiate()
 	viewer.hub = self
 	viewer.registered = s_registered.button_pressed
+	viewer.occlusion_culling = s_occlusion_culling.button_pressed
 
 	last_play = pakpath
 	add_child(viewer)

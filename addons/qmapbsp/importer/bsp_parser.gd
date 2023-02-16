@@ -366,7 +366,7 @@ func _model_geo() -> bool :
 		face_count = model[9]
 		face_indexf = model[8]
 		unit_scale_f = 1.0 / unit_scale
-		region_size = wim._get_region_size()
+		region_size = wim._entity_region_size(load_index)
 	if loc_load_index == face_count :
 		loc_load_index = 0
 		return true
@@ -596,9 +596,17 @@ func _build_geo() -> bool :
 	var extents : Vector3 = rarray[3]
 	var mesh : ArrayMesh
 	
+	var occ : ArrayOccluder3D
+	var occ_verts : PackedVector3Array
+	var occ_indices : PackedInt32Array
+	
+	if wim._entity_prefers_occluder(target_ent) :
+		occ = ArrayOccluder3D.new()
+	
 	var global_surface_tool : SurfaceTool
 	var surface_tool : SurfaceTool
 	
+	var mat : Material
 	
 	for s in texdict :
 		var is_global := s is int
@@ -610,11 +618,13 @@ func _build_geo() -> bool :
 					global_surface_tool.set_custom_format(0, SurfaceTool.CUSTOM_RGBA_HALF)
 					global_surface_tool.set_custom_format(1, SurfaceTool.CUSTOM_RGBA_HALF)
 					global_surface_tool.set_material(global_surface_mat)
+					mat = global_surface_mat
 				surface_tool = global_surface_tool
 			else :
 				surface_tool = SurfaceTool.new()
 				surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 				surface_tool.set_material(s)
+				mat = s
 		
 		# maybe faster ?
 		var C_UV := surface_tool.set_uv
@@ -637,6 +647,8 @@ func _build_geo() -> bool :
 			var lights : Color = surface[6]
 			var lstyle : int = surface[7]
 			
+			
+			
 			var ADD := func(i : int) :
 				C_UV.call(uvs[i])
 				if !uvrs.is_empty() :
@@ -645,8 +657,24 @@ func _build_geo() -> bool :
 				if is_global :
 					C_CT.call(0, Color(s, lstyle, lsize.x / lightmap_size.x, UUU))
 					C_CT.call(1, lights)
-				C_VT.call(verts[i] - center)
-			
+				var V := verts[i] - center
+				C_VT.call(V)
+				
+				var occ_mat := true
+				if (
+					mat is StandardMaterial3D and
+					mat.get_transparency() != BaseMaterial3D.TRANSPARENCY_DISABLED
+				) :
+					occ_mat = false
+				
+				if occ and occ_mat :
+					var idx := occ_verts.find(V)
+					if idx == -1 :
+						occ_indices.append(occ_verts.size())
+						occ_verts.append(V)
+					else :
+						occ_indices.append(idx)
+					
 			var pos : Vector2
 			var offset : Vector2
 			if read_lightmaps :
@@ -684,6 +712,9 @@ func _build_geo() -> bool :
 		global_surface_tool.generate_tangents()
 		mesh = global_surface_tool.commit(mesh)
 	wim._entity_your_mesh(target_ent, loc_load_index, mesh, center, r)
+	if occ :
+		occ.set_arrays(occ_verts, occ_indices)
+		wim._entity_your_occluder(target_ent, loc_load_index, occ, center, r)
 	loc_load_index += 1
 	return false
 	

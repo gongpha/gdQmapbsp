@@ -3,7 +3,7 @@ class_name QmapbspQuakeAmbient
 
 var viewer : QmapbspQuakeViewer
 var props : Dictionary
-func _is_brush_visible() -> bool : return false
+func _qmapbsp_is_brush_visible() -> bool : return false
 func _get_properties(dict : Dictionary) : props = dict
 
 signal emit_message_state(m : String, show : bool)

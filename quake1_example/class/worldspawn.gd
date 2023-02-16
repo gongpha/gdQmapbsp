@@ -18,16 +18,18 @@ func _map_ready() :
 		var env : Environment = wenv.environment
 		var rendering : int = viewer.rendering
 		if rendering != 0 :
-			var skysky : Sky = load("res://quake1_example/sky_sky.tres")
-			var skymat : ShaderMaterial = skysky.sky_material
-			skymat.set_shader_parameter(&'skytex', viewer.skytex)
-			env.sky = skysky
-			env.background_mode = Environment.BG_SKY
-			env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-			env.ambient_light_energy = 16.0
+#			var skysky : Sky = load("res://quake1_example/sky_sky.tres")
+#			var skymat : ShaderMaterial = skysky.sky_material
+#			skymat.set_shader_parameter(&'skytex', viewer.skytex)
+#			env.sky = skysky
+#			env.background_mode = Environment.BG_SKY
+#			env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+#			env.ambient_light_energy = 16.0
 			if rendering == 1 :
 				env.sdfgi_enabled = true
 				env.sdfgi_max_distance = 512.0
+				env.sdfgi_cascades = 2
+				env.sdfgi_read_sky_light = false
 				env.sdfgi_energy = 4.0
 			else :
 				var aabb : AABB = props.get("__qmapbsp_aabb", AABB())

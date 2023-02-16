@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="QmapbspTrenchbroomMapConfig" load_steps=2 format=3 uid="uid://d2jat17pe468k"]
+
+[ext_resource type="Script" path="res://addons/qmapbsp/trenchbroom/map_config.gd" id="1_r6noe"]
+
+[resource]
+script = ExtResource("1_r6noe")
+use_bsp_lightmap = false
+lightmap_texel = 1.0
+inverse_scale_factor = 32.0
+mesh_splitting_size = 32.0
+bake_occluders = true

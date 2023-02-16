@@ -1,0 +1,16 @@
+[remap]
+
+importer="qmapbsp.trenchbroom_map"
+type="PackedScene"
+uid="uid://c7skj88wu4yv"
+path="res://.godot/imported/5_interior.map-89bb4613bf0badff1e521864e0f76f46.scn"
+
+[deps]
+
+source_file="res://trenchbroom_example/maps/5_interior.map"
+dest_files=["res://.godot/imported/5_interior.map-89bb4613bf0badff1e521864e0f76f46.scn"]
+
+[params]
+
+game_config_path="res://trenchbroom_example/my_game.tres"
+map_config_path="res://trenchbroom_example/maps/occluder_config.tres"

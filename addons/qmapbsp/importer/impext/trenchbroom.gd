@@ -3,22 +3,23 @@ extends QmapbspWorldImporterCustomTextures
 class_name QmapbspWorldImporterTrenchbroom
 
 var game_config : QmapbspTrenchbroomGameConfigResource
+var map_config : QmapbspTrenchbroomMapConfig
 
 func _get_unit_scale_f() -> float :
-	return game_config.inverse_scale_factor
+	return map_config.inverse_scale_factor
 	
-func _get_region_size() -> float :
-	return game_config.mesh_splitting_size
+func _entity_region_size(model_id : int) -> float :
+	return map_config.mesh_splitting_size
 	
 func _texture_get_no_texture() -> Material :
-	var no := game_config.default_material
+	var no := map_config.default_material
 	if no : return no
 	return super()
 	
 func _entity_unwrap_uv2(
 	id : int, brush_id : int, mesh : ArrayMesh
 ) -> float :
-	return game_config.lightmap_texel if !game_config.use_bsp_lightmap else -1.0
+	return map_config.lightmap_texel if !map_config.use_bsp_lightmap else -1.0
 
 func _compile_bsp(mappath : String) -> String :
 	var usercfg := game_config.usercfg
@@ -56,3 +57,6 @@ func _get_entity_node(id : int) -> Node :
 		node.visible = dict.get("visible", true)
 	
 	return node
+
+func _entity_prefers_occluder(model_id : int) -> bool :
+	return super(model_id) or (model_id == 0 and map_config.bake_occluders)

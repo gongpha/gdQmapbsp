@@ -13,3 +13,4 @@ dest_files=["res://.godot/imported/3_special.map-174d2570424ae77c8039194e075a19e
 [params]
 
 game_config_path="res://trenchbroom_example/my_game.tres"
+map_config_path=""

@@ -9,7 +9,6 @@ func _start() : pass
 	
 # for loading textures from the wad/bsp file
 func _get_bsp_palette() -> PackedColorArray : return PackedColorArray()
-func _get_region_size() -> float : return 32.0
 func _get_unit_scale_f() -> float : return 32.0
 func _get_custom_bsp_textures_shader() -> Shader :
 	return preload(
@@ -68,8 +67,22 @@ func _entity_your_shape(
 ) -> void :
 	pass
 	
+func _entity_your_occluder(
+	ent_id : int,
+	brush_id : int,
+	occluder : ArrayOccluder3D, origin : Vector3,
+	region
+) -> void :
+	pass
+	
 func _entity_prefers_bsp_geometry(model_id : int) -> bool :
 	return true
+	
+func _entity_prefers_occluder(model_id : int) -> bool :
+	return false
+	
+func _entity_region_size(model_id : int) -> float :
+	return 12.0 if _entity_prefers_occluder(model_id) else 32.0
 
 func _entity_prefers_region_partition(model_id : int) -> bool :
 	return false

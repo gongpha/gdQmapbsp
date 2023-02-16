@@ -25,6 +25,7 @@ var trackcaches : Dictionary # <sounds : AudioStreamMP3>
 var world_surface : ShaderMaterial
 
 var registered : bool = false
+var occlusion_culling : bool = false
 var skill : int = 1
 var rendering : int = 0
 

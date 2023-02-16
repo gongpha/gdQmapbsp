@@ -37,6 +37,12 @@ func _get_import_options(p : String, i : int) -> Array[Dictionary] :
 			"default_value" : "",
 			"property_hint" : PROPERTY_HINT_FILE,
 			"hint_string" : "*.tres,*.res"
+		},
+		{
+			"name" : "map_config_path",
+			"default_value" : "",
+			"property_hint" : PROPERTY_HINT_FILE,
+			"hint_string" : "*.tres,*.res"
 		}
 	]
 	
@@ -77,11 +83,25 @@ func _import(
 		printerr("No Trenchbroom game config file")
 		_save_error(save_path, &"NO_TRENCHBROOM_GAMECFG_FILE", [])
 		return OK
+		
 	var gamecfg : QmapbspTrenchbroomGameConfigResource = load(t_path)
+	t_path = options.get("map_config_path", "")
+	var mapcfg : QmapbspTrenchbroomMapConfig
+	if !t_path.is_empty() :
+		mapcfg = load(t_path)
+		
+	
 	if gamecfg.custom_trenchbroom_world_importer :
 		wis = gamecfg.custom_trenchbroom_world_importer.new()
 	else :
 		wis = QmapbspWorldImporterTrenchbroom.new()
+	
+	if mapcfg :
+		wis.map_config = mapcfg
+	else :
+		wis.map_config = gamecfg.global_map_config
+	if !wis.map_config :
+		wis.map_config = QmapbspTrenchbroomMapConfig.new()
 	wis.game_config = gamecfg
 	bsp_path = wis._compile_bsp(source_file)
 		
