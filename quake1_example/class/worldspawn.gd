@@ -2,7 +2,7 @@ extends StaticBody3D
 class_name QmapbspQuakeWorldspawn
 
 @onready var music := $music
-@onready var wenv := $wenv
+@onready var wenv : WorldEnvironment = $wenv
 
 var props : Dictionary
 func _get_properties(dict : Dictionary) : props = dict

@@ -69,11 +69,21 @@ func _entity_your_shape(
 	
 func _entity_your_occluder(
 	ent_id : int,
-	brush_id : int,
-	occluder : ArrayOccluder3D, origin : Vector3,
-	region
+	occluder : ArrayOccluder3D,
 ) -> void :
 	pass
+	
+func _entity_occluder_includes_region(
+	ent_id : int,
+	occluder : ArrayOccluder3D,
+	region
+) -> bool :
+	return true
+	
+func _entity_occluder_shrink_amount(
+	ent_id : int
+) -> float :
+	return 1.0
 	
 func _entity_prefers_bsp_geometry(model_id : int) -> bool :
 	return true

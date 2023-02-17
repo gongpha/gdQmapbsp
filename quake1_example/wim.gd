@@ -69,17 +69,6 @@ func _texture_get_material_for_integrated(
 		return fluid
 	return super(name, tex)
 	
-func _model_get_region(
-	model_id : int,
-	face_index : int, facemat : Material
-) :
-	if model_id == 0 :
-		if facemat.get_meta(&'fluid', false) :
-			return 1 # water (or whatever)
-		if facemat.get_meta(&'sky', false) :
-			return 2
-	return super(model_id, face_index, facemat)
-	
 func _entity_your_mesh(
 	ent_id : int,
 	brush_id : int,
@@ -87,22 +76,6 @@ func _entity_your_mesh(
 	region
 ) -> void :
 	super(ent_id, brush_id, mesh, origin, region)
-	if ent_id == 0 :
-		if region is int :
-			match region :
-				1 :
-					# water (or whatever)
-					_new_fluid_area()
-					# MOVE
-					last_added_meshin.get_parent().remove_child(last_added_meshin)
-					fluid_area.add_child(last_added_meshin)
-					last_added_meshin.position = origin
-#				2 :
-#					# sky
-#					if viewer.rendering != 0 :
-#						last_added_meshin.queue_free()
-#						last_added_meshin = null
-#						return
 	if region is Vector3i :
 		last_added_meshin.set_instance_shader_parameter(
 			&'region', region
@@ -133,18 +106,17 @@ func _entity_your_shape(
 	
 	#if ent_id == 0 and last_added_col :
 	#	added_brush[brush_id] = last_added_col
-		
-func _entity_your_occluder(
+	
+func _entity_occluder_includes_region(
 	ent_id : int,
-	brush_id : int,
-	occluder : ArrayOccluder3D, origin : Vector3,
+	occluder : ArrayOccluder3D,
 	region
-) -> void :
+) -> bool :
 	if ent_id == 0 :
 		if region is int :
 			# do not add an occluder to water/sky brushes
-			return
-	super(ent_id, brush_id, occluder, origin, region)
+			return false
+	return super(ent_id, occluder, region)
 
 func _new_entity_node(classname : String) -> Node :
 	var node : Node = super(classname)

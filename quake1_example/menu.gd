@@ -27,11 +27,7 @@ var MENU := {
 				viewer.toggle_noclip()
 				],
 			["Toggle wireframe mode", func() :
-				get_viewport().debug_draw = (
-					Viewport.DEBUG_DRAW_DISABLED
-					if get_viewport().debug_draw == Viewport.DEBUG_DRAW_WIREFRAME else
-					Viewport.DEBUG_DRAW_WIREFRAME
-				)
+				viewer.toggle_wireframe_mode()
 				],
 			["Switch rendering mode", func() :
 				viewer.switch_render_mode()

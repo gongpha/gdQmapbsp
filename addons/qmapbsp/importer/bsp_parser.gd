@@ -566,10 +566,17 @@ func _BuildingData() -> float :
 			return 1.0
 	return float(load_index) / entity_geo_keys.size()
 	
+const EPS := 0.0001
 const UUU := 0.0 # unused
 var regions : Dictionary
 var region_keys : Array
 var target_ent : int = -1
+
+var occ : ArrayOccluder3D
+var occ_verts : PackedVector3Array
+var occ_nors : PackedVector3Array
+var occ_indices : PackedInt32Array
+
 func _build_geo() -> bool :
 	if loc_load_index == 0 :
 		# CALL ONCE
@@ -580,11 +587,24 @@ func _build_geo() -> bool :
 		regions = entity_geo[entity_geo_keys[load_index]]
 		region_keys = regions.keys()
 		
+		occ = null
+		occ_verts = PackedVector3Array()
+		occ_nors = PackedVector3Array()
+		occ_indices = PackedInt32Array()
+		
 		if global_surface_mat :
 			global_surface_mat.set_shader_parameter(&'texs', global_textures)
 			global_surface_mat.set_shader_parameter(&'lmp', lmtex)
+			
+		if wim._entity_prefers_occluder(target_ent) :
+			occ = ArrayOccluder3D.new()
 		
 	if loc_load_index == region_keys.size() :
+		if occ :
+			for i in occ_verts.size() :
+				occ_verts[i] -= occ_nors[i] * wim._entity_occluder_shrink_amount(target_ent)
+			occ.set_arrays(occ_verts, occ_indices)
+			wim._entity_your_occluder(target_ent, occ)
 		region_keys.clear()
 		return true
 		
@@ -595,13 +615,6 @@ func _build_geo() -> bool :
 	var center : Vector3 = rarray[2] / rarray[4]
 	var extents : Vector3 = rarray[3]
 	var mesh : ArrayMesh
-	
-	var occ : ArrayOccluder3D
-	var occ_verts : PackedVector3Array
-	var occ_indices : PackedInt32Array
-	
-	if wim._entity_prefers_occluder(target_ent) :
-		occ = ArrayOccluder3D.new()
 	
 	var global_surface_tool : SurfaceTool
 	var surface_tool : SurfaceTool
@@ -653,27 +666,31 @@ func _build_geo() -> bool :
 				C_UV.call(uvs[i])
 				if !uvrs.is_empty() :
 					C_UV2.call(uvrs[i])
-				C_NM.call(nors[i])
+				var nor := nors[i]
+				C_NM.call(nor)
 				if is_global :
 					C_CT.call(0, Color(s, lstyle, lsize.x / lightmap_size.x, UUU))
 					C_CT.call(1, lights)
-				var V := verts[i] - center
-				C_VT.call(V)
+				var V := verts[i]
+				C_VT.call(V - center)
 				
-				var occ_mat := true
+				var include_in_occ := true
 				if (
 					mat is StandardMaterial3D and
 					mat.get_transparency() != BaseMaterial3D.TRANSPARENCY_DISABLED
 				) :
-					occ_mat = false
+					include_in_occ = false
 				
-				if occ and occ_mat :
+				if occ and include_in_occ :
 					var idx := occ_verts.find(V)
 					if idx == -1 :
 						occ_indices.append(occ_verts.size())
 						occ_verts.append(V)
+						occ_nors.append(nor)
 					else :
 						occ_indices.append(idx)
+						var N := occ_nors[idx] + nor
+						occ_nors[idx] = N.normalized()
 					
 			var pos : Vector2
 			var offset : Vector2
@@ -712,9 +729,6 @@ func _build_geo() -> bool :
 		global_surface_tool.generate_tangents()
 		mesh = global_surface_tool.commit(mesh)
 	wim._entity_your_mesh(target_ent, loc_load_index, mesh, center, r)
-	if occ :
-		occ.set_arrays(occ_verts, occ_indices)
-		wim._entity_your_occluder(target_ent, loc_load_index, occ, center, r)
 	loc_load_index += 1
 	return false
 	

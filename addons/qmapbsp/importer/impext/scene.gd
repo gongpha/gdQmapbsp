@@ -65,21 +65,14 @@ func _entity_your_mesh(
 var last_added_occin : OccluderInstance3D
 func _entity_your_occluder(
 	ent_id : int,
-	brush_id : int,
-	occluder : ArrayOccluder3D, origin : Vector3,
-	region
+	occluder : ArrayOccluder3D,
 ) -> void :
 	var node := _get_entity_node(ent_id)
 	if !node : return
 	
 	last_added_occin = OccluderInstance3D.new()
 	last_added_occin.occluder = occluder
-	last_added_occin.name = 'occin%d' % brush_id
-	last_added_occin.set_meta(&'_qmapbsp_region', region)
-	if ent_id == 0 :
-		last_added_occin.position = origin
-	else :
-		_recenter(node, origin)
+	last_added_occin.name = 'occin'
 	node.add_child(last_added_occin)
 	if owner : last_added_occin.owner = owner
 

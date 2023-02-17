@@ -60,3 +60,8 @@ func _get_entity_node(id : int) -> Node :
 
 func _entity_prefers_occluder(model_id : int) -> bool :
 	return super(model_id) or (model_id == 0 and map_config.bake_occluders)
+
+func _entity_occluder_shrink_amount(
+	ent_id : int
+) -> float :
+	return map_config.occluder_shrink_amount

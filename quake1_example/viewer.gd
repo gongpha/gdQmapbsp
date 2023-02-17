@@ -32,6 +32,7 @@ var rendering : int = 0
 var skytex : ImageTexture
 
 func _ready() :
+	get_viewport().use_occlusion_culling = occlusion_culling
 	hud.setup(self)
 	
 	console.hub = hub
@@ -61,6 +62,8 @@ func play_by_node() :
 	message.show()
 	loading.hide()
 	add_child(map)
+	
+	_update_wireframe_mode()
 	
 	
 	for n in get_tree().get_nodes_in_group(&'entities') :
@@ -220,3 +223,19 @@ var region_highlighting : bool = false
 func toggle_region_highlighting() -> void :
 	region_highlighting = !region_highlighting
 	world_surface.set_shader_parameter(&'regionhl', region_highlighting)
+var wireframe_enabled : bool = false
+func toggle_wireframe_mode() -> void :
+	wireframe_enabled = !wireframe_enabled
+	_update_wireframe_mode()
+	
+func _update_wireframe_mode() -> void :
+	get_viewport().debug_draw = (
+		Viewport.DEBUG_DRAW_WIREFRAME
+		if wireframe_enabled else
+		Viewport.DEBUG_DRAW_DISABLED
+	)
+	worldspawn.wenv.environment.background_color = (
+		Color.WHITE
+		if wireframe_enabled else
+		Color.BLACK
+	)
