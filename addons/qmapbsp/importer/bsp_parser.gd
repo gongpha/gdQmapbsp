@@ -366,7 +366,9 @@ func _model_geo() -> bool :
 		face_count = model[9]
 		face_indexf = model[8]
 		unit_scale_f = 1.0 / unit_scale
-		region_size = wim._entity_region_size(load_index)
+		region_size = wim._entity_region_size(
+			model_map[load_index]
+		)
 	if loc_load_index == face_count :
 		loc_load_index = 0
 		return true
@@ -573,8 +575,9 @@ var region_keys : Array
 var target_ent : int = -1
 
 var occ : ArrayOccluder3D
+var occ_shrinking : float
 var occ_verts : PackedVector3Array
-var occ_nors : PackedVector3Array
+var occ_nor_seq : Array[PackedVector3Array]
 var occ_indices : PackedInt32Array
 
 func _build_geo() -> bool :
@@ -588,8 +591,9 @@ func _build_geo() -> bool :
 		region_keys = regions.keys()
 		
 		occ = null
+		occ_shrinking = wim._entity_occluder_shrink_amount(target_ent)
 		occ_verts = PackedVector3Array()
-		occ_nors = PackedVector3Array()
+		occ_nor_seq = []
 		occ_indices = PackedInt32Array()
 		
 		if global_surface_mat :
@@ -601,8 +605,12 @@ func _build_geo() -> bool :
 		
 	if loc_load_index == region_keys.size() :
 		if occ :
-			for i in occ_verts.size() :
-				occ_verts[i] -= occ_nors[i] * wim._entity_occluder_shrink_amount(target_ent)
+			if occ_shrinking != 0.0 :
+				for i in occ_verts.size() :
+					var N : Vector3
+					for j in occ_nor_seq[i] :
+						N += j
+					occ_verts[i] -= N.normalized() * occ_shrinking
 			occ.set_arrays(occ_verts, occ_indices)
 			wim._entity_your_occluder(target_ent, occ)
 		region_keys.clear()
@@ -683,15 +691,19 @@ func _build_geo() -> bool :
 				
 				if occ and include_in_occ :
 					var idx := occ_verts.find(V)
+					var shrinking = occ_shrinking != 0.0
 					if idx == -1 :
 						occ_indices.append(occ_verts.size())
 						occ_verts.append(V)
-						occ_nors.append(nor)
+						if shrinking :
+							occ_nor_seq.append(PackedVector3Array([nor]))
 					else :
 						occ_indices.append(idx)
-						var N := occ_nors[idx] + nor
-						occ_nors[idx] = N.normalized()
-					
+						if shrinking :
+							var L := occ_nor_seq[idx]
+							if !L.has(nor) :
+								L.append(nor)
+						
 			var pos : Vector2
 			var offset : Vector2
 			if read_lightmaps :

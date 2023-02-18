@@ -83,16 +83,19 @@ func _entity_occluder_includes_region(
 func _entity_occluder_shrink_amount(
 	ent_id : int
 ) -> float :
-	return 1.0
+	return 0.75
 	
 func _entity_prefers_bsp_geometry(model_id : int) -> bool :
 	return true
 	
-func _entity_prefers_occluder(model_id : int) -> bool :
+func _entity_prefers_collision_shape(ent_id : int) -> bool :
+	return true
+	
+func _entity_prefers_occluder(ent_id : int) -> bool :
 	return false
 	
-func _entity_region_size(model_id : int) -> float :
-	return 12.0 if _entity_prefers_occluder(model_id) else 32.0
+func _entity_region_size(ent_id : int) -> float :
+	return 12.0 if _entity_prefers_occluder(ent_id) else 32.0
 
 func _entity_prefers_region_partition(model_id : int) -> bool :
 	return false

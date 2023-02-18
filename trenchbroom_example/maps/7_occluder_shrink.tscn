@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://c1smett155dgj"]
+
+[ext_resource type="PackedScene" uid="uid://c82c7eoln3shj" path="res://trenchbroom_example/maps/7_occluder_shrink.map" id="1_yluif"]
+
+[node name="map" instance=ExtResource("1_yluif")]

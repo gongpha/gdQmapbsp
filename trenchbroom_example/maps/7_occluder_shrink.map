@@ -1,0 +1,214 @@
+// Game: Qmapbsp Test Game
+// Format: Standard
+// entity 0
+{
+"classname" "worldspawn"
+"_tb_textures" "trenchbroom_example/textures;trenchbroom_example/textures/prototype"
+// brush 0
+{
+( -128 -64 -16 ) ( -128 -63 -16 ) ( -128 -64 -15 ) prototype/prototype1 0 0 0 1 1
+( -64 -128 -16 ) ( -64 -128 -15 ) ( -63 -128 -16 ) prototype/prototype1 0 0 0 1 1
+( -64 -64 -16 ) ( -63 -64 -16 ) ( -64 -63 -16 ) prototype/prototype1 0 0 0 1 1
+( 64 64 16 ) ( 64 65 16 ) ( 65 64 16 ) prototype/prototype1 0 0 0 1 1
+( 64 128 16 ) ( 65 128 16 ) ( 64 128 17 ) prototype/prototype1 0 0 0 1 1
+( 128 64 16 ) ( 128 64 17 ) ( 128 65 16 ) prototype/prototype1 0 0 0 1 1
+}
+// brush 1
+{
+( -64 -16 16 ) ( -64 -15 16 ) ( -64 -16 17 ) prototype/prototype1 0 0 0 1 1
+( -64 -16 16 ) ( -64 -16 17 ) ( -63 -16 16 ) prototype/prototype1 0 0 0 1 1
+( -64 -16 24 ) ( -63 -16 24 ) ( -64 -15 24 ) prototype/prototype1 0 0 0 1 1
+( 0 0 88 ) ( 0 1 88 ) ( 1 0 88 ) prototype/prototype1 0 0 0 1 1
+( 0 0 88 ) ( 1 0 88 ) ( 0 0 89 ) prototype/prototype1 0 0 0 1 1
+( -4 0 88 ) ( -4 0 89 ) ( -4 1 88 ) prototype/prototype1 0 0 0 1 1
+}
+// brush 2
+{
+( -2 -16 16 ) ( -2 -15 16 ) ( -2 -16 17 ) prototype/prototype1 0 0 0 1 1
+( 0 -16 16 ) ( 0 -16 17 ) ( 1 -16 16 ) prototype/prototype1 -64 0 0 1 1
+( 0 -16 24 ) ( 1 -16 24 ) ( 0 -15 24 ) prototype/prototype1 -64 0 0 1 1
+( 64 0 88 ) ( 64 1 88 ) ( 65 0 88 ) prototype/prototype1 -64 0 0 1 1
+( 64 0 88 ) ( 65 0 88 ) ( 64 0 89 ) prototype/prototype1 -64 0 0 1 1
+( 64 0 88 ) ( 64 0 89 ) ( 64 1 88 ) prototype/prototype1 0 0 0 1 1
+}
+// brush 3
+{
+( -96 -224 32 ) ( -96 -223 32 ) ( -96 -224 33 ) prototype/prototype1 128 48 0 1 1
+( -96 -224 32 ) ( -96 -224 33 ) ( -95 -224 32 ) prototype/prototype1 0 48 0 1 1
+( -96 -224 32 ) ( -95 -224 32 ) ( -96 -223 32 ) prototype/prototype1 0 -128 0 1 1
+( -64 -192 64 ) ( -64 -191 64 ) ( -63 -192 64 ) prototype/prototype1 0 -128 0 1 1
+( -64 -192 64 ) ( -63 -192 64 ) ( -64 -192 65 ) prototype/prototype1 0 48 0 1 1
+( -64 -192 64 ) ( -64 -192 65 ) ( -64 -191 64 ) prototype/prototype1 128 48 0 1 1
+}
+// brush 4
+{
+( -48 -224 32 ) ( -48 -223 32 ) ( -48 -224 33 ) prototype/prototype1 128 48 0 1 1
+( -48 -208 32 ) ( -48 -208 33 ) ( -47 -208 32 ) prototype/prototype1 -48 48 0 1 1
+( -48 -224 32 ) ( -47 -224 32 ) ( -48 -223 32 ) prototype/prototype1 -48 -128 0 1 1
+( -16 -192 48 ) ( -16 -191 48 ) ( -15 -192 48 ) prototype/prototype1 -48 -128 0 1 1
+( -16 -192 64 ) ( -15 -192 64 ) ( -16 -192 65 ) prototype/prototype1 -48 48 0 1 1
+( -32 -192 64 ) ( -32 -192 65 ) ( -32 -191 64 ) prototype/prototype1 128 48 0 1 1
+}
+// brush 5
+{
+( -16 -224 32 ) ( -16 -223 32 ) ( -16 -224 33 ) prototype/prototype1 128 48 0 1 1
+( -16 -200 32 ) ( -16 -200 33 ) ( -15 -200 32 ) prototype/prototype1 -80 48 0 1 1
+( -16 -224 32 ) ( -15 -224 32 ) ( -16 -223 32 ) prototype/prototype1 -80 -128 0 1 1
+( 16 -192 40 ) ( 16 -191 40 ) ( 17 -192 40 ) prototype/prototype1 -80 -128 0 1 1
+( 16 -192 64 ) ( 17 -192 64 ) ( 16 -192 65 ) prototype/prototype1 -80 48 0 1 1
+( -8 -192 64 ) ( -8 -192 65 ) ( -8 -191 64 ) prototype/prototype1 128 48 0 1 1
+}
+// brush 6
+{
+( -176 -224 32 ) ( -176 -223 32 ) ( -176 -224 33 ) prototype/prototype1 128 48 0 1 1
+( -144 -256 32 ) ( -144 -256 33 ) ( -143 -256 32 ) prototype/prototype1 48 48 0 1 1
+( -144 -224 32 ) ( -143 -224 32 ) ( -144 -223 32 ) prototype/prototype1 48 -128 0 1 1
+( -112 -192 96 ) ( -112 -191 96 ) ( -111 -192 96 ) prototype/prototype1 48 -128 0 1 1
+( -112 -192 64 ) ( -111 -192 64 ) ( -112 -192 65 ) prototype/prototype1 48 48 0 1 1
+( -112 -192 64 ) ( -112 -192 65 ) ( -112 -191 64 ) prototype/prototype1 128 48 0 1 1
+}
+// brush 7
+{
+( 8 -192 64 ) ( 8 -191 64 ) ( 8 -192 65 ) prototype/prototype1 128 48 0 1 1
+( -16 -196 32 ) ( -16 -196 33 ) ( -15 -196 32 ) prototype/prototype1 -80 48 0 1 1
+( -16 -224 32 ) ( -15 -224 32 ) ( -16 -223 32 ) prototype/prototype1 -80 -128 0 1 1
+( 16 -192 36 ) ( 16 -191 36 ) ( 17 -192 36 ) prototype/prototype1 -80 -128 0 1 1
+( 16 -192 64 ) ( 17 -192 64 ) ( 16 -192 65 ) prototype/prototype1 -80 48 0 1 1
+( 12 -192 64 ) ( 12 -192 65 ) ( 12 -191 64 ) prototype/prototype1 128 48 0 1 1
+}
+// brush 8
+{
+( 28 -192 64 ) ( 28 -191 64 ) ( 28 -192 65 ) prototype/prototype1 128 48 0 1 1
+( 4 -194 32 ) ( 4 -194 33 ) ( 5 -194 32 ) prototype/prototype1 -100 48 0 1 1
+( 4 -224 32 ) ( 5 -224 32 ) ( 4 -223 32 ) prototype/prototype1 -100 -128 0 1 1
+( 36 -192 34 ) ( 36 -191 34 ) ( 37 -192 34 ) prototype/prototype1 -100 -128 0 1 1
+( 36 -192 64 ) ( 37 -192 64 ) ( 36 -192 65 ) prototype/prototype1 -100 48 0 1 1
+( 30 -192 64 ) ( 30 -192 65 ) ( 30 -191 64 ) prototype/prototype1 128 48 0 1 1
+}
+// brush 9
+{
+( 46 -192 64 ) ( 46 -191 64 ) ( 46 -192 65 ) prototype/prototype1 128 48 0 1 1
+( 22 -193 32 ) ( 22 -193 33 ) ( 23 -193 32 ) prototype/prototype1 -118 48 0 1 1
+( 22 -224 32 ) ( 23 -224 32 ) ( 22 -223 32 ) prototype/prototype1 -118 -128 0 1 1
+( 54 -192 33 ) ( 54 -191 33 ) ( 55 -192 33 ) prototype/prototype1 -118 -128 0 1 1
+( 54 -192 64 ) ( 55 -192 64 ) ( 54 -192 65 ) prototype/prototype1 -118 48 0 1 1
+( 47 -192 64 ) ( 47 -192 65 ) ( 47 -191 64 ) prototype/prototype1 128 48 0 1 1
+}
+// brush 10
+{
+( -320 -224 32 ) ( -320 -223 32 ) ( -320 -224 33 ) prototype/prototype1 128 48 0 1 1
+( -224 -320 32 ) ( -224 -320 33 ) ( -223 -320 32 ) prototype/prototype1 128 48 0 1 1
+( -224 -224 32 ) ( -223 -224 32 ) ( -224 -223 32 ) prototype/prototype1 128 -128 0 1 1
+( -192 -192 160 ) ( -192 -191 160 ) ( -191 -192 160 ) prototype/prototype1 128 -128 0 1 1
+( -192 -192 64 ) ( -191 -192 64 ) ( -192 -192 65 ) prototype/prototype1 128 48 0 1 1
+( -192 -192 64 ) ( -192 -192 65 ) ( -192 -191 64 ) prototype/prototype1 128 48 0 1 1
+}
+// brush 11
+{
+( 352 -288 16 ) ( 320 -192 16 ) ( 320 -192 32 ) prototype/prototype1 128 0 0 1 1
+( 352 -288 32 ) ( 448 -320 32 ) ( 448 -320 16 ) prototype/prototype1 -16 0 0 1 1
+( 352 -288 16 ) ( 448 -320 16 ) ( 416 -224 16 ) prototype/prototype1 -16 -128 0 1 1
+( 416 -224 32 ) ( 448 -320 32 ) ( 352 -288 32 ) prototype/prototype1 -16 -128 0 1 1
+( 416 -224 16 ) ( 416 -224 32 ) ( 320 -192 32 ) prototype/prototype1 -16 0 0 1 1
+( 448 -320 16 ) ( 448 -320 32 ) ( 416 -224 32 ) prototype/prototype1 128 0 0 1 1
+}
+// brush 12
+{
+( 320 -576 32 ) ( 320 -704 32 ) ( 320 -704 16 ) prototype/prototype1 0 0 0 1 1
+( 320 -704 16 ) ( 448 -576 16 ) ( 320 -576 16 ) prototype/prototype1 -16 0 0 1 1
+( 320 -576 32 ) ( 448 -576 32 ) ( 320 -704 32 ) prototype/prototype1 -16 0 0 1 1
+( 448 -576 16 ) ( 448 -576 32 ) ( 320 -576 32 ) prototype/prototype1 -16 0 0 1 1
+( 320 -704 32 ) ( 448 -576 32 ) ( 448 -576 16 ) prototype/prototype1 0 0 0 1 1
+}
+// brush 13
+{
+( 544 -288 16 ) ( 512 -192 16 ) ( 512 -192 32 ) prototype/prototype1 128 0 0 1 1
+( 544 -288 32 ) ( 640 -320 32 ) ( 640 -320 16 ) prototype/prototype1 -208 0 0 1 1
+( 544 -288 16 ) ( 640 -320 16 ) ( 608 -224 16 ) prototype/prototype1 -208 -128 0 1 1
+( 608 -224 48 ) ( 640 -320 48 ) ( 544 -288 48 ) prototype/prototype1 -208 -128 0 1 1
+( 608 -224 16 ) ( 608 -224 32 ) ( 512 -192 32 ) prototype/prototype1 -208 0 0 1 1
+( 640 -320 16 ) ( 640 -320 32 ) ( 608 -224 32 ) prototype/prototype1 128 0 0 1 1
+}
+// brush 14
+{
+( 512 -576 32 ) ( 512 -704 32 ) ( 512 -704 16 ) prototype/prototype1 0 0 0 1 1
+( 512 -704 16 ) ( 640 -576 16 ) ( 512 -576 16 ) prototype/prototype1 -208.00003 0 0 1 1
+( 512 -576 48 ) ( 640 -576 48 ) ( 512 -704 48 ) prototype/prototype1 -208.00003 0 0 1 1
+( 640 -576 16 ) ( 640 -576 32 ) ( 512 -576 32 ) prototype/prototype1 -208 0 0 1 1
+( 512 -704 32 ) ( 640 -576 32 ) ( 640 -576 16 ) prototype/prototype1 0 0 0 1 1
+}
+// brush 15
+{
+( 736 -288 16 ) ( 704 -192 16 ) ( 704 -192 32 ) prototype/prototype1 128 0 0 1 1
+( 736 -288 32 ) ( 832 -320 32 ) ( 832 -320 16 ) prototype/prototype1 -144 0 0 1 1
+( 736 -288 16 ) ( 832 -320 16 ) ( 800 -224 16 ) prototype/prototype1 -144 -128 0 1 1
+( 800 -224 80 ) ( 832 -320 80 ) ( 736 -288 80 ) prototype/prototype1 -144 -128 0 1 1
+( 800 -224 16 ) ( 800 -224 32 ) ( 704 -192 32 ) prototype/prototype1 -144 0 0 1 1
+( 832 -320 16 ) ( 832 -320 32 ) ( 800 -224 32 ) prototype/prototype1 128 0 0 1 1
+}
+// brush 16
+{
+( 704 -576 32 ) ( 704 -704 32 ) ( 704 -704 16 ) prototype/prototype1 0 0 0 1 1
+( 704 -704 16 ) ( 832 -576 16 ) ( 704 -576 16 ) prototype/prototype1 -144 0 0 1 1
+( 704 -576 80 ) ( 832 -576 80 ) ( 704 -704 80 ) prototype/prototype1 -144 0 0 1 1
+( 832 -576 16 ) ( 832 -576 32 ) ( 704 -576 32 ) prototype/prototype1 -144 0 0 1 1
+( 704 -704 32 ) ( 832 -576 32 ) ( 832 -576 16 ) prototype/prototype1 0 0 0 1 1
+}
+// brush 17
+{
+( 928 -288 16 ) ( 896 -192 16 ) ( 896 -192 32 ) prototype/prototype1 128 0 0 1 1
+( 928 -288 32 ) ( 1024 -320 32 ) ( 1024 -320 16 ) prototype/prototype1 -80 0 0 1 1
+( 928 -288 16 ) ( 1024 -320 16 ) ( 992 -224 16 ) prototype/prototype1 -80 -128 0 1 1
+( 992 -224 144 ) ( 1024 -320 144 ) ( 928 -288 144 ) prototype/prototype1 -80 -128 0 1 1
+( 992 -224 16 ) ( 992 -224 32 ) ( 896 -192 32 ) prototype/prototype1 -80 0 0 1 1
+( 1024 -320 16 ) ( 1024 -320 32 ) ( 992 -224 32 ) prototype/prototype1 128 0 0 1 1
+}
+// brush 18
+{
+( 896 -576 32 ) ( 896 -704 32 ) ( 896 -704 16 ) prototype/prototype1 0 0 0 1 1
+( 896 -704 16 ) ( 1024 -576 16 ) ( 896 -576 16 ) prototype/prototype1 -80 0 0 1 1
+( 896 -576 144 ) ( 1024 -576 144 ) ( 896 -704 144 ) prototype/prototype1 -80 0 0 1 1
+( 1024 -576 16 ) ( 1024 -576 32 ) ( 896 -576 32 ) prototype/prototype1 -80 0 0 1 1
+( 896 -704 32 ) ( 1024 -576 32 ) ( 1024 -576 16 ) prototype/prototype1 0 0 0 1 1
+}
+// brush 19
+{
+( 160 -288 16 ) ( 128 -192 16 ) ( 128 -192 32 ) prototype/prototype1 128 0 0 1 1
+( 160 -288 32 ) ( 256 -320 32 ) ( 256 -320 16 ) prototype/prototype1 176 0 0 1 1
+( 160 -288 16 ) ( 256 -320 16 ) ( 224 -224 16 ) prototype/prototype1 176 -128 0 1 1
+( 224 -224 24 ) ( 256 -320 24 ) ( 160 -288 24 ) prototype/prototype1 176 -128 0 1 1
+( 224 -224 16 ) ( 224 -224 32 ) ( 128 -192 32 ) prototype/prototype1 176 0 0 1 1
+( 256 -320 16 ) ( 256 -320 32 ) ( 224 -224 32 ) prototype/prototype1 128 0 0 1 1
+}
+// brush 20
+{
+( 128 -576 32 ) ( 128 -704 32 ) ( 128 -704 16 ) prototype/prototype1 0 0 0 1 1
+( 128 -704 16 ) ( 256 -576 16 ) ( 128 -576 16 ) prototype/prototype1 175.99998 0 0 1 1
+( 128 -576 24 ) ( 256 -576 24 ) ( 128 -704 24 ) prototype/prototype1 175.99998 0 0 1 1
+( 256 -576 16 ) ( 256 -576 32 ) ( 128 -576 32 ) prototype/prototype1 176 0 0 1 1
+( 128 -704 32 ) ( 256 -576 32 ) ( 256 -576 16 ) prototype/prototype1 0 0 0 1 1
+}
+// brush 21
+{
+( 64 -456 80 ) ( 64 -455 80 ) ( 64 -456 81 ) prototype/prototype1 0 64 0 1 1
+( 64 -448 80 ) ( 64 -448 81 ) ( 65 -448 80 ) prototype/prototype1 0 64 0 1 1
+( 64 -456 -64 ) ( 65 -456 -64 ) ( 64 -455 -64 ) prototype/prototype1 0 0 0 1 1
+( 1024 -384 192 ) ( 1024 -383 192 ) ( 1025 -384 192 ) prototype/prototype1 0 0 0 1 1
+( 1024 -384 208 ) ( 1025 -384 208 ) ( 1024 -384 209 ) prototype/prototype1 0 64 0 1 1
+( 576 -384 208 ) ( 576 -384 209 ) ( 576 -383 208 ) prototype/prototype1 0 64 0 1 1
+}
+// brush 22
+{
+( 592 -384 208 ) ( 592 -383 208 ) ( 592 -384 209 ) prototype/prototype1 0 64 0 1 1
+( 64 -448 80 ) ( 64 -448 81 ) ( 65 -448 80 ) prototype/prototype1 0 64 0 1 1
+( 64 -456 -64 ) ( 65 -456 -64 ) ( 64 -455 -64 ) prototype/prototype1 0 0 0 1 1
+( 1024 -384 192 ) ( 1024 -383 192 ) ( 1025 -384 192 ) prototype/prototype1 0 0 0 1 1
+( 1024 -384 208 ) ( 1025 -384 208 ) ( 1024 -384 209 ) prototype/prototype1 0 64 0 1 1
+( 1088 -384 208 ) ( 1088 -384 209 ) ( 1088 -383 208 ) prototype/prototype1 0 64 0 1 1
+}
+}
+// entity 1
+{
+"classname" "test_sphere"
+"origin" "-4 28 56"
+}

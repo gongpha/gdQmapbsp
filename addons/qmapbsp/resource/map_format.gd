@@ -32,22 +32,10 @@ var brush_offsets2_valve : PackedColorArray
 var brush_rotations : PackedFloat32Array
 var brush_scales : PackedVector2Array
 
-func export_brush() -> Array :
-	return [
-		brush_planes,
-		brush_textures,
-		brush_offsets,
-		brush_offsets1_valve,
-		brush_offsets2_valve,
-		brush_rotations,
-		brush_scales,
-	]
-
 func poll(result : Array) -> int :
 	var parsing : int = 0
 	var str_begin : int
 	var pushed = null
-	
 	
 	while i < src.length() :
 		var c := src.unicode_at(i)

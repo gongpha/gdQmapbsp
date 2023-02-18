@@ -1,7 +1,7 @@
 @tool
 extends OmniLight3D
 
-# { <prop_key : [desc, default, type?]> . . . }
+# { <prop_key : [desc, default]> . . . }
 func _qmapbsp_get_fgd_info() -> Dictionary :
 	return {
 		"range" : ["The light's radius", omni_range],

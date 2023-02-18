@@ -1,0 +1,16 @@
+[remap]
+
+importer="qmapbsp.trenchbroom_map"
+type="PackedScene"
+uid="uid://c82c7eoln3shj"
+path="res://.godot/imported/7_occluder_shrink.map-6257e6ca181031340d80df3b5f7e2eed.scn"
+
+[deps]
+
+source_file="res://trenchbroom_example/maps/7_occluder_shrink.map"
+dest_files=["res://.godot/imported/7_occluder_shrink.map-6257e6ca181031340d80df3b5f7e2eed.scn"]
+
+[params]
+
+game_config_path="res://trenchbroom_example/my_game.tres"
+map_config_path="res://trenchbroom_example/maps/occluder_shrink_test_config.tres"

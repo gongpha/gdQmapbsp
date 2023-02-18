@@ -16,6 +16,14 @@ func begin_file(f : FileAccess) -> StringName :
 	return StringName()
 
 func _brush_found() :
+	if wim._entity_prefers_collision_shape(entity_idx) :
+		_parse_shape()
+	
+	for t in mapf.brush_textures :
+		if known_textures.has(t) : continue
+		known_textures.append(t)
+		
+func _parse_shape() -> void :
 	var shape : Shape3D
 	var V := Vector3()
 	var aabb : AABB
@@ -88,10 +96,6 @@ func _brush_found() :
 			shape.points = vertices
 			
 		parsed_shapes.append([shape, V, mapf.brush_textures.duplicate()])
-	
-	for t in mapf.brush_textures :
-		if known_textures.has(t) : continue
-		known_textures.append(t)
 		
 func _end_entity(idx : int) :
 	for i in parsed_shapes.size() :

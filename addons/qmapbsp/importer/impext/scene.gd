@@ -2,7 +2,7 @@
 extends QmapbspWorldImporter
 class_name QmapbspWorldImporterScene
 
-# Inputs (can be assign on the outside of the class)
+# Inputs (can be assigned outside of the class)
 var root : Node3D
 var owner : Node
 
@@ -181,7 +181,17 @@ func _get_entity_node(id : int) -> Node :
 func _entity_prefers_region_partition(model_id : int) -> bool :
 	return model_id == 0 # worldspawn only
 
-func _entity_prefers_occluder(model_id : int) -> bool :
-	var dict : Dictionary = entity_props.get(model_id, {})
+func _entity_prefers_occluder(ent_id : int) -> bool :
+	var dict : Dictionary = entity_props.get(ent_id, {})
 	if dict.get("classname", "") != "func_occluder" : return false
 	return true
+	
+func _get_occluder_shrink_amount() -> float :
+	return super._entity_occluder_shrink_amount(0)
+
+func _entity_occluder_shrink_amount(
+	ent_id : int
+) -> float :
+	var dict : Dictionary = entity_props.get(ent_id, {})
+	if dict.get("classname", "") == "func_occluder" : return 0.0
+	return _get_occluder_shrink_amount()

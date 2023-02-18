@@ -164,5 +164,5 @@ func _get_entity_node(id : int) -> Node :
 		node.add_to_group('T_' + dict['targetname'])
 	return node
 
-func _entity_prefers_occluder(model_id : int) -> bool :
-	return model_id == 0 and viewer.occlusion_culling
+func _entity_prefers_occluder(ent_id : int) -> bool :
+	return ent_id == 0 and viewer.occlusion_culling

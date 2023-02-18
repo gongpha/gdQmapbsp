@@ -100,3 +100,4 @@ common/physics_ticks_per_second=120
 
 global_illumination/sdfgi/probe_ray_count=0
 global_illumination/sdfgi/frames_to_converge=3
+occlusion_culling/use_occlusion_culling=true
