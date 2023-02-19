@@ -5,6 +5,8 @@ class_name QmapbspWorldImporterTrenchbroom
 var game_config : QmapbspTrenchbroomGameConfigResource
 var map_config : QmapbspTrenchbroomMapConfig
 
+var point_file_points : PackedVector3Array
+
 func _get_unit_scale_f() -> float :
 	return map_config.inverse_scale_factor
 	
@@ -21,10 +23,37 @@ func _entity_unwrap_uv2(
 ) -> float :
 	return map_config.lightmap_texel if !map_config.use_bsp_lightmap else -1.0
 
+func _build_point_file_lines() -> bool :
+	return map_config.load_point_file
+
 func _compile_bsp(mappath : String) -> String :
 	var usercfg := game_config.usercfg
 	var cmplwf := usercfg.compilation_workflow
-	return cmplwf._compile(mappath)
+	var result_path := cmplwf._compile(mappath)
+	
+	# Check for a point file
+	if map_config.load_point_file :
+		var pts := FileAccess.open(result_path.get_basename() + ".pts", FileAccess.READ)
+		if pts :
+			var l := pts.get_line()
+			var points : PackedVector3Array
+			var isf := _get_unit_scale_f()
+			while true :
+				if l.is_empty() : break
+				
+				var psa := l.split(' ')
+				if psa.size() != 3 :
+					# cannot load
+					return result_path
+				points.append(QmapbspBaseParser._qnor_to_vec3(Vector3(
+					float(psa[0]), float(psa[1]), float(psa[2])
+				) / isf))
+				l = pts.get_line()
+			point_file_points = points
+	return result_path
+	
+func _get_point_file_points() -> PackedVector3Array :
+	return point_file_points
 
 func _texture_get_dir() -> String :
 	return game_config.textures_directory

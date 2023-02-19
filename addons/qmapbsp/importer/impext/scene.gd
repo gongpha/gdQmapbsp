@@ -6,7 +6,6 @@ class_name QmapbspWorldImporterScene
 var root : Node3D
 var owner : Node
 
-
 var entity_props : Dictionary # <id : Dict>
 var entity_nodes : Dictionary # <id : Node>
 var entity_is_brush : PackedByteArray # tells if the entitiy has brushes
@@ -195,3 +194,24 @@ func _entity_occluder_shrink_amount(
 	var dict : Dictionary = entity_props.get(ent_id, {})
 	if dict.get("classname", "") == "func_occluder" : return 0.0
 	return _get_occluder_shrink_amount()
+	
+func _build_point_file_lines() -> bool :
+	return false
+
+func _get_point_file_points() -> PackedVector3Array :
+	return PackedVector3Array()
+
+func _finally() -> void :
+	var pfp := _get_point_file_points()
+	if pfp.is_empty() : return
+	
+	# construct point file lines
+	var path3d := Path3D.new()
+	var curve := Curve3D.new()
+	for p in _get_point_file_points() :
+		curve.add_point(p)
+	path3d.curve = curve
+	path3d.name = &'!!! POINTFILE !!!'
+	root.add_child(path3d)
+	root.move_child(path3d, 0)
+	if owner : path3d.owner = owner

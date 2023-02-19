@@ -131,6 +131,7 @@ func __sections__() -> Dictionary : return {
 	&'CONSTRUCTING_DATA' : _ConstructingData,
 	&'BUILDING_DATA' : _BuildingData,
 	&'BUILDING_DATA_CUSTOM' : [_BuildingDataCustom, 0.1],
+	&'FINALLY' : [_Finally, 0.1],
 }
 
 func _GatheringAllEntities() -> float : return _race(0)
@@ -140,6 +141,11 @@ func _ImportingData() -> float :
 func _ConstructingData() -> float : return _race(2)
 func _BuildingData() -> float : return _race(3)
 func _BuildingDataCustom() -> float : return _race(4)
+func _Finally() -> float :
+	_finally()
+	return 1.0
+	
+func _finally() -> void : return
 	
 var mapp : QmapbspMAPParser
 var bspp : QmapbspBSPParser

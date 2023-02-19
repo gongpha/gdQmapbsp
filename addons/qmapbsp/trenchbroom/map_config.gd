@@ -23,3 +23,6 @@ class_name QmapbspTrenchbroomMapConfig
 ## Must not be lesser than the grid size (like in Trenchbroom) divided with the inverse scale factor.
 ## Otherwise, it will shrink through to the opposite side and make it grow rather than shrinking.
 @export var occluder_shrink_amount : float = 0.5 # grid 16
+## Loads point files if they exist.
+## This can help you to locate leaks in your map.
+@export var load_point_file : bool = false

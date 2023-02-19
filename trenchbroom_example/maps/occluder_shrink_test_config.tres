@@ -11,3 +11,4 @@ mesh_splitting_size = 0.1
 ignore_collision = true
 bake_occluders = true
 occluder_shrink_amount = 0.5
+load_point_file = true
