@@ -40,7 +40,7 @@ func _entity_your_mesh(
 	
 	last_added_meshin = MeshInstance3D.new()
 	last_added_meshin.mesh = mesh
-	last_added_meshin.name = 'meshin%d' % brush_id
+	last_added_meshin.name = 'm%d' % brush_id
 	last_added_meshin.set_meta(&'_qmapbsp_region', region)
 	if ent_id == 0 :
 		last_added_meshin.position = origin
@@ -94,7 +94,7 @@ func _entity_your_shape(
 	
 	last_added_col = CollisionShape3D.new()
 	last_added_col.shape = shape
-	last_added_col.name = 'col%d' % brush_id
+	last_added_col.name = 'c%d' % brush_id
 	if ent_id == 0 :
 		last_added_col.position = origin
 	else :
@@ -161,7 +161,7 @@ func _get_entity_node(id : int) -> Node :
 		dict['__qmapbsp_has_brush'] = true
 		dict['__qmapbsp_aabb'] = AABB()
 		
-	node.name = '%s%04d' % [classname, id]
+	node.name = '%s%d' % [classname, id]
 	if node is Node3D and id != 0 :
 		var origin : Vector3 = dict.get('origin', Vector3())
 		node.position = origin

@@ -81,8 +81,7 @@ func _import(
 	var t_path : String = options.get("game_config_path", "")
 	if t_path.is_empty() :
 		printerr("No Trenchbroom game config file")
-		_save_error(save_path, &"NO_TRENCHBROOM_GAMECFG_FILE", [])
-		return OK
+		return _save_error(save_path, &"NO_TRENCHBROOM_GAMECFG_FILE", [])
 		
 	var gamecfg : QmapbspTrenchbroomGameConfigResource = load(t_path)
 	t_path = options.get("map_config_path", "")
@@ -111,9 +110,8 @@ func _import(
 	wis.owner = node
 	
 	if bsp_path.is_empty() :
-		_save_error(save_path, &"NO_BSP_FILE_COMPILED", [])
 		printerr("No BSP file")
-		return OK
+		return _save_error(save_path, &"NO_BSP_FILE_COMPILED", [])
 	
 	var ret : Array
 	
@@ -122,8 +120,7 @@ func _import(
 	)
 	
 	if err != StringName() :
-		_save_error(save_path, err, ret)
-		return OK
+		return _save_error(save_path, err, ret)
 	
 	err = StringName()
 	while true :
@@ -135,16 +132,14 @@ func _import(
 			break
 			
 	if err != StringName() :
-		_save_error(save_path, err, [])
 		printerr(err)
-		return OK
+		return _save_error(save_path, err, [])
 
 	#######################################################
 
 	var pscene := PackedScene.new()
 	if pscene.pack(node) :
-		_save_error(save_path, &'CANNOT_SAVE_SCENE', [])
-		return OK
+		return _save_error(save_path, &'CANNOT_SAVE_SCENE', [])
 
 	var filename := save_path + "." + _get_save_extension()
 	return ResourceSaver.save(pscene, filename)

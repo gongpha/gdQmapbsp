@@ -399,7 +399,9 @@ func _model_geo() -> bool :
 
 	var tsize : Vector2i
 	if texture == global_surface_mat and texture != null :
-		tsize = global_textures[texture_ids[texture_info[4]]].get_size()
+		var tex := global_textures[texture_ids[texture_info[4]]]
+		if tex :
+			tsize = tex.get_size()
 	else :
 		tsize = texture.get_meta(&'size') if texture else Vector2i()
 	

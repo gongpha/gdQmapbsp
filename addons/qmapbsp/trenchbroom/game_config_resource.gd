@@ -17,6 +17,7 @@ class_name QmapbspTrenchbroomGameConfigResource
 
 @export_group("Advanced configurations")
 @export var custom_trenchbroom_world_importer : Script
+@export_multiline var additional_fgd : String = ""
 
 @export_group("Generated", "_")
 @export var _entity_properties_def : Dictionary
@@ -44,16 +45,20 @@ func export_cfg() :
 	dir.copy(icon, dirpath.path_join("icon.png"))
 		
 	var fgd := FileAccess.open(dirpath.path_join("qmapbsp.fgd"), FileAccess.WRITE)
-	fgd.store_string(FGD_TEMPLATE % [name])
+	fgd.store_string(
+		FGD_TEMPLATE % [name] +
+		additional_fgd
+	)
 	if ent_export_to_fgd_file :
 		fgd.store_string(_scan_fgd_classes())
 	fgd = null
 		
+	var texture_dir := textures_directory.replace("res://", "") # TODO : please fix
+	if texture_dir.is_empty() : texture_dir = '.'
+		
 	var gt := GAMECONFIG_TEMPLATE.duplicate(true)
 	gt["name"] = name
-	gt["textures"]["package"]["root"] = (
-		textures_directory.replace("res://", "") # TODO : please fix
-	)
+	gt["textures"]["package"]["root"] = texture_dir
 	gt["faceattribs"]["defaults"]["scale"] = [
 		def_face_scale.x, def_face_scale.y
 	]
