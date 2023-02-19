@@ -22,6 +22,9 @@ func _compile(map_filepath : String) -> String :
 	OS.execute(qbsp_path, [
 		'-wrbrushesonly',
 		'-notex',
+		'-nopercent',
+		'-maxNodeSize 0',
+		'-subdivide 0',
 		ProjectSettings.globalize_path(map_filepath),
 		out
 	], o)
