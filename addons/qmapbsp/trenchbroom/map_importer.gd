@@ -84,6 +84,9 @@ func _import(
 		return _save_error(save_path, &"NO_TRENCHBROOM_GAMECFG_FILE", [])
 		
 	var gamecfg : QmapbspTrenchbroomGameConfigResource = load(t_path)
+	if !gamecfg :
+		printerr("Cannot load Trenchbroom game config file")
+		return _save_error(save_path, &"CANNOT_LOAD_TRENCHBROOM_GAMECFG_FILE", [])
 	t_path = options.get("map_config_path", "")
 	var mapcfg : QmapbspTrenchbroomMapConfig
 	if !t_path.is_empty() :

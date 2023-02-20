@@ -40,7 +40,9 @@ func _entity_your_mesh(
 	last_added_meshin = MeshInstance3D.new()
 	last_added_meshin.mesh = mesh
 	last_added_meshin.name = 'm%d' % brush_id
+	last_added_meshin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
 	last_added_meshin.set_meta(&'_qmapbsp_region', region)
+	
 	if ent_id == 0 :
 		last_added_meshin.position = origin
 	else :
@@ -55,9 +57,19 @@ func _entity_your_mesh(
 		aabbb.position += origin
 
 		dict['__qmapbsp_aabb'] = aabb.merge(aabbb)
+		
+	var texel := _entity_unwrap_uv2(ent_id, brush_id, mesh)
+		
+	if dict.get("classname", "") == "func_blocklight" :
+		# only casts shadow
+		last_added_meshin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		for i in mesh.get_surface_count() :
+			mesh.surface_set_material(i, null)
+		texel = -1.0
+		mesh.lightmap_size_hint = Vector2i(1, 1)
+		last_added_meshin.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 	
 	if owner : last_added_meshin.owner = owner
-	var texel := _entity_unwrap_uv2(ent_id, brush_id, mesh)
 	if texel >= 0.0 :
 		mesh.lightmap_unwrap(Transform3D(), texel)
 		

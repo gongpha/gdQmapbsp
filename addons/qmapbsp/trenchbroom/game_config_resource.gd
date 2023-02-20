@@ -210,8 +210,10 @@ const FGD_TEMPLATE := """
 @SolidClass = func_detail_fence []
 
 ////////////////////////////
+// Built-in Qmapbsp classes
 
-@SolidClass = func_occluder []
+@SolidClass = func_occluder : "Used as an occluder." []
+@SolidClass = func_blocklight : "Casts shadow only. Does not render meshes." []
 
 ////////////////////////////
 
