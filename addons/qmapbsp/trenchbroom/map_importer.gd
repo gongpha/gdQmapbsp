@@ -50,8 +50,8 @@ func _get_option_visibility(path: String, option_name: StringName, options: Dict
 	return true
 
 const MIE := "res://addons/qmapbsp/resource/map_import_error.tscn"
-func _save_error(save_path : String, error : StringName, error_ret : Array) :
-	var mie := preload(MIE).instantiate()
+func _save_error(save_path : String, error : StringName, error_ret : Array) -> int :
+	var mie : QmapbspMapImportError = load(MIE).instantiate()
 	mie.error = error
 	var strs : PackedStringArray
 	strs.resize(error_ret.size())
