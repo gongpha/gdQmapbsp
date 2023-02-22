@@ -5,5 +5,5 @@ func _can_handle(o) -> bool :
 	return o is QmapbspMap
 	
 func _parse_begin(o) :
-	var pscene := preload("sub/map_quake_inspepctor_control.tscn")
+	var pscene := preload("sub/map_quake_inspector_control.tscn")
 	add_custom_control(pscene.instantiate())

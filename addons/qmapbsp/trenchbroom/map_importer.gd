@@ -71,7 +71,7 @@ func _import(
 	options : Dictionary,
 	platform_variants : Array[String],
 	gen_files : Array[String]
-) -> int :
+) -> Error :
 	var file := FileAccess.open(source_file, FileAccess.READ)
 	if !file :
 		return FileAccess.get_open_error()
