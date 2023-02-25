@@ -207,13 +207,16 @@ const FGD_TEMPLATE := """
 	visible(boolean) : "Visible" : 1 : "The node's visibility"
 ]
 
+@SolidClass = func_detail []
+@SolidClass = func_detail_illusionary []
+@SolidClass = func_detail_wall []
 @SolidClass = func_detail_fence []
 
 ////////////////////////////
 // Built-in Qmapbsp classes
 
-@SolidClass = func_occluder : "Used as an occluder." []
-@SolidClass = func_blocklight : "Casts shadow only. Does not render meshes." []
+@SolidClass = func_occluder : "Used as an occluder. It can be skipped by using SKIP or HINTSKIP texture." []
+@SolidClass = func_blocklight : "Casts shadow only. Does not render meshes or lightmap baking." []
 
 ////////////////////////////
 

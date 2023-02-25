@@ -8,6 +8,7 @@ var owner : Node
 
 var entity_props : Dictionary # <id : Dict>
 var entity_nodes : Dictionary # <id : Node>
+var entity_navreg : Dictionary # <id : NavigationRegion3D>
 var entity_is_brush : PackedByteArray # tells if the entitiy has brushes
 	
 func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
@@ -48,7 +49,20 @@ func _entity_your_mesh(
 	else :
 		last_added_meshin.gi_mode = GeometryInstance3D.GI_MODE_DYNAMIC
 		_recenter(node, origin)
+		
+	var navmesh_tem := _get_navmesh_template()
+	if navmesh_tem :
+		var navreg : NavigationRegion3D = entity_navreg.get(ent_id, null)
+		if !navreg :
+			navreg = NavigationRegion3D.new()
+			navreg.name = &'nav'
+			node.add_child(navreg)
+			if owner : navreg.owner = owner
+			var navmesh := navmesh_tem.duplicate()
+			navreg.navigation_mesh = navmesh
+			entity_navreg[ent_id] = navreg
 	node.add_child(last_added_meshin)
+	if owner : last_added_meshin.owner = owner
 	
 	var dict : Dictionary = entity_props.get(ent_id, {})
 	if dict.has('__qmapbsp_aabb') :
@@ -68,8 +82,7 @@ func _entity_your_mesh(
 		texel = -1.0
 		mesh.lightmap_size_hint = Vector2i(1, 1)
 		last_added_meshin.gi_mode = GeometryInstance3D.GI_MODE_STATIC
-	
-	if owner : last_added_meshin.owner = owner
+		
 	if texel >= 0.0 :
 		mesh.lightmap_unwrap(Transform3D(), texel)
 		
@@ -215,15 +228,25 @@ func _get_point_file_points() -> PackedVector3Array :
 
 func _finally() -> void :
 	var pfp := _get_point_file_points()
-	if pfp.is_empty() : return
-	
-	# construct point file lines
-	var path3d := Path3D.new()
-	var curve := Curve3D.new()
-	for p in _get_point_file_points() :
-		curve.add_point(p)
-	path3d.curve = curve
-	path3d.name = &'!!! POINTFILE !!!'
-	root.add_child(path3d)
-	root.move_child(path3d, 0)
-	if owner : path3d.owner = owner
+	if !pfp.is_empty() :
+		# construct point file lines
+		var path3d := Path3D.new()
+		var curve := Curve3D.new()
+		for p in pfp :
+			curve.add_point(p)
+		path3d.curve = curve
+		path3d.name = &'!!! POINTFILE !!!'
+		root.add_child(path3d)
+		root.move_child(path3d, 0)
+		if owner : path3d.owner = owner
+		
+		
+	for k in entity_navreg :
+		var n3d : NavigationRegion3D = entity_navreg[k]
+		print_verbose("Baking Navmesh %d" % k)
+		NavigationServer3D.region_bake_navigation_mesh(
+			n3d.navigation_mesh, entity_nodes.get(k)
+		)
+
+func _get_navmesh_template() -> NavigationMesh :
+	return null

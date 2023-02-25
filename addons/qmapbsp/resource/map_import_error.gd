@@ -4,5 +4,5 @@ class_name QmapbspMapImportError
 
 ## Created instead of an actual result when the importing progress was failed
 
-@export var error : StringName
+@export var error : String
 @export_multiline var error_data : String

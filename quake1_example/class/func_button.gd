@@ -7,6 +7,7 @@ func _motion_f(destroy_tween : bool = false) :
 		'T_' + props.get('target')
 	) :
 		if !t : continue
+		if !t.has_method(&'_trigger') : continue
 		t._trigger(self)
 
 func _def_lip() -> String : return '4'

@@ -88,10 +88,13 @@ func _get_entity_node(id : int) -> Node :
 	return node
 
 func _entity_prefers_occluder(ent_id : int) -> bool :
-	return super(ent_id) or (ent_id == 0 and map_config.bake_occluders)
+	return super(ent_id) or (ent_id == 0 and map_config.occ_bake_occluders)
 
 func _get_occluder_shrink_amount() -> float :
-	return map_config.occluder_shrink_amount
+	return map_config.occ_shrink_amount
 
 func _entity_prefers_collision_shape(ent_id : int) -> bool :
 	return !map_config.ignore_collision
+
+func _get_navmesh_template() -> NavigationMesh :
+	return map_config.navmesh_template
