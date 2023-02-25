@@ -18,6 +18,9 @@ func _enter_tree() :
 			add_import_plugin(plugin)
 		elif plugin is EditorInspectorPlugin :
 			add_inspector_plugin(plugin)
+			
+		if plugin.has_method(&'_editor_plugin') :
+			plugin.call(&'_editor_plugin', self)
 
 func _exit_tree() :
 	for i in plugins :

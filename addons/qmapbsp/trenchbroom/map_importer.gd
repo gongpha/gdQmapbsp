@@ -1,6 +1,11 @@
 extends EditorImportPlugin
 class_name QmapbspTrenchbroomMapImporterPlugin
 
+var editor_plugin : EditorPlugin
+
+func _editor_plugin(p : EditorPlugin) -> void :
+	editor_plugin = p
+
 func _get_importer_name() -> String :
 	return "qmapbsp.trenchbroom_map"
 
@@ -50,8 +55,8 @@ func _get_option_visibility(path: String, option_name: StringName, options: Dict
 	return true
 
 const MIE := "res://addons/qmapbsp/resource/map_import_error.tscn"
-func _save_error(save_path : String, error : StringName, error_ret : Array) -> int :
-	var mie : QmapbspMapImportError = load(MIE).instantiate()
+func _save_error(save_path : String, error : StringName, error_ret : Array) :
+	var mie := preload(MIE).instantiate()
 	mie.error = error
 	var strs : PackedStringArray
 	strs.resize(error_ret.size())
@@ -107,13 +112,17 @@ func _import(
 	wis.game_config = gamecfg
 	bsp_path = wis._compile_bsp(source_file)
 		
+	var editor_itf := editor_plugin.get_editor_interface()
 	var node := Node3D.new()
 	node.name = &'map'
 	wis.root = node
 	wis.owner = node
+	node.hide()
+	editor_itf.add_child(node)
 	
 	if bsp_path.is_empty() :
 		printerr("No BSP file")
+		node.free()
 		return _save_error(save_path, &"NO_BSP_FILE_COMPILED", [])
 	
 	var ret : Array
@@ -123,6 +132,7 @@ func _import(
 	)
 	
 	if err != StringName() :
+		node.free()
 		return _save_error(save_path, err, ret)
 	
 	err = StringName()
@@ -136,13 +146,17 @@ func _import(
 			
 	if err != StringName() :
 		printerr(err)
+		node.free()
 		return _save_error(save_path, err, [])
 
 	#######################################################
 
 	var pscene := PackedScene.new()
+	node.show()
 	if pscene.pack(node) :
+		node.free()
 		return _save_error(save_path, &'CANNOT_SAVE_SCENE', [])
-
+		
+	node.free()
 	var filename := save_path + "." + _get_save_extension()
 	return ResourceSaver.save(pscene, filename)
