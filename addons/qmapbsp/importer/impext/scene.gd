@@ -225,6 +225,9 @@ func _build_point_file_lines() -> bool :
 
 func _get_point_file_points() -> PackedVector3Array :
 	return PackedVector3Array()
+	
+func _point_files_simplify_angle() -> float :
+	return 0.001
 
 func _finally() -> void :
 	var pfp := _get_point_file_points()
@@ -232,7 +235,27 @@ func _finally() -> void :
 		# construct point file lines
 		var path3d := Path3D.new()
 		var curve := Curve3D.new()
+		var dir : Vector3
+		var dir_passed : int = 0
+		
+		# simplify lines
+		var langle := _point_files_simplify_angle()
 		for p in pfp :
+			if langle > 0.0 :
+				if dir_passed < 2 :
+					dir_passed += 1
+					if dir_passed == 2 :
+						dir = curve.get_point_position(0).direction_to(
+							curve.get_point_position(1)
+						)
+				else :
+					var last := curve.point_count - 1
+					var ndir = curve.get_point_position(last).direction_to(p)
+					if dir.angle_to(ndir) < langle :
+						dir = ndir
+						curve.set_point_position(last, p)
+						continue
+					dir = ndir
 			curve.add_point(p)
 		path3d.curve = curve
 		path3d.name = &'!!! POINTFILE !!!'

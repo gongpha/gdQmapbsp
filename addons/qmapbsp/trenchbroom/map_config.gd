@@ -22,6 +22,8 @@ class_name QmapbspTrenchbroomMapConfig
 ## Loads point files if they exist.
 ## This can help you to locate leaks in your map.
 @export var load_point_file : bool = false
+## Simplifies point files.
+@export var simplify_point_files : bool = true
 
 @export_group("Occluders", "occ_")
 ## Bakes occluders from the worldspawn entity.

@@ -54,6 +54,9 @@ func _compile_bsp(mappath : String) -> String :
 	
 func _get_point_file_points() -> PackedVector3Array :
 	return point_file_points
+	
+func _point_files_simplify_angle() -> float :
+	return super() if map_config.simplify_point_files else 0.0
 
 func _texture_get_dir() -> String :
 	return game_config.textures_directory
