@@ -217,6 +217,9 @@ const FGD_TEMPLATE := """
 
 @SolidClass = func_occluder : "Used as an occluder. It can be skipped by using SKIP or HINTSKIP texture." []
 @SolidClass = func_blocklight : "Casts shadow only. Does not render meshes or lightmap baking." []
+@SolidClass = func_navmesh : "Builds a navigation mesh from this brush" [
+	layer(integer) : "Navigation Layers" : 1 : "Navigation Layers"
+]
 
 ////////////////////////////
 

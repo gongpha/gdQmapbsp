@@ -68,12 +68,12 @@ func _entity_node_directory_paths() -> PackedStringArray :
 
 func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 	var epd := game_config._entity_properties_def
-	var props : Dictionary = epd.get(entity.get("classname", ""), {})
+	var props : Dictionary = epd.get(entity.get("classname", &""), {})
 	for k in props :
 		if !entity.has(k) : continue
 		var v = entity[k]
 		var dv = props[k]
-		if not v is String : continue
+		if not v is StringName : continue
 		entity[k] = QmapbspTypeProp.prop_to_var(v, typeof(dv))
 	entity.merge(props)
 	

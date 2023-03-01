@@ -38,13 +38,13 @@ func _BuildingData() -> float :
 func _BuildingDataCustom() -> float :
 	return 1.0
 	
-const WORLDSPAWN_BRUSH_ENTITIES : PackedStringArray = [
+const WORLDSPAWN_BRUSH_ENTITIES := [
 	# Trenchbroom
-	"func_group",
+	&"func_group",
 	# ericw-tools
-	"func_detail_illusionary",
-	"func_detail_wall",
-	"func_detail_fence",
+	&"func_detail_illusionary",
+	&"func_detail_wall",
+	&"func_detail_fence",
 ]
 
 var entity_idx := 0
@@ -52,6 +52,9 @@ var entity_dict : Dictionary
 
 var entity_first_brush : bool = false
 var entity_is_illusionary : bool = false
+
+# !!! a bsp entity count can probably not be the same as a map entity !!!
+var worldspawn_entity_count : int = 0
 
 var brushes : Array
 func _mapf_after_poll(pollr : int) -> bool :
@@ -63,22 +66,25 @@ func _mapf_after_poll(pollr : int) -> bool :
 			entity_first_brush = true
 		QmapbspMapFormat.PollResult.END_ENTITY :
 			if entity_dict.get('classname') in WORLDSPAWN_BRUSH_ENTITIES :
-				# ignore func_group entity
+				# ignore these entities
 				_end_entity(0) # treat as Worldspawn
+				worldspawn_entity_count += 1
 			else :
-				_end_entity(entity_idx)
+				_end_entity(
+					entity_idx - worldspawn_entity_count
+				)
 			entity_idx += 1
 			
 		QmapbspMapFormat.PollResult.FOUND_KEYVALUE :
-			var k : String = mapf.out[0]
-			var v : String = mapf.out[1]
+			var k : StringName = mapf.out[0]
+			var v : StringName = mapf.out[1]
 			entity_dict[k] = v
-			if k == 'mapversion' and v == '220' :
+			if k == &'mapversion' and v == &'220' :
 				mapf.tell_valve_format = true
 		QmapbspMapFormat.PollResult.FOUND_BRUSH :
 			entity_dict['__qmapbsp_has_brush'] = true
 			if entity_first_brush :
-				entity_is_illusionary = entity_dict.get('classname') == 'func_detail_illusionary'
+				entity_is_illusionary = entity_dict.get('classname') == &'func_detail_illusionary'
 				entity_first_brush = false
 				
 			_brush_found()

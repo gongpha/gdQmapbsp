@@ -6,6 +6,8 @@ class_name QmapbspTrenchbroomMapConfig
 ## and unwraps UV2.
 @export var use_bsp_lightmap : bool = false
 ## The texel size used for baking UV2.
+## A lower value gives high-resolution lightmaps.
+## But also leads to bigger lightmap size and more baking time.
 @export var lightmap_texel : float = 1.0
 ## The ratio of Quake 1 unit per Godot unit.
 @export var inverse_scale_factor : float = 32.0
@@ -19,10 +21,11 @@ class_name QmapbspTrenchbroomMapConfig
 @export var navmesh_template : NavigationMesh
 ## If [code]true[/code], collision shape construction would get ignored.
 @export var ignore_collision : bool = false
-## Loads point files if they exist.
-## This can help you to locate leaks in your map.
+## Loads point file as [Path3D] if it exists.
+## Useful for interior maps. This can help you to locate leaks in your map. And gives an extra face clipping.
 @export var load_point_file : bool = false
-## Simplifies point files.
+## Removes unnecessary points in the point file.
+## But still can lead you to the leak properly.
 @export var simplify_point_files : bool = true
 
 @export_group("Occluders", "occ_")

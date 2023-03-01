@@ -20,7 +20,7 @@ static func var_to_prop(v) -> Array :
 			vv = var_to_str(v)
 	return [vv, typev]
 	
-static func prop_to_var(p : String, known_type : int = -1) :
+static func prop_to_var(p : StringName, known_type : int = -1) :
 	match known_type :
 		TYPE_COLOR :
 			var S := p.split(' ')

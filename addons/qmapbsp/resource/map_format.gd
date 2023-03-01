@@ -35,7 +35,7 @@ var brush_scales : PackedVector2Array
 func poll(result : Array) -> int :
 	var parsing : int = 0
 	var str_begin : int
-	var pushed = null
+	var pushed : StringName
 	
 	while i < src.length() :
 		var c := src.unicode_at(i)
@@ -47,17 +47,17 @@ func poll(result : Array) -> int :
 						parsing = 2
 					0x22 : # "
 						# end of the literal string
-						var v := (
+						var v := StringName(
 							src.substr(str_begin, i - str_begin).c_unescape()
 						)
 						i += 1
 						parsing = 0
-						if pushed == null :
+						if pushed == StringName() :
 							pushed = v
 						else :
 							# new entry
 							out = [pushed, v]
-							pushed = null
+							pushed = StringName()
 							return PollResult.FOUND_KEYVALUE
 				i += 1
 			2 : # escaping
@@ -165,7 +165,7 @@ func poll(result : Array) -> int :
 	if level != 0 :
 		result.append(&"UNMATCHED_BRACES")
 		return PollResult.ERR
-	if pushed :
+	if pushed != StringName() :
 		result.append(&"INCOMPLETE_KEY")
 		return PollResult.ERR
 	return PollResult.END
@@ -176,10 +176,10 @@ static func begin_from_text(text : String) -> QmapbspMapFormat :
 	kv.src = text
 	return kv
 
-static func expect_vec3(v : String) -> Vector3 :
+static func expect_vec3(v : StringName) -> Vector3 :
 	var s := v.split(' ') if !v.is_empty() else PackedStringArray()
 	if s.size() < 3 : return Vector3()
 	return Vector3(float(s[0]), float(s[1]), float(s[2]))
 
-static func expect_int(v : String) -> int :
+static func expect_int(v : StringName) -> int :
 	return v.to_int()

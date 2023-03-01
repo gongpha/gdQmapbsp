@@ -9,6 +9,7 @@ var owner : Node
 var entity_props : Dictionary # <id : Dict>
 var entity_nodes : Dictionary # <id : Node>
 var entity_navreg : Dictionary # <id : NavigationRegion3D>
+var entity_navreg_raw : Dictionary # <id : NavigationRegion3D>
 var entity_is_brush : PackedByteArray # tells if the entitiy has brushes
 	
 func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
@@ -50,8 +51,11 @@ func _entity_your_mesh(
 		last_added_meshin.gi_mode = GeometryInstance3D.GI_MODE_DYNAMIC
 		_recenter(node, origin)
 		
+	var dict : Dictionary = entity_props.get(ent_id, {})
+	var classname : StringName = dict.get("classname", &"")
+		
 	var navmesh_tem := _get_navmesh_template()
-	if navmesh_tem :
+	if navmesh_tem and classname != &'func_navmesh' :
 		var navreg : NavigationRegion3D = entity_navreg.get(ent_id, null)
 		if !navreg :
 			navreg = NavigationRegion3D.new()
@@ -64,7 +68,6 @@ func _entity_your_mesh(
 	node.add_child(last_added_meshin)
 	if owner : last_added_meshin.owner = owner
 	
-	var dict : Dictionary = entity_props.get(ent_id, {})
 	if dict.has('__qmapbsp_aabb') :
 		var aabb : AABB = dict['__qmapbsp_aabb']
 		var aabbb := mesh.get_aabb()
@@ -73,8 +76,8 @@ func _entity_your_mesh(
 		dict['__qmapbsp_aabb'] = aabb.merge(aabbb)
 		
 	var texel := _entity_unwrap_uv2(ent_id, brush_id, mesh)
-		
-	if dict.get("classname", "") == "func_blocklight" :
+	
+	if classname == &"func_blocklight" :
 		# only casts shadow
 		last_added_meshin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		for i in mesh.get_surface_count() :
@@ -82,6 +85,12 @@ func _entity_your_mesh(
 		texel = -1.0
 		mesh.lightmap_size_hint = Vector2i(1, 1)
 		last_added_meshin.gi_mode = GeometryInstance3D.GI_MODE_STATIC
+	elif classname == &'func_navmesh' :
+		# actual navmesh
+		var n3d : QmapbspFuncNavmesh = node
+		n3d.navigation_layers = dict.get("layer", &"1").to_int()
+
+		entity_navreg_raw[ent_id] = node
 		
 	if texel >= 0.0 :
 		mesh.lightmap_unwrap(Transform3D(), texel)
@@ -146,8 +155,8 @@ func _entity_node_directory_paths() -> PackedStringArray :
 		"res://addons/qmapbsp/class/"
 	]
 
-func _new_entity_node(classname : String) -> Node :
-	if classname == "func_occluder" :
+func _new_entity_node(classname : StringName) -> Node :
+	if classname == &"func_occluder" :
 		# build occluder
 		var occluder
 	
@@ -174,7 +183,7 @@ func _get_entity_node(id : int) -> Node :
 	
 	# new node
 	var dict : Dictionary = entity_props.get(id, {})
-	var classname : String = dict.get('classname', '')
+	var classname : StringName = dict.get('classname', &'')
 	node = _new_entity_node(classname)
 	if !node :
 		node = QmapbspUnknownClassname.new()
@@ -207,7 +216,7 @@ func _entity_prefers_region_partition(model_id : int) -> bool :
 
 func _entity_prefers_occluder(ent_id : int) -> bool :
 	var dict : Dictionary = entity_props.get(ent_id, {})
-	if dict.get("classname", "") != "func_occluder" : return false
+	if dict.get("classname", &"") != &"func_occluder" : return false
 	return true
 	
 func _get_occluder_shrink_amount() -> float :
@@ -217,7 +226,7 @@ func _entity_occluder_shrink_amount(
 	ent_id : int
 ) -> float :
 	var dict : Dictionary = entity_props.get(ent_id, {})
-	if dict.get("classname", "") == "func_occluder" : return 0.0
+	if dict.get("classname", &"") == &"func_occluder" : return 0.0
 	return _get_occluder_shrink_amount()
 	
 func _build_point_file_lines() -> bool :
@@ -263,6 +272,15 @@ func _finally() -> void :
 		root.move_child(path3d, 0)
 		if owner : path3d.owner = owner
 		
+	for k in entity_navreg_raw :
+		var n3d : QmapbspFuncNavmesh = entity_navreg_raw[k]
+		var nmesh := NavigationMesh.new()
+		for m in n3d.get_children() :
+			if m is MeshInstance3D :
+				nmesh.create_from_mesh(m.mesh)
+				m.free()
+		n3d.navigation_mesh = nmesh
+	entity_navreg_raw.clear()
 		
 	for k in entity_navreg :
 		var n3d : NavigationRegion3D = entity_navreg[k]
@@ -270,6 +288,7 @@ func _finally() -> void :
 		NavigationServer3D.region_bake_navigation_mesh(
 			n3d.navigation_mesh, entity_nodes.get(k)
 		)
+	entity_navreg.clear()
 
 func _get_navmesh_template() -> NavigationMesh :
 	return null
