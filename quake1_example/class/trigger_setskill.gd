@@ -7,5 +7,5 @@ func _message() : return
 func _bo_en(b : Node3D) :
 	super(b)
 	v.set_skill(
-		int(props.get('message'))
+		int(String(props.get('message')))
 	)

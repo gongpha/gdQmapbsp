@@ -29,7 +29,7 @@ func _bo_ex(b : Node3D) :
 
 func _message() :
 	var message = props.get('message', null)
-	if message is String :
+	if message is StringName :
 		_show_message_start(message)
 
 func _trigger(b : Node3D) :

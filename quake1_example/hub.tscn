@@ -167,7 +167,6 @@ text = "Registered"
 [node name="s_occlusion_culling" type="CheckBox" parent="tabs/Viewer Settings/vbox"]
 unique_name_in_owner = true
 layout_mode = 2
-button_pressed = true
 text = "Occlusion Culling"
 
 [node name="s_difficulity" type="OptionButton" parent="tabs/Viewer Settings/vbox"]

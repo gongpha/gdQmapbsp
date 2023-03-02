@@ -118,7 +118,7 @@ func _entity_occluder_includes_region(
 			return false
 	return super(ent_id, occluder, region)
 
-func _new_entity_node(classname : String) -> Node :
+func _new_entity_node(classname : StringName) -> Node :
 	var node : Node = super(classname)
 	if !node : return null
 	
