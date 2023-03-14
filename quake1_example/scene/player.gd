@@ -76,22 +76,23 @@ func move_ground(delta : float) -> void :
 	accelerate(max_speed, delta)
 	
 	_stairs(delta)
+	
+	move_and_slide()
+	_coltest()
+	
 	# test ceiling
 	staircast.target_position.y = 0.66 + stairstep
 	staircast.force_shapecast_update()
 	if staircast.get_collision_count() == 0 :
-		staircast.target_position.y = -stairstep - 0.1 # (?)
+		staircast.target_position.y = -stairstep # (?)
 		staircast.force_shapecast_update()
 		if staircast.get_collision_count() > 0 and staircast.get_collision_normal(0).y >= 0.8 :
 			var height := staircast.get_collision_point(0).y - (global_position.y - 0.75)
 			if height < stairstep :
-				position.y += height * 1.25 # additional bonus
+				position.y += height * 1.125 # additional bonus
 				smooth_y = -height
-				around.position.y = -height + 0.688
+				around.position.y += smooth_y
 				# 0.688 is an initial value of around.y
-	
-	move_and_slide()
-	_coltest()
 	
 func _stairs(delta : float) :
 	var w := (velocity / max_speed) * Vector3(2.0, 0.0, 2.0) * delta
@@ -170,8 +171,10 @@ func _physics_process(delta : float) -> void :
 	if is_zero_approx(smooth_y) :
 		smooth_y = 0.0
 	else :
-		smooth_y /= 1.5
+		#print(smooth_y)
+		smooth_y /= 1.125
 		around.position.y = smooth_y + 0.688
+	#Engine.time_scale = 0.2
 		
 func _coltest() :
 	for i in get_slide_collision_count() :
