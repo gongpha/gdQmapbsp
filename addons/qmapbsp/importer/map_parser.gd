@@ -8,6 +8,9 @@ signal tell_collision_shapes(
 
 var known_textures : PackedStringArray
 
+var generated_box_shapes : Array[BoxShape3D]
+var generated_box_shapes_size : PackedVector3Array
+
 var parsed_shapes : Array[Array] # [shape, origin, textures]
 
 func begin_file(f : FileAccess) -> StringName :
@@ -78,20 +81,29 @@ func _parse_shape() -> void :
 		else : is_box = false
 		
 		if is_box :
-			shape = BoxShape3D.new()
+			var s := aabb.size
+			var i := generated_box_shapes_size.find(s)
+			if i == -1 :
+				shape = BoxShape3D.new()
+				(shape as BoxShape3D).size = s
+				generated_box_shapes.append(shape)
+				generated_box_shapes_size.append(s)
+			else :
+				shape = generated_box_shapes[i]
 			V = aabb.get_center()
-			shape.size = aabb.size
 		else :
 			var vertices := planes_intersect(planes)
+			var vs := vertices.size()
 			
-			for i in vertices.size() :
+			for i in vs :
 				var v := vertices[i]
 				v = _qpos_to_vec3(v * -1)
 				vertices[i] = v
 				V += v
-			V /= vertices.size()
-			for i in vertices.size() :
+			V /= vs
+			for i in vs :
 				vertices[i] -= V
+			
 			shape = ConvexPolygonShape3D.new()
 			shape.points = vertices
 			
