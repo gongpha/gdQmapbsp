@@ -212,7 +212,7 @@ var lightmap_boost : float = 4.0
 var lightmap_boost_min : float = 0.0
 var lightmap_boost_max : float = 32.0
 func add_lightmap_boost(add : int) :
-	lightmap_boost = clamp(
+	lightmap_boost = clampf(
 		lightmap_boost + add * 2.0,
 		lightmap_boost_min, lightmap_boost_max
 	)

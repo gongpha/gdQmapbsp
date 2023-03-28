@@ -24,7 +24,7 @@ func _GatheringAllEntities() -> float :
 	if end :
 		entity_dict = {}
 		return 1.0
-	return min(_mapf_prog(), 0.99)
+	return minf(_mapf_prog(), 0.99)
 	
 func _ImportingData() -> float :
 	return 1.0

@@ -26,7 +26,7 @@ func draw_slider(where : Vector2, call : Callable,
 	scale_ := Vector2.ONE
 ) :
 	var v : float = call.call()
-	v = clamp(v, 0, 1)
+	v = clampf(v, 0, 1)
 	draw_quake_character(where + Vector2(-8, 0), 128, scale_)
 	for i in SLIDER_RANGE :
 		draw_quake_character(where + Vector2(i * 8.0, 0), 129, scale_)

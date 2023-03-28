@@ -100,7 +100,7 @@ func _calc_add() :
 			add = Vector3.BACK.rotated(Vector3.UP, rot) * dir
 		dura = add.length() / (props.get('speed', _def_speed()).to_int() / s)
 		
-		var sounds : int = clamp(props.get('sounds', '0').to_int(), 0, 5)
+		var sounds : int = clampi(props.get('sounds', '0').to_int(), 0, 5)
 		_get_sounds(sounds)
 		
 func _get_sounds(sounds : int) :

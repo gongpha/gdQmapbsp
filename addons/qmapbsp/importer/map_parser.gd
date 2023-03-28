@@ -44,33 +44,33 @@ func _parse_shape() -> void :
 				match plane.normal :
 					Vector3(1, 0, 0) :
 						x = Vector2(
-							min(plane.d, x.x),
-							max(plane.d, x.y),
+							minf(plane.d, x.x),
+							maxf(plane.d, x.y),
 						)
 					Vector3(-1, 0, 0) :
 						x = Vector2(
-							min(-plane.d, x.x),
-							max(-plane.d, x.y),
+							minf(-plane.d, x.x),
+							maxf(-plane.d, x.y),
 						)
 					Vector3(0, 1, 0) :
 						y = Vector2(
-							min(plane.d, y.x),
-							max(plane.d, y.y),
+							minf(plane.d, y.x),
+							maxf(plane.d, y.y),
 						)
 					Vector3(0, -1, 0) :
 						y = Vector2(
-							min(-plane.d, y.x),
-							max(-plane.d, y.y),
+							minf(-plane.d, y.x),
+							maxf(-plane.d, y.y),
 						)
 					Vector3(0, 0, 1) :
 						z = Vector2(
-							min(plane.d, z.x),
-							max(plane.d, z.y),
+							minf(plane.d, z.x),
+							maxf(plane.d, z.y),
 						)
 					Vector3(0, 0, -1) :
 						z = Vector2(
-							min(-plane.d, z.x),
-							max(-plane.d, z.y),
+							minf(-plane.d, z.x),
+							maxf(-plane.d, z.y),
 						)
 					_ :
 						is_box = false
@@ -128,15 +128,15 @@ static func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
 				var n0 := planes[i].normal
 				var n1 := planes[j].normal
 				var n2 := planes[k].normal
-				var d0 := planes[i].d * -1
-				var d1 := planes[j].d * -1
-				var d2 := planes[k].d * -1
+				var d0 := planes[i].d * -1.0
+				var d1 := planes[j].d * -1.0
+				var d2 := planes[k].d * -1.0
 				var t : float = (
 					n0.x * (n1.y * n2.z - n1.z * n2.y) +
 					n0.y * (n1.z * n2.x - n1.x * n2.z) +
 					n0.z * (n1.x * n2.y - n1.y * n2.x)
 				)
-				if abs(t) < EPS : continue
+				if absf(t) < EPS : continue
 				var v := Vector3(
 					(d0 * (n1.z * n2.y - n1.y * n2.z) + d1 * (n0.y * n2.z - n0.z * n2.y) + d2 * (n0.z * n1.y - n0.y * n1.z)) / -t,
 					(d0 * (n1.x * n2.z - n1.z * n2.x) + d1 * (n0.z * n2.x - n0.x * n2.z) + d2 * (n0.x * n1.z - n0.z * n1.x)) / -t,
@@ -145,7 +145,7 @@ static func planes_intersect(planes : Array[Plane]) -> PackedVector3Array :
 				var yes := true
 				for l in planes.size() :
 					var lp := planes[l]
-					if l != i and l != j and l != k and v.dot(lp.normal) < (lp.d  * -1)+ EPS :
+					if l != i and l != j and l != k and v.dot(lp.normal) < (lp.d  * -1) + EPS :
 						yes = false
 						break
 				if yes :

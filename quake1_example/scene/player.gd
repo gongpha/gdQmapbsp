@@ -57,14 +57,14 @@ func teleport_to(dest : Node3D, play_sound : bool = false) :
 
 func accelerate(in_speed : float, delta : float) -> void :
 	velocity += wishdir * (
-		clamp(in_speed - velocity.dot(wishdir), 0, accel * delta)
+		clampf(in_speed - velocity.dot(wishdir), 0, accel * delta)
 	)
 
 func friction(delta : float) -> void :
 	var speed : float = velocity.length()
 	var svec : Vector3
 	if speed > 0 :
-		svec = velocity * max(speed - (
+		svec = velocity * maxf(speed - (
 			fric * speed * delta
 		), 0) / speed
 	if speed < 0.1 :
@@ -199,7 +199,7 @@ func _input(event : InputEvent) -> void :
 		around.rotate_y(r.x * sensitivity)
 		
 		var hrot = head.rotation
-		hrot.x = clamp(hrot.x, -PI/2, PI/2)
+		hrot.x = clampf(hrot.x, -PI/2, PI/2)
 		head.rotation = hrot
 		
 func _fluid_enter(f : QmapbspQuakeFluidVolume) :

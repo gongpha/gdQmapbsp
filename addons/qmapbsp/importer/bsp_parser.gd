@@ -361,7 +361,7 @@ func _model_geo() -> bool :
 		bound_max = model[1]
 		
 		extents = (bound_max - bound_min) / 2
-		extents = Vector3(abs(extents.x), abs(extents.y), abs(extents.z))
+		extents = Vector3(absf(extents.x), absf(extents.y), absf(extents.z))
 		
 		face_count = model[9]
 		face_indexf = model[8]
@@ -649,7 +649,6 @@ func _build_geo() -> bool :
 				surface_tool.set_material(s)
 				mat = s
 		
-		# maybe faster ?
 		var C_UV := surface_tool.set_uv
 		var C_UV2 := surface_tool.set_uv2
 		var C_NM := surface_tool.set_normal
@@ -764,7 +763,6 @@ const ENTRY_LIST := [
 	'leaves', 'lface', 'edges', 'ledges', 'models',
 ]
 
-# it's literally the same as the method inside QmapbspPakFile
 func _make_im_from_pal(
 	s : Vector2i, d : PackedByteArray
 ) -> Image :

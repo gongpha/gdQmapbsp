@@ -5,10 +5,10 @@
 
 [sub_resource type="Resource" id="Resource_1lml6"]
 script = ExtResource("1_aloy5")
-qbsp_path = ""
+qbsp_path = "C:/Users/USER/Desktop/OTHER GAMES/_/quakespasm-0.94.7_win64/bin/qbsp.exe"
 
 [resource]
 resource_name = "USERCONFIG"
 script = ExtResource("1_4544i")
 compilation_workflow = SubResource("Resource_1lml6")
-tb_path = ""
+tb_path = "D:/trenchbroom"
