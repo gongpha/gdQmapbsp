@@ -141,12 +141,13 @@ static func _make_image(
 	return im
 	
 func _poll_converting() -> StringName :
-	var idx := convert_indexes[loadrsc_index]
-	var entry : Array = convert_entries[loadrsc_index]
-	var entrydata : Array = entry[1]
-	match entry[0] :
-		&'lmp_pic' :
-			_save_entry(idx, _make_image(entrydata, global_pal))
+	if !convert_indexes.is_empty() :
+		var idx := convert_indexes[loadrsc_index]
+		var entry : Array = convert_entries[loadrsc_index]
+		var entrydata : Array = entry[1]
+		match entry[0] :
+			&'lmp_pic' :
+				_save_entry(idx, _make_image(entrydata, global_pal))
 	loadrsc_index += 1
 				
 	if loadrsc_index >= convert_entries.size() :
