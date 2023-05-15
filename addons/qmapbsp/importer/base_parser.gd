@@ -42,6 +42,7 @@ const WORLDSPAWN_BRUSH_ENTITIES := [
 	# Trenchbroom
 	&"func_group",
 	# ericw-tools
+	&"func_detail",
 	&"func_detail_illusionary",
 	&"func_detail_wall",
 	&"func_detail_fence",

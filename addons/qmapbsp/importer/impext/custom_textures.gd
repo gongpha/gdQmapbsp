@@ -26,19 +26,29 @@ var _created_textures : Dictionary # <name, Material>
 
 func _texture_include_bsp_textures() -> bool : return true
 
+func _rename_texture(name : String) -> String : return name
+
+func _build_paths(
+	name : String
+) -> PackedStringArray :
+	var exts := _get_extensions()
+	var texdir := _texture_get_dir()
+	var paths : PackedStringArray
+	for e in exts :
+		paths.append(texdir.path_join('%s.%s' % [_rename_texture(name), e]))
+	return paths
+
 func _texture_get(name : String, size : Vector2i) :
 	var existed : Material = _created_textures.get(name, null)
 	if existed : return existed
 	
-	var exts := _get_extensions()
-	var texdir := _texture_get_dir()
+	var paths := _build_paths(name)
 	var rsc : Resource
 	
 	# finding the best resource file for this texture
-	for e in exts :
-		var path := texdir.path_join('%s.%s' % [name, e])
-		if !ResourceLoader.exists(path) : continue
-		rsc = load(path)
+	for p in paths :
+		if !ResourceLoader.exists(p) : continue
+		rsc = load(p)
 		if rsc is Texture2D :
 			rsc = _construct_new_material(rsc)
 			_created_textures[name] = rsc

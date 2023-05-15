@@ -13,6 +13,7 @@ size = Vector3(1, 0.175, 1)
 collision_layer = 3
 floor_constant_speed = true
 floor_snap_length = 0.5
+platform_on_leave = 2
 script = ExtResource("1_rapov")
 
 [node name="col" type="CollisionShape3D" parent="."]
