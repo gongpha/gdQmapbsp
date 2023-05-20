@@ -82,7 +82,7 @@ func _entity_your_mesh(
 		last_added_meshin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		for i in mesh.get_surface_count() :
 			mesh.surface_set_material(i, null)
-		texel = -1.0
+		texel = 128.0
 		mesh.lightmap_size_hint = Vector2i(1, 1)
 		last_added_meshin.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 	elif classname == &'func_navmesh' :
@@ -91,6 +91,12 @@ func _entity_your_mesh(
 		n3d.navigation_layers = dict.get("layer", &"1").to_int()
 
 		entity_navreg_raw[ent_id] = node
+	else :
+		if dict.has('__qmapbsp_lmscale') :
+			texel *= float(String(dict['__qmapbsp_lmscale']))
+			
+		if node.has_method(&'_qmapbsp_get_gi_mode') :
+			last_added_meshin.gi_mode = node._qmapbsp_get_gi_mode()
 		
 	if texel >= 0.0 :
 		mesh.lightmap_unwrap(Transform3D(), texel)
@@ -175,7 +181,7 @@ func _new_entity_node(classname : StringName) -> Node :
 		if !scr :
 			continue
 		return scr.new()
-	return null
+	return QmapbspUnknownClassname.new()
 
 func _get_entity_node(id : int) -> Node :
 	var node : Node = entity_nodes.get(id, null)
@@ -186,7 +192,8 @@ func _get_entity_node(id : int) -> Node :
 	var classname : StringName = dict.get('classname', &'')
 	node = _new_entity_node(classname)
 	if !node :
-		node = QmapbspUnknownClassname.new()
+		return null
+	elif node is QmapbspUnknownClassname :
 		node.props = dict
 	elif node.has_method(&'_get_properties') :
 		node._get_properties(dict)

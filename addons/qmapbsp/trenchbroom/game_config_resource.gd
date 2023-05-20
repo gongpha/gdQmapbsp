@@ -91,15 +91,22 @@ func _scan_fgd_classes() -> String :
 	return fgdsrc
 		
 func _write_object_fgd(classname : String, object : Object) -> String :
-	#if !object.has_method(&'_qmapbsp_get_fgd_info') : return ""
-	var dict : Dictionary = object._qmapbsp_get_fgd_info()
+	# TODO : docs
+	var solid : bool = false
+	if object.has_method(&'_qmapbsp_is_solid_class') :
+		solid = object._qmapbsp_is_solid_class()
+		
+	var has_info := object.has_method(&'_qmapbsp_get_fgd_info')
+	if !has_info and !solid : return ""
+		
+	var dict : Dictionary = object._qmapbsp_get_fgd_info() if has_info else {}
 	var s : String
 	var bases : PackedStringArray
 	if object is Node3D :
 		bases.append("Node3D")
 		
 	return _write_fgd_class(
-		classname, "PointClass", "", bases, dict
+		classname, "SolidClass" if solid else "PointClass", "", bases, dict
 	)
 		
 func _write_fgd_class(
@@ -142,12 +149,15 @@ func _write_fgd_class(
 			color.g * 255,
 			color.b * 255,
 		]
+	var sizestr : String
 	var size_ : String = "-4 -4 -4, 4 4 4"
+	if type != "SolidClass" :
+		sizestr = "size(" + size_ + ") "
 	if !desc.is_empty() :
 		desc = " : " + desc
 	notify_property_list_changed()
 	return """
-@""" + type + """ base(""" + ', '.join(bases) + """) size(""" + size_ + """) """ + color_ + """= """ + classname + desc + """ [
+@""" + type + """ base(""" + ', '.join(bases) + """) """ + sizestr + color_ + """= """ + classname + desc + """ [
 """ + props + """
 ]
 		"""
@@ -215,6 +225,7 @@ const FGD_TEMPLATE := """
 ////////////////////////////
 // Built-in Qmapbsp classes
 
+@SolidClass = func_brush : "A plain brush entity." []
 @SolidClass = func_occluder : "Used as an occluder. It can be skipped by using SKIP or HINTSKIP texture." []
 @SolidClass = func_blocklight : "Casts shadow only. Does not render meshes or lightmap baking." []
 @SolidClass = func_navmesh : "Builds a navigation mesh from this brush" [

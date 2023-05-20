@@ -118,7 +118,7 @@ func _import(
 	wis.root = node
 	wis.owner = node
 	node.hide()
-	editor_itf.add_child(node)
+	editor_itf.get_base_control().add_child(node)
 	
 	if bsp_path.is_empty() :
 		printerr("No BSP file")
