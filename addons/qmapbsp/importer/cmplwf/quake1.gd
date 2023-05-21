@@ -25,6 +25,7 @@ func _compile(map_filepath : String) -> String :
 		'-nopercent',
 		'-maxNodeSize 0',
 		'-subdivide 0',
+		'-bsp2',
 		ProjectSettings.globalize_path(map_filepath),
 		out
 	], o)

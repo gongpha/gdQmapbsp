@@ -15,6 +15,8 @@ var bsp_shader : Shader
 var known_map_textures : PackedStringArray
 
 var model_map : Dictionary # <model_id : ent_id>
+	
+var is_bsp2 := false
 
 func _init() :
 	super()
@@ -27,6 +29,8 @@ func begin_file(f : FileAccess) -> StringName :
 	match bsp_version :
 		29 : # OK
 			pass
+		844124994 : # BSP2
+			is_bsp2 = true
 		_ : return &'BSP_VERSION_IS_NOT_SUPPORTED'
 	
 	_read_dentry()
@@ -132,8 +136,12 @@ func _read_edges() -> float :
 	if load_index == 0 :
 		curr_entry = entries['edges']
 		file.seek(curr_entry.x)
-		edges.resize(curr_entry.y / 4)
+		edges.resize(curr_entry.y / (8 if is_bsp2 else 4))
 	edges[load_index] = Vector2i(
+		# BSP2
+		file.get_32(), # start vertex
+		file.get_32() # end vertex
+	) if is_bsp2 else Vector2i(
 		file.get_16(), # start vertex
 		file.get_16() # end vertex
 	)
@@ -295,13 +303,13 @@ func _read_faces() -> float :
 	if load_index == 0 :
 		curr_entry = entries['faces']
 		file.seek(curr_entry.x)
-		faces.resize(curr_entry.y / 20)
+		faces.resize(curr_entry.y / (28 if is_bsp2 else 20))
 	faces[load_index] = [
-		file.get_16(), # plane id
-		file.get_16(), # side
+		(file.get_32() if is_bsp2 else file.get_16()), # plane id
+		(file.get_32() if is_bsp2 else file.get_16()), # side (unused ?)
 		file.get_32(), # first edge on the list
-		file.get_16(), # edge count
-		file.get_16(), # tinfo id
+		(file.get_32() if is_bsp2 else file.get_16()), # edge count
+		(file.get_32() if is_bsp2 else file.get_16()), # tinfo id
 		file.get_8(), file.get_8(), # LM1, LM2
 		file.get_8(), file.get_8(), # LM3, LM4
 		u32toi32(file.get_32()), # lightmap
