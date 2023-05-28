@@ -99,6 +99,10 @@ func _entity_get_collision_shape_method(ent_id : int) -> int :
 func _entity_prefers_occluder(ent_id : int) -> bool :
 	return false
 	
+# -1 : disabled
+func _entity_auto_smooth_degree() -> float :
+	return 30
+	
 func _entity_region_size(ent_id : int) -> float :
 	return 12.0 if _entity_prefers_occluder(ent_id) else 32.0
 

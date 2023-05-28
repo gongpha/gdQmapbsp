@@ -132,11 +132,19 @@ func _read_vertices() -> float :
 	load_index += 1
 	return float(load_index) / vertices.size()
 			
+var smooth_angle : float
+var smooth_group_faces : PackedInt32Array # <numfaces> smooth group id
+var smooth_group_fofv : Array[PackedInt32Array] # <numvertices> face ids...
+var smooth_group_n : int = 0
 func _read_edges() -> float :
 	if load_index == 0 :
 		curr_entry = entries['edges']
 		file.seek(curr_entry.x)
 		edges.resize(curr_entry.y / (8 if is_bsp2 else 4))
+		smooth_angle = deg_to_rad(wim._entity_auto_smooth_degree())
+		if smooth_angle >= 0 :
+			smooth_group_fofv.resize(vertices.size())
+			smooth_group_fofv.fill(-1)
 	edges[load_index] = Vector2i(
 		# BSP2
 		file.get_32(), # start vertex
@@ -304,6 +312,10 @@ func _read_faces() -> float :
 		curr_entry = entries['faces']
 		file.seek(curr_entry.x)
 		faces.resize(curr_entry.y / (28 if is_bsp2 else 20))
+		if smooth_angle >= 0 :
+			smooth_group_faces.resize(faces.size())
+			smooth_group_faces.fill(-1)
+			
 	faces[load_index] = [
 		(file.get_32() if is_bsp2 else file.get_16()), # plane id
 		(file.get_32() if is_bsp2 else file.get_16()), # side (unused ?)
@@ -349,6 +361,12 @@ func _ConstructingData() -> float : # per model
 			return 1.0
 	return float(load_index) / models.size()
 	
+func get_real_normal(face : Array) -> Vector3 :
+	return planes[face[0]].normal * (
+		# flip if it's backface (behind the plane)
+		-1 if face[1] == 1 else 1
+	)
+	
 var loc_load_index : int
 var entity_geo_d : Dictionary
 var model : Array
@@ -385,6 +403,7 @@ func _model_geo() -> bool :
 	var face : Array = faces[face_array_index]
 	
 	var face_vertices : PackedVector3Array
+	var face_vertex_face_ids : PackedInt32Array
 	var face_normals : PackedVector3Array
 	var face_uvs : PackedVector2Array
 	var face_uvrs : PackedVector2Array
@@ -394,6 +413,7 @@ func _model_geo() -> bool :
 	var edge_count : int = face[3]
 
 	face_vertices.resize(edge_count)
+	face_vertex_face_ids.resize(edge_count)
 	face_normals.resize(edge_count)
 	face_uvs.resize(edge_count)
 	#face_colors.resize(edge_count)
@@ -418,13 +438,12 @@ func _model_geo() -> bool :
 		1.0 / (tsize.y * unit_scale)
 	)
 
-	var plane_normal : Vector3 = planes[face[0]].normal * (
-		# flip if it's backface (behind the plane)
-		-1 if face[1] == 1 else 1
-	)
+	var plane_normal : Vector3 = get_real_normal(face)
 	
 	var uv_min := Vector2(INF, INF)
 	var uv_max := Vector2(-INF, -INF)
+	
+	var smooth_group : int = -1
 	
 	for k in edge_count :
 		var edge_index : int = edge_list[edge_start + k]
@@ -435,6 +454,27 @@ func _model_geo() -> bool :
 		else :
 			v0 = edges[edge_index][0]
 		var vert : Vector3 = vertices[v0]
+		
+		if smooth_group_fofv.size() > 0 :
+			var exist_faces := smooth_group_fofv[v0]
+			if !exist_faces.is_empty() :
+				for f in exist_faces :
+					var n2 := get_real_normal(faces[f])
+					var angle := plane_normal.angle_to(n2)
+					if angle <= smooth_angle and angle != 0.0 :
+						# merge all the faces that are inside it too
+						var newgroup := smooth_group_faces[f]
+						if smooth_group != -1 :
+							for i in smooth_group_faces.size() :
+								if smooth_group_faces[i] == smooth_group :
+									smooth_group_faces[i] = newgroup
+						smooth_group = newgroup
+						
+			if smooth_group == -1 :
+				smooth_group = smooth_group_n
+				smooth_group_n += 1
+			face_vertex_face_ids[k] = face_array_index
+		
 		face_vertices[k] = vert
 		face_normals[k] = plane_normal
 		var t_s : Vector3 = texture_info[0]
@@ -470,6 +510,19 @@ func _model_geo() -> bool :
 	var region_or_alone = wim._model_get_region(
 		load_index, face_array_index, texture
 	)
+	
+	if smooth_group != -1 :
+		for k in edge_count :
+			var edge_index : int = edge_list[edge_start + k]
+			var v0 : int
+			if edge_index < 0 :
+				edge_index = -edge_index
+				v0 = edges[edge_index][1]
+			else :
+				v0 = edges[edge_index][0]
+				
+			smooth_group_fofv[v0].append(face_array_index)
+		smooth_group_faces[face_array_index] = smooth_group
 	
 	if region_or_alone == null : 
 		if wim._entity_prefers_region_partition(load_index) :
@@ -513,7 +566,7 @@ func _model_geo() -> bool :
 	if entity_geo_d.has(region_or_alone) :
 		var arr : Array = entity_geo_d[region_or_alone]
 		arr[0].append([
-			face_vertices, face_normals, face_uvs,
+			face_vertices, face_vertex_face_ids, face_normals, face_uvs,
 			lsize, lid, face_uvrs, Color(
 				face[5], face[6], face[7], face[8]
 			), lstyle
@@ -529,7 +582,7 @@ func _model_geo() -> bool :
 		entity_geo_d[region_or_alone] = [
 			[
 				[
-					face_vertices, face_normals, face_uvs,
+					face_vertices, face_vertex_face_ids, face_normals, face_uvs,
 					lsize, lid, face_uvrs, Color(
 						face[5], face[6], face[7], face[8]
 					), lstyle
@@ -574,6 +627,7 @@ func _BuildingData() -> float :
 			lmtex = null
 			entity_geo.clear()
 			lightmapdata.clear()
+			smooth_group_faces.clear()
 			ip = null
 			return 1.0
 	return float(load_index) / entity_geo_keys.size()
@@ -612,6 +666,8 @@ func _build_geo() -> bool :
 			
 		if wim._entity_prefers_occluder(target_ent) :
 			occ = ArrayOccluder3D.new()
+			
+		smooth_group_fofv.clear()
 		
 	if loc_load_index == region_keys.size() :
 		if occ :
@@ -657,38 +713,51 @@ func _build_geo() -> bool :
 				surface_tool.set_material(s)
 				mat = s
 		
+		surface_tool.set_smooth_group(-1)
 		var C_UV := surface_tool.set_uv
 		var C_UV2 := surface_tool.set_uv2
 		var C_NM := surface_tool.set_normal
 		var C_CT := surface_tool.set_custom
 		var C_VT := surface_tool.add_vertex
+		var C_SG : Callable = surface_tool.set_smooth_group if smooth_group_faces.size() > 0 else Callable()
 		
 		var indexes : PackedInt32Array = texdict[s]
+		var refv := [
+			-1 # last smooth group
+		]
 		
 		for t in indexes :
 			var surface : Array = surfaces[t]
 			var verts : PackedVector3Array = surface[0]
-			var lid : int = surface[4]
-			var uvs : PackedVector2Array = surface[2]
-			var lsize : Vector2 = surface[3]
-			var nors : PackedVector3Array = surface[1]
-			var uvrs : PackedVector2Array = surface[5]
-			#var cols : PackedColorArray = surface[6]
-			var lights : Color = surface[6]
-			var lstyle : int = surface[7]
+			var faceids : PackedInt32Array = surface[1]
+			var lid : int = surface[5]
+			var uvs : PackedVector2Array = surface[3]
+			var lsize : Vector2 = surface[4]
+			var nors : PackedVector3Array = surface[2]
+			var uvrs : PackedVector2Array = surface[6]
+			var lights : Color = surface[7]
+			var lstyle : int = surface[8]
 			
 			
 			
-			var ADD := func(i : int) :
+			var ADD := func(i : int, ref : Array) :
 				C_UV.call(uvs[i])
 				if !uvrs.is_empty() :
 					C_UV2.call(uvrs[i])
-				var nor := nors[i]
-				C_NM.call(nor)
 				if is_global :
 					C_CT.call(0, Color(s, lstyle, lsize.x / lightmap_size.x, UUU))
 					C_CT.call(1, lights)
 				var V := verts[i]
+				var nor := nors[i]
+				
+				if C_SG.is_valid() :
+					var sg := smooth_group_faces[faceids[i]]
+					if sg != ref[0] :
+						C_SG.call(sg)
+						ref[0] = sg
+				else :
+					C_NM.call(nor)
+				
 				C_VT.call(V - center)
 				
 				var include_in_occ := true
@@ -738,15 +807,19 @@ func _build_geo() -> bool :
 						uvrs[i] = (uv * fsize) + offset
 				
 			for i in verts.size() - 2 :
-				ADD.call(0)
-				ADD.call(i + 1)
-				ADD.call(i + 2)
+				ADD.call(0, refv)
+				ADD.call(i + 1, refv)
+				ADD.call(i + 2, refv)
 		
 		if !is_global :
+			if smooth_group_faces.size() > 0 :
+				surface_tool.generate_normals()
 			surface_tool.generate_tangents()
 			mesh = surface_tool.commit(mesh)
 			surface_tool = null
 	if global_surface_tool :
+		if smooth_group_faces.size() > 0 :
+			global_surface_tool.generate_normals()
 		global_surface_tool.generate_tangents()
 		mesh = global_surface_tool.commit(mesh)
 	wim._entity_your_mesh(target_ent, loc_load_index, mesh, center, r)
