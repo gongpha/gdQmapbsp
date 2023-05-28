@@ -19,8 +19,8 @@ class_name QmapbspTrenchbroomMapConfig
 ## Bakes navigation meshes based on this [NavigationMesh].
 ## The operation will skip if it's empty.
 @export var navmesh_template : NavigationMesh
-## If [code]true[/code], collision shape construction would get ignored.
-@export var ignore_collision : bool = false
+## The method for constructing collision shapes from a whole map. Useful when importing individual models. Leave "Optimal" if importing for level maps
+@export_enum("Optimal", "Convex Hull", "Convex Hull Simple", "Trimesh", "Disabled") var collsion_constructing_method : int = 0
 ## Loads point file as [Path3D] if it exists.
 ## Useful for interior maps. This can help you to locate leaks in your map. And gives an extra face clipping.
 @export var load_point_file : bool = false

@@ -96,8 +96,8 @@ func _entity_prefers_occluder(ent_id : int) -> bool :
 func _get_occluder_shrink_amount() -> float :
 	return map_config.occ_shrink_amount
 
-func _entity_prefers_collision_shape(ent_id : int) -> bool :
-	return !map_config.ignore_collision
+func _entity_get_collision_shape_method(ent_id : int) -> int :
+	return map_config.collsion_constructing_method
 
 func _get_navmesh_template() -> NavigationMesh :
 	return map_config.navmesh_template

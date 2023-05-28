@@ -18,13 +18,16 @@ func begin_file(f : FileAccess) -> StringName :
 	mapf = QmapbspMapFormat.begin_from_text(f.get_as_text(true))
 	return StringName()
 
-func _brush_found() :
-	if wim._entity_prefers_collision_shape(entity_idx) :
+func _brush_found() -> void :
+	if wim._entity_get_collision_shape_method(entity_idx) == 0 :
 		_parse_shape()
 	
 	for t in mapf.brush_textures :
 		if known_textures.has(t) : continue
 		known_textures.append(t)
+		
+func _make_convex() -> void :
+	pass
 		
 func _parse_shape() -> void :
 	var shape : Shape3D

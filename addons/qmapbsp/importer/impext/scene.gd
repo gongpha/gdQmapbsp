@@ -51,6 +51,24 @@ func _entity_your_mesh(
 		last_added_meshin.gi_mode = GeometryInstance3D.GI_MODE_DYNAMIC
 		_recenter(node, origin)
 		
+	var colmet := _entity_get_collision_shape_method(ent_id)
+	var newshape : Shape3D
+	match colmet :
+		1, 2 : # convex, convex (simple)
+			newshape = mesh.create_convex_shape(
+				true, colmet == 2
+			)
+		3 : # top 10 most lazy collision construction methods ever (2023)
+			newshape = mesh.create_trimesh_shape()
+			
+	if newshape :
+		last_added_col = CollisionShape3D.new()
+		last_added_col.shape = newshape
+		last_added_col.name = 'c%d' % brush_id
+		last_added_col.position = last_added_meshin.position
+		node.add_child(last_added_col)
+		if owner : last_added_col.owner = owner
+		
 	var dict : Dictionary = entity_props.get(ent_id, {})
 	var classname : StringName = dict.get("classname", &"")
 		

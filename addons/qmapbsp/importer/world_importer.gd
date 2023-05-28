@@ -88,8 +88,13 @@ func _entity_occluder_shrink_amount(
 func _entity_prefers_bsp_geometry(model_id : int) -> bool :
 	return true
 	
-func _entity_prefers_collision_shape(ent_id : int) -> bool :
-	return true
+# 0 : best (boxshape > convex)
+# 1 : convex hull (default)
+# 2 : convex hull (simple)
+# 3 : trimesh (concave)
+# 4 : disabled
+func _entity_get_collision_shape_method(ent_id : int) -> int :
+	return 0
 	
 func _entity_prefers_occluder(ent_id : int) -> bool :
 	return false

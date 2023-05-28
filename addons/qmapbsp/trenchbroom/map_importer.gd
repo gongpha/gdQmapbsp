@@ -144,6 +144,8 @@ func _import(
 			err = reti
 			break
 			
+	node = wis.root
+			
 	if err != StringName() :
 		printerr(err)
 		node.free()
