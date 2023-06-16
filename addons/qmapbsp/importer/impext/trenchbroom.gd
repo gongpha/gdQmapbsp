@@ -101,3 +101,6 @@ func _entity_get_collision_shape_method(ent_id : int) -> int :
 
 func _get_navmesh_template() -> NavigationMesh :
 	return map_config.navmesh_template
+
+func _entity_auto_smooth_degree() -> float :
+	return map_config.auto_smooth_max_angle

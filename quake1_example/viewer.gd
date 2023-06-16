@@ -202,7 +202,7 @@ func found_secret() :
 
 var mode : int = 0
 func switch_render_mode() :
-	if mode == 2 :
+	if mode == 3 :
 		mode = 0
 	else :
 		mode += 1

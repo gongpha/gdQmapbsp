@@ -454,7 +454,7 @@ func _model_geo() -> bool :
 			v0 = edges[edge_index][0]
 		var vert : Vector3 = vertices[v0]
 		
-		if smooth_group_fofv.size() > 0 :
+		if !smooth_group_fofv.is_empty() :
 			var exist_faces := smooth_group_fofv[v0]
 			if !exist_faces.is_empty() :
 				for f in exist_faces :

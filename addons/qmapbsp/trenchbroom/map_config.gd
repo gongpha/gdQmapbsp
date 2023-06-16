@@ -27,6 +27,9 @@ class_name QmapbspTrenchbroomMapConfig
 ## Removes unnecessary points in the point file.
 ## But still can lead you to the leak properly.
 @export var simplify_point_files : bool = true
+## The maximum angle (in degrees) between faces for grouping smooth groups.
+## Enter [code]-1[/code] to disable this feature.
+@export var auto_smooth_max_angle : float = 30
 
 @export_group("Occluders", "occ_")
 ## Bakes occluders from the worldspawn entity.

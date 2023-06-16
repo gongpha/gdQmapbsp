@@ -54,6 +54,8 @@ void fragment() {
 		ALBEDO = color;
 	} else if (mode == 2) {
 		ALBEDO = vec3(lightmap(UV2));
+	} else if (mode == 3) {
+		ALBEDO = NORMAL;
 	}
 	
 	if (regionhl) {
