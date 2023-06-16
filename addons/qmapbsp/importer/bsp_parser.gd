@@ -144,7 +144,6 @@ func _read_edges() -> float :
 		smooth_angle = deg_to_rad(wim._entity_auto_smooth_degree())
 		if smooth_angle >= 0 :
 			smooth_group_fofv.resize(vertices.size())
-			smooth_group_fofv.fill(-1)
 	edges[load_index] = Vector2i(
 		# BSP2
 		file.get_32(), # start vertex

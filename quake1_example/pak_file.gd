@@ -109,6 +109,7 @@ func _poll_read_file() -> StringName :
 		_ :
 			rsc = QmapbspRawFile.new()
 			var mpath := "user://packcache/".path_join(path)
+			DirAccess.make_dir_absolute(mpath.get_base_dir())
 			var f := FileAccess.open(mpath, FileAccess.WRITE)
 			if f :
 				f.store_buffer(loadrsc_f.get_buffer(datasize))
