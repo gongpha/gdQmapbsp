@@ -6,6 +6,7 @@ class_name QmapbspQuakeFunctionDoor
 
 var tween : Tween
 var add : Vector3
+var add_reveal : Vector3
 var dura : float
 var wait : int
 var calc_ : bool = false
@@ -20,13 +21,13 @@ var links : Array[QmapbspQuakeFunctionDoor]
 signal emit_message_once(m : String)
 
 # according to the QC file
-var audio_paths := [
-	['misc/null.wav', ''],
+const audio_paths := [
+	['', ''],
 	['doors/drclos4.wav', 'doors/doormv1.wav'],
 	['doors/hydro1.wav', 'doors/hydro2.wav'],
 	['doors/stndr1.wav', 'doors/stndr2.wav'],
 	['doors/ddoor1.wav', 'doors/ddoor2.wav'],
-	['misc/null.wav', ''],
+	['', ''],
 ]
 
 var func_door := [
@@ -71,7 +72,7 @@ func _calc_add() :
 			for n in get_tree().get_nodes_in_group(&'doors') :
 				#if n.calc_ : continue
 				n._calc_add()
-				if _no_linking() :
+				if n._no_linking() :
 					continue
 					
 				if (
@@ -98,6 +99,9 @@ func _calc_add() :
 				aabb.size.x, 0.0, aabb.size.z
 			)) + Vector3(lip, 0.0, lip)
 			add = Vector3.BACK.rotated(Vector3.UP, rot) * dir
+			add_reveal = Vector3.RIGHT.rotated(Vector3.UP, -rot) * -(Vector3(
+				aabb.size.x, 0.0, aabb.size.z
+			))
 		dura = add.length() / (props.get('speed', _def_speed()).to_int() / s)
 		
 		var sounds : int = clampi(props.get('sounds', '0').to_int(), 0, 5)
@@ -122,10 +126,13 @@ func _make_player() :
 		player = AudioStreamPlayer3D.new()
 		player.finished.connect(_audf)
 		add_child(player)
+		
+func _get_sound_index_loop() -> int : return 0
+func _get_sound_index_motion_end() -> int : return 1
 
 func _motion_f(destroy_tween : bool = false) :
 	player_end = true
-	_play_snd(1)
+	_play_snd(_get_sound_index_motion_end())
 	if destroy_tween :
 		tween.kill()
 		tween = null
@@ -145,24 +152,30 @@ func _audf() :
 		_make_player()
 		player.play()
 
+func _move_pre(tween : Tween) -> Vector3 : return position
+
 func _move() :
+	tween = create_tween()
+	
+	var basepos := _move_pre(tween)
+	
 	if open :
-		tween = create_tween()
 		tween.tween_property(self, ^'position',
-			position - add, dura
+			basepos - add, dura
 		).finished.connect(_motion_f.bind(true))
 	else :
-		tween = create_tween()
 		tween.tween_property(self, ^'position',
-			position + add, dura
+			basepos + add, dura
 		).finished.connect(_motion_f)
 	open = !open
-	_play_snd(0)
+	_play_snd(_get_sound_index_loop())
 	player_end = false
 	
 	if wait != -1 :
 		tween.tween_interval(wait)
 		tween.finished.connect(_move)
+		
+
 
 func _open_direct() :
 	player_end = false

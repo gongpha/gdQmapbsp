@@ -6,7 +6,7 @@ uniform float lmboost = 4.0;
 uniform bool regionhl = false;
 uniform sampler2D[256] texs : source_color; // not an actual limit
 uniform sampler2D lmp : repeat_disable;
-uniform float[12] lightstyles;
+uniform float[64] lightstyles;
 
 // for debugging purposes
 instance uniform ivec3 region;
@@ -24,10 +24,10 @@ varying float lights[4];
 
 void vertex() {
 	lights = {
-		(CUSTOM1.x < 12.0) ? lightstyles[int(CUSTOM1.x)] : 1.0,
-		(CUSTOM1.y < 12.0) ? lightstyles[int(CUSTOM1.y)] : 1.0,
-		(CUSTOM1.z < 12.0) ? lightstyles[int(CUSTOM1.z)] : 1.0,
-		(CUSTOM1.w < 12.0) ? lightstyles[int(CUSTOM1.w)] : 1.0
+		lightstyles[int(CUSTOM1.x)],
+		lightstyles[int(CUSTOM1.y)],
+		lightstyles[int(CUSTOM1.z)],
+		lightstyles[int(CUSTOM1.w)]
 	};
 	texidx = int(CUSTOM0.x);
 	lstyles = int(CUSTOM0.y);
