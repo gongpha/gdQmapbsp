@@ -10,16 +10,29 @@ config_version=5
 
 [application]
 
-config/name="gdQmapbsp"
+config/name="gdQmapbsp-spyFPS"
 run/main_scene="res://quake1_example/hub.tscn"
 config/features=PackedStringArray("4.0", "Mobile")
 config/icon="res://icon.svg"
 
 [debug]
 
+settings/stdout/verbose_stdout=true
 gdscript/warnings/enable=false
 shapes/collision/shape_color=Color(4, 0, 0, 1)
 shapes/collision/contact_color=Color(1, 0.2, 0.101961, 0.8)
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="viewport"
+window/stretch/aspect="expand"
+
+[editor]
+
+version_control/plugin_name="GitPlugin"
+version_control/autoload_on_startup=true
 
 [editor_plugins]
 
@@ -98,6 +111,7 @@ common/physics_ticks_per_second=120
 
 [rendering]
 
+renderer/rendering_method="mobile"
 global_illumination/sdfgi/probe_ray_count=0
 global_illumination/sdfgi/frames_to_converge=3
 occlusion_culling/use_occlusion_culling=true
