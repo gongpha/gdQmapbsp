@@ -21,18 +21,18 @@ To make MAP files know your game configuration. Go to `Project Settings → Impo
 Qmapbsp supports custom entities by scanning all entity scripts inside the chosen folder (`ent_entity_script_directory`) when clicking the `Export configs to Trenchbroom` button. It will read the info by calling the `_qmapbsp_get_fgd_info` method on each script file that has to return a `Dictionary` value with these keyvalues:
 ```gdscript
 {
-    property_name1 : [property_description, property_default_value],
-    property_name2 : [property_description, property_default_value],
-    property_name3 : [property_description, property_default_value],
-    . . .
+	property_name1 : [property_description, property_default_value],
+	property_name2 : [property_description, property_default_value],
+	property_name3 : [property_description, property_default_value],
+	. . .
 }
 ```
 ```gdscript
 func _qmapbsp_get_fgd_info() -> Dictionary :
-    return {
-        "my_prop1" : ["My integer property", 0],
-        "my_prop2" : ["My string property", "Hello"]
-    }
+	return {
+		"my_prop1" : ["My integer property", 0],
+		"my_prop2" : ["My string property", "Hello"]
+	}
 ```
 Once all entities have been scanned. The game configuration resource will convert to an FGD class format and export to an FGD file.
 
@@ -43,9 +43,9 @@ To import properties, Create a new method in a script named below with the first
  
 ```gdscript
 func _qmapbsp_ent_props_post(props : Dictionary) -> void :
-    var my_prop1 = props.get('my_prop1', 0) # returns int
-    var my_prop2 = props.get('my_prop2', "Bye") # returns string
-    # do something
+	var my_prop1 = props.get('my_prop1', 0) # returns int
+	var my_prop2 = props.get('my_prop2', "Bye") # returns string
+	# do something
 ```
 
 ## Dealing with transparent textures
