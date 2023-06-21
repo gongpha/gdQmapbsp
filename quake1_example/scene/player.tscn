@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://bjrvl643qpvsm"]
 
-[ext_resource type="Script" path="res://quake1_example/scene/player.gd" id="1_rapov"]
+[ext_resource type="Script" path="res://quake1_example/scene/player.gd" id="1_qw014"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8hfp"]
 size = Vector3(1, 1.5, 1)
@@ -14,18 +14,18 @@ collision_layer = 3
 floor_constant_speed = true
 floor_snap_length = 0.5
 platform_on_leave = 2
-script = ExtResource("1_rapov")
+script = ExtResource("1_qw014")
 
 [node name="col" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_c8hfp")
 
 [node name="around" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.688, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 0.526, 2.08165e-12)
 
 [node name="head" type="Node3D" parent="around"]
 
 [node name="cam" type="Camera3D" parent="around/head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.202, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 2.08165e-12, 2.08165e-12)
 current = true
 
 [node name="staircast" type="ShapeCast3D" parent="."]
