@@ -239,3 +239,7 @@ func _update_wireframe_mode() -> void :
 		if wireframe_enabled else
 		Color.BLACK
 	)
+
+# according to QC builtin functions
+func qc_lightstyle(style : int, light : String) -> void :
+	worldspawn.set_lightstyle(style, light)
