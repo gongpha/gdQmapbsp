@@ -10,12 +10,15 @@ var viewer : QmapbspQuakeViewer
 
 @export var max_speed : float = 10
 @export var max_air_speed : float = 0.5
+@export var max_liquid_speed : float = 5
 @export var accel : float = 100
 @export var fric : float = 8
 @export var sensitivity : float = 0.0025
 @export var stairstep := 0.6
 @export var gravity : float = 20
+@export var gravity_liquid : float = 15
 @export var jump_up : float = 7.6
+@export var jump_up_liquid : float = 1.9
 
 var noclip : bool = false
 
@@ -53,7 +56,6 @@ func teleport_to(dest : Node3D, play_sound : bool = false) :
 		viewer.add_child(p)
 		p.global_position = global_position
 		p.play()
-		
 
 func accelerate(in_speed : float, delta : float) -> void :
 	velocity += wishdir * (
@@ -74,9 +76,7 @@ func friction(delta : float) -> void :
 func move_ground(delta : float) -> void :
 	friction(delta)
 	accelerate(max_speed, delta)
-	
 	_stairs(delta)
-	
 	move_and_slide()
 	_coltest()
 	
@@ -107,10 +107,32 @@ func _stairs(delta : float) :
 	staircast.position = Vector3(
 		ws.x, 0.175 + stairstep - 0.75, ws.z
 	)
+	
+func _stairs_liquid(delta : float) :
+	var w := (velocity / max_liquid_speed) * Vector3(2.0, 0.0, 2.0) * delta
+	var ws := w * max_liquid_speed
+	
+	# stair stuffs
+	var shape : BoxShape3D = staircast.shape
+	shape.size = Vector3(
+		1.0 + ws.length(), shape.size.y, 1.0 + ws.length()
+	)
+	
+	staircast.position = Vector3(
+		ws.x, 0.175 + stairstep - 0.75, ws.z
+	)
 
 func move_air(delta : float) -> void :
 	accelerate(max_air_speed, delta)
 	_stairs(delta)
+	move_and_slide()
+	_coltest()
+	
+func move_liquid(delta : float) -> void :
+	friction(delta)
+	accelerate(max_liquid_speed, delta)
+#	_stairs(delta)
+	_stairs_liquid(delta)
 	move_and_slide()
 	_coltest()
 	
@@ -123,7 +145,7 @@ func _physics_process(delta : float) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
 		return
 		
-	wishdir = (head if noclip else around).global_transform.basis * Vector3((
+	wishdir = (head if noclip or fluid else around).global_transform.basis * Vector3((
 		Input.get_axis(&"q1_move_left", &"q1_move_right")
 	), 0, (
 		Input.get_axis(&"q1_move_forward", &"q1_move_back")
@@ -142,18 +164,17 @@ func _physics_process(delta : float) -> void :
 			wish_jump = false
 	
 	if fluid :
-		# trash movement ;)
+		# slighly trash movement ;)
 		if wish_jump :
-			velocity.y = jump_up
-			move_air(delta)
-		else :
-			if is_on_floor() :
-				velocity.y = 0
-				move_ground(delta)
-			else :
-				velocity.y -= gravity * delta * 0.25
-				move_air(delta)
+			velocity.y = jump_up_liquid
+#			if is_on_floor() :
+#				velocity.y = jump_up
+		
+		if not (wishdir.x > 0 or wishdir.z > 0 or wish_jump) :
+			velocity.y -= gravity_liquid * delta
 			
+		move_liquid(delta)
+		
 	else :
 		if is_on_floor() :
 			if wish_jump :
@@ -204,6 +225,9 @@ func _input(event : InputEvent) -> void :
 		
 func _fluid_enter(f : QmapbspQuakeFluidVolume) :
 	fluid = f
+	print(f._liquid_type())
+	print(f._damage());
+	print(f._decay_time());
 	
 func _fluid_exit(f : QmapbspQuakeFluidVolume) :
 	if f == fluid : fluid = null
