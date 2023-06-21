@@ -74,5 +74,4 @@ func _process(delta : float) :
 		var currlight : int = (Engine.get_frames_drawn() / 10) % str.length()
 		s[i] = (str.unicode_at(currlight) - 0x61) / ZA;
 		
-		
 	surface.set_shader_parameter(&'lightstyles', s)
