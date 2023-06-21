@@ -158,9 +158,6 @@ func _new_entity_node(classname : StringName) -> Node :
 	
 	if classname == 'worldspawn' :
 		viewer.worldspawn = node
-	elif classname.begins_with('light') :
-		if viewer.rendering == 0 :
-			node.hide()
 	
 	if node.has_signal(&'emit_message_state') :
 		node.connect(&'emit_message_state',

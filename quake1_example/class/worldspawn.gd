@@ -9,6 +9,24 @@ func _get_properties(dict : Dictionary) : props = dict
 
 var surface : ShaderMaterial
 
+func _init() -> void :
+	lightstyles.resize(MAX_LIGHTSTYLE)
+	lightstyles_f.resize(MAX_LIGHTSTYLE)
+	lightstyles.fill(PackedFloat32Array([DEFAULT_LIGHT_M])) # normal light
+	
+	# stock lightstyles (world.qc)
+	set_lightstyle(1, 'mmnmmommommnonmmonqnmmo')
+	set_lightstyle(2, 'abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba')
+	set_lightstyle(3, 'mmmmmaaaaammmmmaaaaaabcdefgabcdefg')
+	set_lightstyle(4, 'mamamamamama')
+	set_lightstyle(5, 'jklmnopqrstuvwxyzyxwvutsrqponmlkj')
+	set_lightstyle(6, 'nmonqnmomnmomomno')
+	set_lightstyle(7, 'mmmaaaabcdefgmmmmaaaammmaamm')
+	set_lightstyle(8, 'mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa')
+	set_lightstyle(9, 'aaaaaaaazzzzzzzz')
+	set_lightstyle(10, 'mmamammmmammamamaaamammma')
+	set_lightstyle(11, 'abcdefghijklmnopqrrqponmlkjihgfedcba')
+
 func _map_ready() :
 	var viewer : QmapbspQuakeViewer = get_meta(&'viewer', null)
 	if viewer :
@@ -45,33 +63,31 @@ func _map_ready() :
 		else :
 			env.ambient_light_source = Environment.AMBIENT_SOURCE_DISABLED
 
-# progs/world.qc
-# i can't invest the time to make a VM for these languages
-const LIGHTSTYLES : PackedStringArray = [
-	'm',
-	'mmnmmommommnonmmonqnmmo',
-	'abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba',
-	'mmmmmaaaaammmmmaaaaaabcdefgabcdefg',
-	'mamamamamama',
-	'jklmnopqrstuvwxyzyxwvutsrqponmlkj',
-	'nmonqnmomnmomomno',
-	'mmmaaaabcdefgmmmmaaaammmaamm',
-	'mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa',
-	'aaaaaaaazzzzzzzz',
-	'mmamammmmammamamaaamammma',
-	'abcdefghijklmnopqrrqponmlkjihgfedcba'
-]
+#####################################################################
+# lightstyles
+var lightstyles : Array[PackedFloat32Array]
+var lightstyles_f : PackedFloat32Array
 
 const ZA : float = 0x7a - 0x61
+const MAX_LIGHTSTYLE := 64
+const SWITCHABLE_LIGHT_BEGIN := 32 # to 62
+
+const DEFAULT_LIGHT_M := (0x6D - 0x61) / ZA # M light (0.48)
 
 func _process(delta : float) :
 	if !surface : return # ?
 	
-	var s : PackedFloat32Array
-	s.resize(12)
-	for i in LIGHTSTYLES.size() : # 12
-		var str := LIGHTSTYLES[i]
-		var currlight : int = (Engine.get_frames_drawn() / 10) % str.length()
-		s[i] = (str.unicode_at(currlight) - 0x61) / ZA;
+	var frame := Engine.get_frames_drawn() / 10
+	for i in MAX_LIGHTSTYLE :
+		var pf32a := lightstyles[i]
+		lightstyles_f[i] = pf32a[frame % pf32a.size()]
 		
-	surface.set_shader_parameter(&'lightstyles', s)
+	surface.set_shader_parameter(&'lightstyles', lightstyles_f)
+
+func set_lightstyle(style : int, light : String) -> void :
+	var lightraw : PackedFloat32Array
+	lightraw.resize(light.length())
+	for i in light.length() :
+		lightraw[i] = (light.unicode_at(i) - 0x61) / ZA
+	
+	lightstyles[style] = lightraw
