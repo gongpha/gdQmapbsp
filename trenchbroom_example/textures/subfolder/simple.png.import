@@ -3,16 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cl8aohp8wrfif"
-path.s3tc="res://.godot/imported/simple.png-968df4e5897230b962dd310db5c11fa3.s3tc.ctex"
+path.etc2="res://.godot/imported/simple.png-968df4e5897230b962dd310db5c11fa3.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://trenchbroom_example/textures/subfolder/simple.png"
-dest_files=["res://.godot/imported/simple.png-968df4e5897230b962dd310db5c11fa3.s3tc.ctex"]
+dest_files=["res://.godot/imported/simple.png-968df4e5897230b962dd310db5c11fa3.etc2.ctex"]
 
 [params]
 
