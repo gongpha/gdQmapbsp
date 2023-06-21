@@ -25,7 +25,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 0.526, 2.08165e-
 [node name="head" type="Node3D" parent="around"]
 
 [node name="cam" type="Camera3D" parent="around/head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 2.08165e-12, 2.08165e-12)
 current = true
 
 [node name="staircast" type="ShapeCast3D" parent="."]
