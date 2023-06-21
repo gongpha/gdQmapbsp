@@ -1,6 +1,8 @@
 extends QmapbspQuakeFunctionDoor
 class_name QmapbspQuakeFunctionPlat
 
+func _can_create_trigger() : return true
+
 func _gen_aabb() :
 	var height : int = props.get('height', '0').to_int()
 	if height == 0 :

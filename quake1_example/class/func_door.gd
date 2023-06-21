@@ -17,6 +17,7 @@ var open : bool = false
 var player : AudioStreamPlayer3D
 var player_end : bool = false
 var links : Array[QmapbspQuakeFunctionDoor]
+var trigger : QmapbspQuakeTrigger
 
 signal emit_message_once(m : String)
 
@@ -36,29 +37,30 @@ var func_door := [
 	['doors/basetry.wav', 'doors/baseuse.wav'],
 ]
 
-
+func _can_create_trigger() : return true
 
 func _map_ready() :
 	add_to_group(&'doors')
 	_calc_add()
 	_starts_open()
-	
+	_create_trigger()
+
 func _starts_open() :
 	if props.get('spawnflags', 0) & 0b01 :
 		_open_direct()
-			
+
 func _add_link(n : QmapbspQuakeFunctionDoor) :
 	if n == self : return
 	if links.has(n) : return
 	links.append(n)
-	
+
 func _def_lip() -> String : return '8'
 func _def_wait() -> String : return '-1'
 func _def_speed() -> String : return '100'
 
 func _no_linking() -> bool :
 	return props.get('spawnflags', 0) & 0b100
-	
+
 func _get_angle() -> int :
 	return props.get('angle', 0)
 
@@ -106,6 +108,35 @@ func _calc_add() :
 		
 		var sounds : int = clampi(props.get('sounds', '0').to_int(), 0, 5)
 		_get_sounds(sounds)
+		
+func _create_trigger() :
+	if !_can_create_trigger() : return
+	if props.has('targetname') : return
+	if trigger : return
+	# self setup
+	props["targetname"] = name
+	props["message"] = name
+	add_to_group('T_' + props['targetname'])
+	# create trigger
+	trigger = QmapbspQuakeTriggerMultiple.new()
+	trigger.name = &'trigger_%s' % name
+	trigger.set_meta(&'viewer', viewer)
+	trigger.set_meta(&'scale', get_meta("scale"))
+	trigger._get_properties({ "target": name })
+	# add trigger to scene
+	get_parent().add_child(trigger)
+	# create trigger collision shape
+	var col = CollisionShape3D.new()
+	col.shape = BoxShape3D.new()
+	var t_pad = Vector3(1.8, 0.25, 1.8)
+	var t_pos : Vector3 = aabb.position - t_pad
+	var t_end : Vector3 = aabb.end + t_pad
+	col.shape.size = t_end - t_pos
+	col.set_position(position)
+	# add collision shape to trigger
+	trigger.add_child(col)
+	# TODO: make one trigger for all linked doors
+	pass
 		
 func _get_sounds(sounds : int) :
 	if sounds == 5 :
