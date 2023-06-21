@@ -1,6 +1,8 @@
 extends QmapbspQuakeFunctionDoor
 class_name QmapbspQuakeFunctionDoorSecret
 
+func _can_create_trigger() : return false
+
 func _starts_open() :
 	return
 	

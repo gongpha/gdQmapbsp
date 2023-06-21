@@ -1,5 +1,6 @@
 extends Area3D
 class_name QmapbspQuakeTrigger
+
 var props : Dictionary
 var v : QmapbspQuakeViewer
 func _qmapbsp_is_brush_visible() -> bool : return false

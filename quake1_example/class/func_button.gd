@@ -1,6 +1,8 @@
 extends QmapbspQuakeFunctionDoor
 class_name QmapbspQuakeFunctionButton
 
+func _can_create_trigger() : return false
+
 func _motion_f(destroy_tween : bool = false) :
 	super(destroy_tween)
 	for t in get_tree().get_nodes_in_group(
