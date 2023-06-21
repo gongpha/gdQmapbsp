@@ -77,7 +77,7 @@ var entities : Array[Array]
 # Built-in BSP material
 var global_surface_mat : ShaderMaterial
 var global_textures : Array[Texture2D]
-const GLOBAL_TEXTURE_LIMIT := 256 # NOT AN ACTUAL LIMIT
+const GLOBAL_TEXTURE_LIMIT := 96 # device dependent
 
 var import_tasks := [
 	[_read_vertices, 128],
@@ -241,7 +241,7 @@ func _read_mip_textures() -> float :
 		if !mat :
 			if global_textures.size() > GLOBAL_TEXTURE_LIMIT :
 				# oof
-				printerr("You hit the texture limit ! (> 256)")
+				printerr("You hit the texture limit ! (> %d)" % GLOBAL_TEXTURE_LIMIT)
 			else :
 				texture_ids[load_index] = global_textures.size()
 				global_textures.append(tex)
@@ -660,6 +660,7 @@ func _build_geo() -> bool :
 		occ_indices = PackedInt32Array()
 		
 		if global_surface_mat :
+			global_textures.resize(GLOBAL_TEXTURE_LIMIT)
 			global_surface_mat.set_shader_parameter(&'texs', global_textures)
 			global_surface_mat.set_shader_parameter(&'lmp', lmtex)
 			
