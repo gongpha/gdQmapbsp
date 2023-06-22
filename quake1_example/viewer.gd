@@ -180,8 +180,11 @@ func _emit_message_state(msg : String, show : bool, from : Node) :
 	message.set_emitter(msg, show, from)
 
 func emit_message_once(msg : String, from : Node) :
+	# FIXME: there's got to be a way to smartly set the sound based on context,
+	# without having to create a different function for each case?
 	message.set_talk_sound(hub.load_audio("misc/talk.wav"))
 	message.set_emitter(msg, true, null)
+
 
 func get_music(sounds : int) -> AudioStreamMP3 :
 	var mp3 : AudioStreamMP3 = trackcaches.get(sounds)
