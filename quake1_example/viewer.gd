@@ -65,11 +65,17 @@ func play_by_node() :
 	
 	_update_wireframe_mode()
 	
-	
 	for n in get_tree().get_nodes_in_group(&'entities') :
 		if !n.has_method(&'_map_ready') : continue
 		n._map_ready()
-	#get_tree().call_group(&'entities', &'_map_ready')
+	
+	for n in get_tree().get_nodes_in_group(&'entities') :
+		if !n.has_method(&'_entities_ready') : continue
+		n._entities_ready()
+		
+	for n in get_tree().get_nodes_in_group(&'primary_doors') :
+		if !n.has_method(&'_doors_ready') : continue
+		n._doors_ready()
 	
 	if console.showing :
 		console.toggle()
@@ -103,6 +109,7 @@ func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	parser = QmapbspWorldImporterQuake1.new()
 	parser.viewer = self
 	map = QmapbspQuakeWorld.new()
+	map.name = &'map'
 	console.printv("Loading %s" % mapname)
 	console.printv("Loading a map %s times per frame." % iterations)
 	if iterations <= 32 :
