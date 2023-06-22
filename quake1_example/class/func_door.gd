@@ -37,13 +37,19 @@ var func_door := [
 	['doors/basetry.wav', 'doors/baseuse.wav'],
 ]
 
-func _can_create_trigger() : return true
+func _can_create_trigger() -> bool : return true
+func _get_trigger_padding() -> Vector3 : return Vector3(1.8, 0.25, 1.8)
 
 func _map_ready() :
 	add_to_group(&'doors')
 	_calc_add()
 	_starts_open()
-	_create_trigger()
+	
+func _entities_ready() : 
+	_set_primary()
+
+func _doors_ready() :
+	if is_in_group(&'primary_doors') : _create_trigger()
 
 func _starts_open() :
 	if props.get('spawnflags', 0) & 0b01 :
@@ -109,9 +115,23 @@ func _calc_add() :
 		var sounds : int = clampi(props.get('sounds', '0').to_int(), 0, 5)
 		_get_sounds(sounds)
 		
-func _create_trigger() :
+func _set_primary() :
 	if !_can_create_trigger() : return
-	if props.has('targetname') : return
+	if has_meta(&'primary') : return
+	if props.has(&'targetname') : return
+	var make_primary : bool = true
+	var l_targetname : String
+	for l in links :
+		if l.has_meta(&'primary') : make_primary = false
+		if l.props.has(&'targetname') : make_primary = false
+	if make_primary : 
+		set_meta(&'primary', true)
+		add_to_group(&'primary_doors')
+		
+func _create_trigger() :
+	# FIXME: don't create triggers for doors with keys
+	if !_can_create_trigger() : return
+	if props.has(&'targetname') : return
 	if trigger : return
 	# self setup
 	props["targetname"] = name
@@ -127,16 +147,34 @@ func _create_trigger() :
 	get_parent().add_child(trigger)
 	# create trigger collision shape
 	var col = CollisionShape3D.new()
+	col.name = &'col_shape'
 	col.shape = BoxShape3D.new()
-	var t_pad = Vector3(1.8, 0.25, 1.8)
+	var t_pad = _get_trigger_padding()
 	var t_pos : Vector3 = aabb.position - t_pad
 	var t_end : Vector3 = aabb.end + t_pad
-	col.shape.size = t_end - t_pos
+	col.shape.size = (t_end - t_pos).abs()
 	col.set_position(position)
 	# add collision shape to trigger
 	trigger.add_child(col)
-	# TODO: make one trigger for all linked doors
-	pass
+	for l in links :
+		_update_trigger_shape(l, trigger)
+		
+		
+func _update_trigger_shape(
+	new_door : QmapbspQuakeFunctionDoor, 
+	trigger : QmapbspQuakeTriggerMultiple
+) :
+	# calc new size
+	var m_aabb : AABB = aabb.merge(new_door.aabb)
+	var t_pad = _get_trigger_padding()
+	var t_pos : Vector3 = m_aabb.position - t_pad
+	var t_end : Vector3 = m_aabb.end + t_pad
+	# update shape size and position
+	var col = trigger.get_node_or_null('col_shape')
+	if col : 
+		col.shape.size = (t_end - t_pos).abs()
+		col.set_position(m_aabb.get_center())
+		
 		
 func _get_sounds(sounds : int) :
 	if sounds == 5 :
@@ -146,11 +184,13 @@ func _get_sounds(sounds : int) :
 	else :
 		streams = audio_paths[sounds]
 		
+		
 func _trigger(b : Node3D) :
 	if tween : return
 	_move()
 	for l in links :
 		l._trigger(b)
+		
 		
 func _make_player() :
 	if !player :
@@ -158,8 +198,10 @@ func _make_player() :
 		player.finished.connect(_audf)
 		add_child(player)
 		
+		
 func _get_sound_index_loop() -> int : return 0
 func _get_sound_index_motion_end() -> int : return 1
+
 
 func _motion_f(destroy_tween : bool = false) :
 	player_end = true
