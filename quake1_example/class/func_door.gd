@@ -4,6 +4,9 @@ class_name QmapbspQuakeFunctionDoor
 # this is written from scratch. No QuakeC code was applied here
 # maybe not accurate to the original approach
 
+const GOLD_KEY_MESSAGE = 'You require the Gold Key!'
+const SILVER_KEY_MESSAGE = 'You require the Silver Key!'
+
 var tween : Tween
 var add : Vector3
 var add_reveal : Vector3
@@ -49,7 +52,7 @@ func _entities_ready() :
 	_set_primary()
 
 func _doors_ready() :
-	if is_in_group(&'primary_doors') : _create_trigger()
+	if is_in_group(&'primary_doors') : _create_primary_trigger()
 
 func _starts_open() :
 	if props.get('spawnflags', 0) & 0b01 :
@@ -119,6 +122,7 @@ func _set_primary() :
 	if !_can_create_trigger() : return
 	if has_meta(&'primary') : return
 	if props.has(&'targetname') : return
+	if _requires_key() : return
 	var make_primary : bool = true
 	var l_targetname : String
 	for l in links :
@@ -128,9 +132,9 @@ func _set_primary() :
 		set_meta(&'primary', true)
 		add_to_group(&'primary_doors')
 		
-func _create_trigger() :
-	# FIXME: don't create triggers for doors with keys
+func _create_primary_trigger() :
 	if !_can_create_trigger() : return
+	if _requires_key() : return
 	if props.has(&'targetname') : return
 	if trigger : return
 	# self setup
@@ -184,13 +188,16 @@ func _get_sounds(sounds : int) :
 	else :
 		streams = audio_paths[sounds]
 		
-		
 func _trigger(b : Node3D) :
+	if _requires_gold_key() :
+		emit_message_once.emit(GOLD_KEY_MESSAGE)
+	elif _requires_silver_key() :
+		emit_message_once.emit(SILVER_KEY_MESSAGE)
+	if _requires_key() : return # TODO: fetch key from player
 	if tween : return
 	_move()
 	for l in links :
 		l._trigger(b)
-		
 		
 func _make_player() :
 	if !player :
@@ -198,10 +205,8 @@ func _make_player() :
 		player.finished.connect(_audf)
 		add_child(player)
 		
-		
 func _get_sound_index_loop() -> int : return 0
 func _get_sound_index_motion_end() -> int : return 1
-
 
 func _motion_f(destroy_tween : bool = false) :
 	player_end = true
@@ -249,7 +254,6 @@ func _move() :
 		tween.finished.connect(_move)
 		
 
-
 func _open_direct() :
 	player_end = false
 	position += add
@@ -265,4 +269,23 @@ func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 			if l.props.has("message") :
 				l.emit_message_once.emit(l.props["message"])
 			return
+	
 	_trigger(p)
+
+func _requires_key() -> bool :
+	if (_requires_silver_key() or _requires_gold_key()) : 
+		return true
+	else:
+		return false
+
+func _requires_silver_key() -> bool:
+	if (props.get('spawnflags', 0) & 0b10000) : 
+		return true
+	else:
+		return false
+
+func _requires_gold_key() -> bool:
+	if (props.get('spawnflags', 0) & 0b1000) : 
+		return true
+	else:
+		return false
