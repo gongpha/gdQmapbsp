@@ -138,8 +138,7 @@ func _create_primary_trigger() :
 	if props.has(&'targetname') : return
 	if trigger : return
 	# self setup
-	props["targetname"] = name
-	props["message"] = name
+	props[&"targetname"] = name
 	add_to_group('T_' + props['targetname'])
 	# create trigger
 	trigger = QmapbspQuakeTriggerMultiple.new()
@@ -157,12 +156,16 @@ func _create_primary_trigger() :
 	var t_pos : Vector3 = aabb.position - t_pad
 	var t_end : Vector3 = aabb.end + t_pad
 	col.shape.size = (t_end - t_pos).abs()
-	col.set_position(position)
+	_set_primary_trigger_position(col, aabb)
 	# add collision shape to trigger
 	trigger.add_child(col)
+	# if linked doors exists, expand trigger to encome
 	for l in links :
+		if !props.get(&'message') : props[&'message'] = l.props.get(&'message')
 		_update_trigger_shape(l, trigger)
 		
+func _set_primary_trigger_position(col : CollisionShape3D, aabb: AABB) :
+	col.set_position(aabb.get_center())
 		
 func _update_trigger_shape(
 	new_door : QmapbspQuakeFunctionDoor, 
@@ -189,10 +192,8 @@ func _get_sounds(sounds : int) :
 		streams = audio_paths[sounds]
 		
 func _trigger(b : Node3D) :
-	if _requires_gold_key() :
-		emit_message_once.emit(GOLD_KEY_MESSAGE)
-	elif _requires_silver_key() :
-		emit_message_once.emit(SILVER_KEY_MESSAGE)
+	if _requires_gold_key() : emit_message_once.emit(GOLD_KEY_MESSAGE)
+	elif _requires_silver_key() : emit_message_once.emit(SILVER_KEY_MESSAGE)
 	if _requires_key() : return # TODO: fetch key from player
 	if tween : return
 	_move()
