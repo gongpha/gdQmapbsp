@@ -224,10 +224,8 @@ func _input(event : InputEvent) -> void :
 		head.rotation = hrot
 		
 func _fluid_enter(f : QmapbspQuakeFluidVolume) :
+	# TODO: implement fluid effects on player
 	fluid = f
-	print(f._liquid_type())
-	print(f._damage());
-	print(f._decay_time());
 	
 func _fluid_exit(f : QmapbspQuakeFluidVolume) :
 	if f == fluid : fluid = null
