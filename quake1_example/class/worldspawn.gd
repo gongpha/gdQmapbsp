@@ -82,4 +82,12 @@ func _process(delta : float) :
 		var pf32a := lightstyles[i]
 		lightstyles_f[i] = pf32a[frame % pf32a.size()]
 		
-	surface.set_shader_parameter(&'lightstyles', s)
+	surface.set_shader_parameter(&'lightstyles', lightstyles_f)
+
+func set_lightstyle(style : int, light : String) -> void :
+	var lightraw : PackedFloat32Array
+	lightraw.resize(light.length())
+	for i in light.length() :
+		lightraw[i] = (light.unicode_at(i) - 0x61) / ZA
+	
+	lightstyles[style] = lightraw
