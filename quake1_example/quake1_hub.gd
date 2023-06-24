@@ -149,16 +149,32 @@ func _process(delta : float) :
 		prog.value = pak.get_progress()
 		status.text = 'Loading %s . . .' % pak.filename
 		
-func _bsp_exists(s : String, t : TreeItem) :
+func _bsp_exists(s : String, t : TreeItem) -> bool:
 	# find a map file
 	var mapname := s.get_basename().split('/')[-1] + '.map'
 	if mapupper.toggled :
 		mapname = mapname.to_upper()
 	if FileAccess.file_exists(pathshow_map.text.path_join(mapname)) :
-		t.set_custom_color(0, Color.DARK_ORANGE)
+		if _valid_map_name(mapname.to_lower()) : 
+			t.set_custom_color(0, Color.DARK_ORANGE)
+			return true
+		else : 
+			print('NOT A PLAYABLE MAP: ', s)
+			t.free()
+			return false
 	else :
-		t.set_text(0, s + '     (!!! NO MAP FILE !!!)')
-		t.set_custom_color(0, Color.ORANGE_RED)
+		print('MATCHING MAP NAME NOT FOUND: ', s)
+		t.free()
+		return false
+		
+func _valid_map_name(mapname: String) -> bool :
+	if (
+		mapname.begins_with('e') or
+		mapname.begins_with('start') or 
+		mapname.begins_with('end') 
+	) : 
+		return true
+	else : return false
 		
 func _show_tree(only_bsp : bool = true) :
 	tree.clear()
