@@ -43,35 +43,44 @@ var func_door := [
 func _can_create_trigger() -> bool : return true
 func _get_trigger_padding() -> Vector3 : return Vector3(1.8, 0.25, 1.8)
 
+func _def_lip() -> String : return '8'
+func _def_wait() -> String : return '3'
+func _def_speed() -> String : return '100'
+
+
 func _map_ready() :
 	add_to_group(&'doors')
 	_calc_add()
 	_starts_open()
 	
+	
 func _entities_ready() : 
 	_set_primary()
 
+
 func _doors_ready() :
-	if is_in_group(&'primary_doors') : _create_primary_trigger()
+	if is_in_group(&'primary_doors') and not props.has(&'targetname') : 
+		_create_primary_trigger()
+
 
 func _starts_open() :
 	if props.get('spawnflags', 0) & 0b01 :
 		_open_direct()
+
 
 func _add_link(n : QmapbspQuakeFunctionDoor) :
 	if n == self : return
 	if links.has(n) : return
 	links.append(n)
 
-func _def_lip() -> String : return '8'
-func _def_wait() -> String : return '-1'
-func _def_speed() -> String : return '100'
 
 func _no_linking() -> bool :
 	return props.get('spawnflags', 0) & 0b100
 
+
 func _get_angle() -> int :
 	return props.get('angle', 0)
+
 
 func _calc_add() :
 	if !calc_ :
@@ -79,13 +88,13 @@ func _calc_add() :
 		
 		_gen_aabb()
 		
+		# check if door should not be linked
 		if !(props.get('spawnflags', 0) & 0b100) :
+			# find doors to try and link
 			for n in get_tree().get_nodes_in_group(&'doors') :
-				#if n.calc_ : continue
 				n._calc_add()
-				if n._no_linking() :
-					continue
-					
+				if n._no_linking() : continue
+				# check if doors are touching
 				if (
 					aabb.size.x >= 0 and aabb.size.y >= 0 and
 					n.aabb.size.x >= 0 and n.aabb.size.y >= 0
@@ -118,11 +127,12 @@ func _calc_add() :
 		var sounds : int = clampi(props.get('sounds', '0').to_int(), 0, 5)
 		_get_sounds(sounds)
 		
+		
 func _set_primary() :
 	if !_can_create_trigger() : return
 	if has_meta(&'primary') : return
-	if props.has(&'targetname') : return
 	if _requires_key() : return
+	
 	var make_primary : bool = true
 	var l_targetname : String
 	for l in links :
@@ -132,20 +142,21 @@ func _set_primary() :
 		set_meta(&'primary', true)
 		add_to_group(&'primary_doors')
 		
+		
 func _create_primary_trigger() :
 	if !_can_create_trigger() : return
 	if _requires_key() : return
-	if props.has(&'targetname') : return
 	if trigger : return
+	
 	# self setup
-	props[&"targetname"] = name
+	if not props.has(&'targetname') : props[&'targetname'] = name
 	add_to_group('T_' + props['targetname'])
 	# create trigger
 	trigger = QmapbspQuakeTriggerMultiple.new()
 	trigger.name = &'trigger_%s' % name
 	trigger.set_meta(&'viewer', viewer)
 	trigger.set_meta(&'scale', get_meta("scale"))
-	trigger._get_properties({ "target": name })
+	trigger._get_properties({ "target": props[&'targetname'] })
 	# add trigger to scene
 	get_parent().add_child(trigger)
 	# create trigger collision shape
@@ -159,13 +170,16 @@ func _create_primary_trigger() :
 	_set_primary_trigger_position(col, aabb)
 	# add collision shape to trigger
 	trigger.add_child(col)
-	# if linked doors exists, expand trigger to encome
 	for l in links :
-		if !props.get(&'message') : props[&'message'] = l.props.get(&'message')
+		# copy message from linked door to primary door
+		if !props.has(&'message') and l.props.has(&'message'): 
+			props[&'message'] = l.props.get(&'message')
+		# grow trigger shape around linked door
 		_update_trigger_shape(l, trigger)
 		
 func _set_primary_trigger_position(col : CollisionShape3D, aabb: AABB) :
 	col.set_position(aabb.get_center())
+		
 		
 func _update_trigger_shape(
 	new_door : QmapbspQuakeFunctionDoor, 
@@ -191,6 +205,7 @@ func _get_sounds(sounds : int) :
 	else :
 		streams = audio_paths[sounds]
 		
+		
 func _trigger(b : Node3D) :
 	if _requires_gold_key() : emit_message_once.emit(GOLD_KEY_MESSAGE)
 	elif _requires_silver_key() : emit_message_once.emit(SILVER_KEY_MESSAGE)
@@ -200,21 +215,17 @@ func _trigger(b : Node3D) :
 	for l in links :
 		l._trigger(b)
 		
+		
 func _make_player() :
 	if !player :
 		player = AudioStreamPlayer3D.new()
 		player.finished.connect(_audf)
 		add_child(player)
 		
+		
 func _get_sound_index_loop() -> int : return 0
 func _get_sound_index_motion_end() -> int : return 1
-
-func _motion_f(destroy_tween : bool = false) :
-	player_end = true
-	_play_snd(_get_sound_index_motion_end())
-	if destroy_tween :
-		tween.kill()
-		tween = null
+		
 		
 func _play_snd(idx : int) :
 	_make_player()
@@ -222,6 +233,7 @@ func _play_snd(idx : int) :
 	if s.is_empty() : return
 	player.stream = viewer.hub.load_audio(s)
 	player.play()
+	
 	
 func _audf() :
 	if player_end :
@@ -231,21 +243,32 @@ func _audf() :
 		_make_player()
 		player.play()
 
+
 func _move_pre(tween : Tween) -> Vector3 : return position
 
+
+func _move_end(destroy_tween : bool = false) :
+	player_end = true
+	_play_snd(_get_sound_index_motion_end())
+	if destroy_tween :
+		tween.kill()
+		tween = null
+
+# TODO: check if something is blocking the door before closing
+# TODO: apply damage to player if blocking and trying to close door
 func _move() :
 	tween = create_tween()
 	
 	var basepos := _move_pre(tween)
 	
-	if open :
+	if open : # close open door
 		tween.tween_property(self, ^'position',
 			basepos - add, dura
-		).finished.connect(_motion_f.bind(true))
-	else :
+		).finished.connect(_move_end.bind(true))
+	else : # open closed door
 		tween.tween_property(self, ^'position',
 			basepos + add, dura
-		).finished.connect(_motion_f)
+		).finished.connect(_move_end)
 	open = !open
 	_play_snd(_get_sound_index_loop())
 	player_end = false
@@ -259,7 +282,8 @@ func _open_direct() :
 	player_end = false
 	position += add
 	open = true
-	
+
+
 func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 	if props.has("targetname") :
 		if props.has("message") :
@@ -279,11 +303,13 @@ func _requires_key() -> bool :
 	else:
 		return false
 
+
 func _requires_silver_key() -> bool:
 	if (props.get('spawnflags', 0) & 0b10000) : 
 		return true
 	else:
 		return false
+
 
 func _requires_gold_key() -> bool:
 	if (props.get('spawnflags', 0) & 0b1000) : 

@@ -15,3 +15,8 @@ func _gen_aabb() :
 func _can_create_trigger() -> bool : return false;
 func _create_trigger() -> void : pass
 
+func _touch_horizontal(nor : Vector3) -> bool :
+	return (abs(nor.x) > 0.9 || abs(nor.z) > 0.9)
+
+func _touch_vertical(nor : Vector3) -> bool :
+	return abs(nor.y) > 0.9
