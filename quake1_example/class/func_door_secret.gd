@@ -19,6 +19,7 @@ const audio_paths_secret := [
 ]
 
 func _reveal() -> bool : return true
+func _def_wait() -> String : return '-1'
 
 func _get_sounds(sounds : int) :
 	streams = audio_paths_secret[sounds]
@@ -31,8 +32,10 @@ func _move_pre(tween : Tween) -> Vector3 :
 	tween.tween_interval(1) # approx
 	return position + add_reveal
 	
-func _no_linking() -> bool :
-	return true
+func _no_linking() -> bool : return true
 	
 func _get_sound_index_loop() -> int : return 1
 func _get_sound_index_motion_end() -> int : return 2
+
+func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
+	if not open : _trigger(p)
