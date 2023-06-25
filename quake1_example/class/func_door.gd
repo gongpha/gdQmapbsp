@@ -88,8 +88,7 @@ func _calc_add() :
 		
 		_gen_aabb()
 		
-		# check if door should not be linked
-		if !(props.get('spawnflags', 0) & 0b100) :
+		if not _no_linking() :
 			# find doors to try and link
 			for n in get_tree().get_nodes_in_group(&'doors') :
 				n._calc_add()
@@ -273,9 +272,10 @@ func _move() :
 	_play_snd(_get_sound_index_loop())
 	player_end = false
 	
-	if wait != -1 :
-		tween.tween_interval(wait)
-		tween.finished.connect(_move)
+	if wait == -1 : return
+	
+	tween.tween_interval(wait)
+	tween.finished.connect(_move)
 		
 
 func _open_direct() :
@@ -285,19 +285,21 @@ func _open_direct() :
 
 
 func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
-	if props.has("targetname") :
-		if props.has("message") :
-			emit_message_once.emit(props["message"])
-		return
-	for l in links :
-		if l.props.has("targetname") :
-			if l.props.has("message") :
-				l.emit_message_once.emit(l.props["message"])
-			return
+	var can_trigger : bool = true
+	if props.has(&'targetname') : can_trigger = false
+	if props.has("message") : 
+		emit_message_once.emit(props["message"])
 	
-	_trigger(p)
+	for l in links :
+		if l.props.has(&'targetname') : can_trigger = false
+		if l.props.has("message") :
+			l.emit_message_once.emit(l.props["message"])
+	
+	if can_trigger : _trigger(p)
+
 
 func _requires_key() -> bool :
+	print('SF: ', props.get('spawnflags'))
 	if (_requires_silver_key() or _requires_gold_key()) : 
 		return true
 	else:

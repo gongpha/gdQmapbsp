@@ -38,4 +38,9 @@ func _get_sound_index_loop() -> int : return 1
 func _get_sound_index_motion_end() -> int : return 2
 
 func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
+	if props.has(&'targetname') : return
 	if not open : _trigger(p)
+	
+func _trigger(b : Node3D) :
+	if tween : return
+	_move()
