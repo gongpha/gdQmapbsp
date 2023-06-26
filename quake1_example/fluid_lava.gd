@@ -1,4 +1,4 @@
-extends "res://quake1_example/fluid.gd"
+extends QmapbspQuakeFluidVolume
 class_name QmapbspQuakeLavaVolume
 
 func _damage() -> int : return 10
