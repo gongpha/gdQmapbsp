@@ -26,6 +26,7 @@ shapes/collision/contact_color=Color(1, 0.2, 0.101961, 0.8)
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+<<<<<<< HEAD
 window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 
@@ -34,6 +35,11 @@ window/stretch/aspect="expand"
 version_control/plugin_name="GitPlugin"
 version_control/autoload_on_startup=true
 
+=======
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+>>>>>>> project-updates-v2
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/qmapbsp/plugin.cfg")
