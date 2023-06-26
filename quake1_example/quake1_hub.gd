@@ -171,7 +171,8 @@ func _valid_map_name(mapname: String) -> bool :
 	if (
 		mapname.begins_with('e') or
 		mapname.begins_with('start') or 
-		mapname.begins_with('end') 
+		mapname.begins_with('end') or
+		mapname.begins_with('dm')
 	) : 
 		return true
 	else : return false
