@@ -27,7 +27,7 @@ shapes/collision/contact_color=Color(1, 0.2, 0.101961, 0.8)
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="viewport"
-window/stretch/aspect="expand"
+window/stretch/aspect="canvas_item"
 
 [editor]
 
