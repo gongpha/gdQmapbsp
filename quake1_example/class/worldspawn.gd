@@ -30,7 +30,7 @@ func _init() -> void :
 func _map_ready() :
 	var viewer : QmapbspQuakeViewer = get_meta(&'viewer', null)
 	if viewer :
-		music.stream = viewer.get_music(props.get('sounds', '0').to_int())
+		music.stream = viewer.get_music(props.get('sounds', 0))
 		music.play()
 		
 		var env : Environment = wenv.environment
