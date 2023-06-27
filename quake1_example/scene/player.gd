@@ -38,6 +38,7 @@ var fluid : QmapbspQuakeFluidVolume
 func _ready() :
 	jump.stream = viewer.hub.load_audio("player/plyrjmp8.wav")
 
+
 func teleport_to(dest : Node3D, play_sound : bool = false) :
 	global_position = dest.global_position
 	var old := around.rotation
@@ -57,10 +58,12 @@ func teleport_to(dest : Node3D, play_sound : bool = false) :
 		p.global_position = global_position
 		p.play()
 
+
 func accelerate(in_speed : float, delta : float) -> void :
 	velocity += wishdir * (
 		clampf(in_speed - velocity.dot(wishdir), 0, accel * delta)
 	)
+
 
 func friction(delta : float) -> void :
 	var speed : float = velocity.length()
@@ -73,14 +76,40 @@ func friction(delta : float) -> void :
 		svec = Vector3()
 	velocity = svec
 
+
 func move_ground(delta : float) -> void :
 	friction(delta)
 	accelerate(max_speed, delta)
 	_stairs(delta)
 	move_and_slide()
 	_coltest()
+	_ceiling_test()
 	
-	# test ceiling
+	
+func move_air(delta : float) -> void :
+	accelerate(max_air_speed, delta)
+	_stairs(delta)
+	move_and_slide()
+	_coltest()
+	
+	
+func move_liquid(delta : float) -> void :
+	friction(delta)
+	accelerate(max_liquid_speed, delta)
+#	_stairs(delta)
+	_stairs_liquid(delta)
+	move_and_slide()
+	_coltest()
+	_ceiling_test()
+	
+	
+func move_noclip(delta : float) -> void :
+	friction(delta)
+	accelerate(max_speed, delta)
+	translate(velocity * delta)
+	
+
+func _ceiling_test() :
 	staircast.target_position.y = 0.66 + stairstep
 	staircast.force_shapecast_update()
 	if staircast.get_collision_count() == 0 :
@@ -93,6 +122,7 @@ func move_ground(delta : float) -> void :
 				smooth_y = -height
 				around.position.y += smooth_y
 				# 0.688 is an initial value of around.y
+	
 	
 func _stairs(delta : float) :
 	var w := (velocity / max_speed) * Vector3(2.0, 0.0, 2.0) * delta
@@ -108,6 +138,7 @@ func _stairs(delta : float) :
 		ws.x, 0.175 + stairstep - 0.75, ws.z
 	)
 	
+	
 func _stairs_liquid(delta : float) :
 	var w := (velocity / max_liquid_speed) * Vector3(2.0, 0.0, 2.0) * delta
 	var ws := w * max_liquid_speed
@@ -122,24 +153,6 @@ func _stairs_liquid(delta : float) :
 		ws.x, 0.175 + stairstep - 0.75, ws.z
 	)
 
-func move_air(delta : float) -> void :
-	accelerate(max_air_speed, delta)
-	_stairs(delta)
-	move_and_slide()
-	_coltest()
-	
-func move_liquid(delta : float) -> void :
-	friction(delta)
-	accelerate(max_liquid_speed, delta)
-#	_stairs(delta)
-	_stairs_liquid(delta)
-	move_and_slide()
-	_coltest()
-	
-func move_noclip(delta : float) -> void :
-	friction(delta)
-	accelerate(max_speed, delta)
-	translate(velocity * delta)
 
 func _physics_process(delta : float) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
@@ -167,14 +180,10 @@ func _physics_process(delta : float) -> void :
 		# slighly trash movement ;)
 		if wish_jump :
 			velocity.y = jump_up_liquid
-#			if is_on_floor() :
-#				velocity.y = jump_up
-		
+		# apply gravity if not moving horizontally
 		if not (wishdir.x > 0 or wishdir.z > 0 or wish_jump) :
 			velocity.y -= gravity_liquid * delta
-			
 		move_liquid(delta)
-		
 	else :
 		if is_on_floor() :
 			if wish_jump :
@@ -196,6 +205,7 @@ func _physics_process(delta : float) -> void :
 		smooth_y /= 1.125
 		around.position.y = smooth_y + 0.688
 	#Engine.time_scale = 0.2
+		
 		
 func _coltest() :
 	for i in get_slide_collision_count() :
@@ -223,9 +233,11 @@ func _input(event : InputEvent) -> void :
 		hrot.x = clampf(hrot.x, -PI/2, PI/2)
 		head.rotation = hrot
 		
+		
 func _fluid_enter(f : QmapbspQuakeFluidVolume) :
 	# TODO: implement fluid effects on player
 	fluid = f
+	
 	
 func _fluid_exit(f : QmapbspQuakeFluidVolume) :
 	if f == fluid : fluid = null
