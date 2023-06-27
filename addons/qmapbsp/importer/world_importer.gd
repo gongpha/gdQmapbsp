@@ -115,7 +115,12 @@ func _entity_your_properties(id : int, entity : Dictionary) -> void :
 ## Offers essential properties on each entity
 func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 	var classname : String = entity.get('classname', '')
-	if id != 0 :
+	if id == 0 : # worldspawn
+		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
+		entity['sounds'] = QmapbspMapFormat.expect_int(entity.get('sounds', ''))
+		entity['worldtype'] = QmapbspMapFormat.expect_int(entity.get('worldtype', ''))
+		entity['light'] = QmapbspMapFormat.expect_int(entity.get('light', ''))
+	else:
 		entity['origin'] = (
 			QmapbspBaseParser._qnor_to_vec3(
 				QmapbspMapFormat.expect_vec3(entity.get('origin', ''))
@@ -126,6 +131,7 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 		if angle >= 0 : angle += 90
 		entity['angle'] = angle
 		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
+		
 	
 #########################################
 

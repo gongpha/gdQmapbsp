@@ -10,8 +10,7 @@ func _init() :
 	#shadow_enabled = true
 	light_bake_mode = Light3D.BAKE_STATIC
 	
-	var s : String = props.get("light", "300")
-	var light := s.to_int()
+	var light : int = props.get("light", 300)
 	omni_range = light / 32.0
 	omni_attenuation = 0.00001
 	light_indirect_energy = light / 50.0
