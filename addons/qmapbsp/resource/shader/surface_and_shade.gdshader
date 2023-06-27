@@ -3,7 +3,7 @@ shader_type spatial;
 uniform int mode = 0;
 uniform float lmboost = 4.0;
 uniform bool regionhl = false;
-uniform sampler2D[256] texs : source_color; // not an actual limit
+uniform sampler2D[96] texs : source_color; // device dependent
 uniform sampler2D lmp : repeat_disable;
 uniform float[12] lightstyles;
 

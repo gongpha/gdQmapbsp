@@ -21,26 +21,17 @@ func set_talk_sound(audio : AudioStream) :
 
 func set_emitter(msg : String, show : bool, from : Node) :
 	if msg == current_message : return
-	if from == null :
-		current_emitter = null
-		_show(msg)
-		talk.play()
-		return
+	if from == null : current_emitter = null
 	if show :
 		current_emitter = from
 		_show(msg)
-		
-	else :
-		if current_emitter == from :
-			current_emitter = null
-		
+		talk.play()
+	elif current_emitter == from : current_emitter = null
+
+
 func _show(m : String) :
 	current_message = m
-	
-	if current_emitter :
-		life.start()
-		_on_life_timeout()
-	
+	life.start()
 	queue_redraw()
 	
 func _draw() :
@@ -50,8 +41,4 @@ func _draw() :
 
 
 func _on_life_timeout() :
-	if current_emitter :
-		if !talk.playing :
-			talk.play()
-	else :
-		clear()
+	clear()
