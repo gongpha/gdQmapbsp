@@ -190,7 +190,7 @@ func _physics_process(delta : float) -> void :
 		if not (wishdir.x > 0 or wishdir.z > 0 or wish_jump) :
 			velocity.y -= gravity_liquid * delta
 		move_liquid(delta)
-		_process_drowning(delta)
+		_process_liquid_hurt(delta)
 	else :
 		if is_on_floor() :
 			if wish_jump :
@@ -274,33 +274,40 @@ func _input(event : InputEvent) -> void :
 		
 func _fluid_enter(f : QmapbspQuakeFluidVolume) :
 	fluid = f
-	match fluid.liquid_type() :
-		&'water' :  
-			pass # water doesn't hurt, unless drowning...
-		&'lava' : 
-			# TODO: setup repeating timer for hurt until exit
-			hurt(&'lava', fluid.damage(), fluid.duration())
-		&'slime' : 
-			# TODO: setup repeating timer for hurt until exit
-			hurt(&'slime', fluid.damage(), fluid.duration())
 
 
-# return 1, 2, 3 water level (ankle deep, halfway, submerged)
-func _get_water_level():
-	# TODO: calculate proper water level
+# return 1, 2, 3 levels (ankle deep, halfway, submerged)
+func _get_submerged_level():
+	# TODO: calculate proper level
 	return 3 # FIXME: hardcoded for testing
 
 
-func _process_drowning(delta) :
+func _process_liquid_hurt(delta) :
 	if !fluid : return
 	
-	if _get_water_level() == 3 : # fully underwater
-		time_submerged += 1 * delta
-	else : time_submerged = 0
-	if time_submerged > max_time_submerged :
-		hurt(&'water', fluid.damage(), fluid.duration())
-		time_submerged -= 1 # apply effect every 1 second
-		
+	var s_level = _get_submerged_level()
+	
+	match fluid.liquid_type() :
+		&'water' :  
+			if s_level == 3 : time_submerged += 1 * delta
+			else : time_submerged = 0
+			if time_submerged > max_time_submerged : # delay
+				time_submerged -= 1 # apply effect every 1 second
+				hurt(&'water', fluid.damage(), fluid.duration())
+		&'lava' : 
+			if s_level > 0 : time_submerged += 1 * delta
+			else : time_submerged = 0
+			if time_submerged > 0 :
+				time_submerged -= 1 # apply effect every 1 second
+				hurt(&'lava', fluid.damage() * s_level, fluid.duration())
+		&'slime' : 
+			# TODO: apply damage for "duration" time after exit
+			if s_level > 0 : time_submerged += 1 * delta
+			else : time_submerged = 0
+			if time_submerged > 0 :
+				time_submerged -= 1 # apply effect every 1 second
+				hurt(&'slime', fluid.damage() * s_level, fluid.duration())
+
 
 func _fluid_exit(f : QmapbspQuakeFluidVolume) :
 	if f == fluid : fluid = null
