@@ -15,6 +15,7 @@ var viewer : QmapbspQuakeViewer
 @export var fric : float = 8
 @export var sensitivity : float = 0.0025
 @export var stairstep := 0.6
+@export var step_buffer := 1.125 # multiplier
 @export var gravity : float = 20
 @export var gravity_liquid : float = 15
 @export var jump_up : float = 7.6
@@ -23,6 +24,7 @@ var viewer : QmapbspQuakeViewer
 
 var noclip : bool = false
 
+@onready var col : CollisionShape3D = $col
 @onready var around : Node3D = $around
 @onready var head : Node3D = $around/head
 @onready var camera : Camera3D = $around/head/cam
@@ -48,12 +50,32 @@ const tele_death_audio = [ &"player/teledth1.wav" ]
 const death_audio = [ &"player/death1.wav",  &"player/death2.wav",  &"player/death3.wav",  &"player/death4.wav",  &"player/death5.wav" ]
 const water_death_audio = [ &"player/h2odeath.wav" ]
 const gib_death_audio = [ &"player/gib.wav", &"player/udeath.wav" ]
-
+	
+# cache some values:
+var _p_size : Vector3
+var _p_height : float
+var _p_half_height : float
+var _sc_size : Vector3
+var _sc_height : float
+var _sc_half_height : float
+var _head_height : float
+	
+	
 func _ready() :
-	pass
+	# player height
+	_p_size = col.shape.size
+	_p_height = _p_size.y
+	_p_half_height = _p_height / 2
+	# staircast height
+	_sc_size = staircast.shape.size
+	_sc_height = _sc_size.y
+	_sc_half_height = _sc_height / 2
+	# around (head container)
+	_head_height = around.position.y
 	
 	
 func hurt(type: StringName, amount: int, duration: float) :
+	# TODO: apply damage, flush out hurt types, etc.
 	match type :
 		&'water' :
 			_play_sound(&'water_pain')
@@ -61,6 +83,8 @@ func hurt(type: StringName, amount: int, duration: float) :
 			_play_sound(&'lava_pain')
 		&'slime' :
 			_play_sound(&'slime_pain')
+		_ : 
+			print('UKNOWN HURT TYPE!')
 
 
 func teleport_to(dest : Node3D, play_sound : bool = false) :
@@ -131,32 +155,30 @@ func move_noclip(delta : float) -> void :
 	
 
 func _ceiling_test() :
-	staircast.target_position.y = 0.66 + stairstep
+	staircast.target_position.y = _p_half_height + _sc_half_height
 	staircast.force_shapecast_update()
 	if staircast.get_collision_count() == 0 :
-		staircast.target_position.y = -stairstep # (?)
+		staircast.target_position.y =  -(_p_half_height - _sc_half_height)
 		staircast.force_shapecast_update()
 		if staircast.get_collision_count() > 0 and staircast.get_collision_normal(0).y >= 0.8 :
-			var height := staircast.get_collision_point(0).y - (global_position.y - 0.75)
-			if height < stairstep :
-				position.y += height * 1.125 # additional bonus
-				smooth_y = -height
-				around.position.y += smooth_y
-				# 0.688 is an initial value of around.y
+			var height := staircast.get_collision_point(0).y - (global_position.y - _p_half_height)
+			if height < stairstep : # step-over
+				position.y += height * step_buffer
+				smooth_y = -height * step_buffer # applied in _physics_process
 	
 	
 func _stairs(delta : float) :
 	var w := (velocity / max_speed) * Vector3(2.0, 0.0, 2.0) * delta
 	var ws := w * max_speed
 	
-	# stair stuffs
+	# increase size in horizontal movement direction
 	var shape : BoxShape3D = staircast.shape
 	shape.size = Vector3(
-		1.0 + ws.length(), shape.size.y, 1.0 + ws.length()
+		_sc_size.x + ws.length(), _sc_height, _sc_size.z + ws.length()
 	)
 	
-	staircast.position = Vector3(
-		ws.x, 0.175 + stairstep - 0.75, ws.z
+	staircast.target_position = Vector3(
+		ws.x, (_sc_height + stairstep - _p_half_height), ws.z
 	)
 
 
@@ -205,13 +227,10 @@ func _physics_process(delta : float) -> void :
 			velocity.y -= gravity * delta
 			move_air(delta)
 	
-	if is_zero_approx(smooth_y) :
-		smooth_y = 0.0
+	if is_zero_approx(smooth_y) : smooth_y = 0.0
 	else :
-		#print(smooth_y)
-		smooth_y /= 1.125
-		around.position.y = smooth_y + 0.688
-	#Engine.time_scale = 0.2
+		smooth_y /= step_buffer
+		around.position.y = smooth_y + _head_height
 		
 		
 func _play_sound(s_type: StringName) :
@@ -301,7 +320,6 @@ func _process_liquid_hurt(delta) :
 				time_submerged -= 1 # apply effect every 1 second
 				hurt(&'lava', fluid.damage() * s_level, fluid.duration())
 		&'slime' : 
-			# TODO: apply damage for "duration" time after exit
 			if s_level > 0 : time_submerged += 1 * delta
 			else : time_submerged = 0
 			if time_submerged > 0 :
@@ -312,6 +330,7 @@ func _process_liquid_hurt(delta) :
 func _fluid_exit(f : QmapbspQuakeFluidVolume) :
 	if f == fluid : fluid = null
 	time_submerged = 0
+	# TODO: apply damage for "duration" time after exit
 
 #########################################
 
