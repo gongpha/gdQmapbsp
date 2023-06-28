@@ -19,6 +19,7 @@ var viewer : QmapbspQuakeViewer
 @export var gravity_liquid : float = 15
 @export var jump_up : float = 7.6
 @export var jump_up_liquid : float = 1.9
+@export var max_time_submerged : float = 5
 
 var noclip : bool = false
 
@@ -26,17 +27,40 @@ var noclip : bool = false
 @onready var head : Node3D = $around/head
 @onready var camera : Camera3D = $around/head/cam
 @onready var staircast : ShapeCast3D = $staircast
-@onready var jump : AudioStreamPlayer3D = $jump
+@onready var sound : AudioStreamPlayer3D = $sound
 
 var wishdir : Vector3
 var wish_jump : bool = false
 var auto_jump : bool = true
 var smooth_y : float
+var time_submerged : float = 0
 
 var fluid : QmapbspQuakeFluidVolume
 
+# audio paths
+const jump_audio = [ &"player/plyrjmp8.wav" ]
+const axe_pain_audio = [ &"player/axhit1.wav" ]
+const pain_audio = [ &"player/pain1.wav", &"player/pain2.wav", &"player/pain3.wav", &"player/pain4.wav", &"player/pain5.wav", &"player/pain6.wav" ]
+const water_pain_audio = [ &"player/drown1.wav", &"player/drown2.wav" ]
+const lava_pain_audio = [ &"player/lburn1.wav", &"player/lburn2.wav" ]
+const slime_pain_audio = [ &"player/lburn1.wav", &"player/lburn2.wav" ] # the same as lava
+const tele_death_audio = [ &"player/teledth1.wav" ]
+const death_audio = [ &"player/death1.wav",  &"player/death2.wav",  &"player/death3.wav",  &"player/death4.wav",  &"player/death5.wav" ]
+const water_death_audio = [ &"player/h2odeath.wav" ]
+const gib_death_audio = [ &"player/gib.wav", &"player/udeath.wav" ]
+
 func _ready() :
-	jump.stream = viewer.hub.load_audio("player/plyrjmp8.wav")
+	pass
+	
+	
+func hurt(type: StringName, amount: int, duration: float) :
+	match type :
+		&'water' :
+			_play_sound(&'water_pain')
+		&'lava' :
+			_play_sound(&'lava_pain')
+		&'slime' :
+			_play_sound(&'slime_pain')
 
 
 func teleport_to(dest : Node3D, play_sound : bool = false) :
@@ -51,9 +75,7 @@ func teleport_to(dest : Node3D, play_sound : bool = false) :
 			viewer.hub.load_audio('misc/r_tele%d.wav' % (randi() % 5 + 1))
 		)
 		
-		p.finished.connect(func() :
-			p.queue_free()
-			)
+		p.finished.connect(func() : p.queue_free())
 		viewer.add_child(p)
 		p.global_position = global_position
 		p.play()
@@ -96,8 +118,7 @@ func move_air(delta : float) -> void :
 func move_liquid(delta : float) -> void :
 	friction(delta)
 	accelerate(max_liquid_speed, delta)
-#	_stairs(delta)
-	_stairs_liquid(delta)
+	_stairs(delta)
 	move_and_slide()
 	_coltest()
 	_ceiling_test()
@@ -127,21 +148,6 @@ func _ceiling_test() :
 func _stairs(delta : float) :
 	var w := (velocity / max_speed) * Vector3(2.0, 0.0, 2.0) * delta
 	var ws := w * max_speed
-	
-	# stair stuffs
-	var shape : BoxShape3D = staircast.shape
-	shape.size = Vector3(
-		1.0 + ws.length(), shape.size.y, 1.0 + ws.length()
-	)
-	
-	staircast.position = Vector3(
-		ws.x, 0.175 + stairstep - 0.75, ws.z
-	)
-	
-	
-func _stairs_liquid(delta : float) :
-	var w := (velocity / max_liquid_speed) * Vector3(2.0, 0.0, 2.0) * delta
-	var ws := w * max_liquid_speed
 	
 	# stair stuffs
 	var shape : BoxShape3D = staircast.shape
@@ -184,10 +190,11 @@ func _physics_process(delta : float) -> void :
 		if not (wishdir.x > 0 or wishdir.z > 0 or wish_jump) :
 			velocity.y -= gravity_liquid * delta
 		move_liquid(delta)
+		_process_drowning(delta)
 	else :
 		if is_on_floor() :
 			if wish_jump :
-				jump.play()
+				_play_sound(&'jump')
 				velocity.y = jump_up
 				move_air(delta)
 				wish_jump = false
@@ -206,6 +213,37 @@ func _physics_process(delta : float) -> void :
 		around.position.y = smooth_y + 0.688
 	#Engine.time_scale = 0.2
 		
+		
+func _play_sound(s_type: StringName) :
+	if sound.is_playing() : return
+	
+	var psnd : StringName
+	match s_type :
+		&'jump' :
+			psnd = jump_audio.pick_random()
+		&'axe_pain' :
+			psnd = axe_pain_audio.pick_random()
+		&'pain' :
+			psnd = pain_audio.pick_random()
+		&'water_pain' :
+			psnd = water_pain_audio.pick_random()
+		&'lava_pain' :
+			psnd = lava_pain_audio.pick_random()
+		&'slime_pain' :
+			psnd = slime_pain_audio.pick_random()
+		&'tele_death' : 
+			psnd = tele_death_audio.pick_random()
+		&'death' :
+			psnd = death_audio.pick_random()
+		&'water_death' :
+			psnd = water_death_audio.pick_random()
+		&'gib_death_audio' :
+			psnd = gib_death_audio.pick_random()
+			
+	if psnd.is_empty() : return
+	sound.stream = viewer.hub.load_audio(psnd)
+	sound.play()
+	
 		
 func _coltest() :
 	for i in get_slide_collision_count() :
@@ -235,12 +273,38 @@ func _input(event : InputEvent) -> void :
 		
 		
 func _fluid_enter(f : QmapbspQuakeFluidVolume) :
-	# TODO: implement fluid effects on player
 	fluid = f
+	match fluid.liquid_type() :
+		&'water' :  
+			pass # water doesn't hurt, unless drowning...
+		&'lava' : 
+			# TODO: setup repeating timer for hurt until exit
+			hurt(&'lava', fluid.damage(), fluid.duration())
+		&'slime' : 
+			# TODO: setup repeating timer for hurt until exit
+			hurt(&'slime', fluid.damage(), fluid.duration())
+
+
+# return 1, 2, 3 water level (ankle deep, halfway, submerged)
+func _get_water_level():
+	# TODO: calculate proper water level
+	return 3 # FIXME: hardcoded for testing
+
+
+func _process_drowning(delta) :
+	if !fluid : return
 	
-	
+	if _get_water_level() == 3 : # fully underwater
+		time_submerged += 1 * delta
+	else : time_submerged = 0
+	if time_submerged > max_time_submerged :
+		hurt(&'water', fluid.damage(), fluid.duration())
+		time_submerged -= 1 # apply effect every 1 second
+		
+
 func _fluid_exit(f : QmapbspQuakeFluidVolume) :
 	if f == fluid : fluid = null
+	time_submerged = 0
 
 #########################################
 
