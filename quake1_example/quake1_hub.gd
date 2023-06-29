@@ -245,6 +245,15 @@ func load_as_texture(pakpath : String) -> ImageTexture :
 		c_textures[pakpath] = itex
 	return itex
 
+func load_model(p : String) -> QmapbspMDLFile :
+	var mdl : QmapbspMDLFile = loaded_models.get(p)
+	if !mdl :
+		mdl = QmapbspMDLFile.load_from_file(
+			FileAccess.open("user://packcache/".path_join(p), FileAccess.READ),
+			global_pal
+		)
+		loaded_models[p] = mdl
+	return mdl
 
 func _on_bsponly_toggled(yes : bool) :
 	texview_root.visible = !yes
@@ -288,13 +297,7 @@ func _on_tree_item_selected() -> void :
 			
 var loaded_models : Dictionary # <path : QmapbspMDLFile>
 func _show_mdl(p : String) -> void :
-	var mdl : QmapbspMDLFile = loaded_models.get(p)
-	if !mdl :
-		mdl = QmapbspMDLFile.load_from_file(
-			FileAccess.open("user://packcache/".path_join(p), FileAccess.READ),
-			global_pal
-		)
-		loaded_models[p] = mdl
+	var mdl : QmapbspMDLFile = load_model(p)
 	current_mdl.mdl = mdl
 	%animesh.play(&'seekloop')
 	%anispin.play(&'spin')

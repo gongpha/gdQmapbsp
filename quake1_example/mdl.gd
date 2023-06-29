@@ -14,7 +14,10 @@ var synctype : int
 var flags : int
 var size : float
 
-static func load_from_file(f : FileAccess, pal_ : PackedColorArray) :
+static func load_from_file(
+	f : FileAccess, pal_ : PackedColorArray,
+	inverse_scale_factor := 32.0
+) :
 	# HEADER
 	var begin := f.get_position()
 	if f.get_32() != 0x4F504449 : return &"MDL_INVALID_MAGIC"
@@ -23,8 +26,8 @@ static func load_from_file(f : FileAccess, pal_ : PackedColorArray) :
 	
 	var mdl := QmapbspMDLFile.new()
 	mdl.pal = pal_
-	mdl.quake_scale = QmapbspBaseParser._read_vec3(f)
-	mdl.quake_origin = QmapbspBaseParser._read_vec3(f)
+	mdl.quake_scale = QmapbspBaseParser._read_vec3(f) / inverse_scale_factor
+	mdl.quake_origin = QmapbspBaseParser._read_vec3(f) / inverse_scale_factor
 	mdl.radius = f.get_float()
 	mdl.offsets = QmapbspBaseParser._read_vec3(f)
 	
