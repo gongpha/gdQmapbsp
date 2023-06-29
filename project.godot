@@ -97,6 +97,7 @@ trenchbroom_test_toggle_noclip={
 
 [layer_names]
 
+3d_physics/layer_3="liquid"
 3d_physics/layer_29="LEAVES"
 
 [physics]

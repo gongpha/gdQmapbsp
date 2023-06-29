@@ -36,10 +36,12 @@ var wish_jump : bool = false
 var auto_jump : bool = true
 var smooth_y : float
 var time_submerged : float = 0
-
 var fluid : QmapbspQuakeFluidVolume
+var mid_level := PhysicsPointQueryParameters3D.new()
+var eye_level := PhysicsPointQueryParameters3D.new()
+var s_level : int = 0
 
-# audio paths
+# audio paths, naming convention: s_type + "_audio
 const jump_audio = [ &"player/plyrjmp8.wav" ]
 const axe_pain_audio = [ &"player/axhit1.wav" ]
 const pain_audio = [ &"player/pain1.wav", &"player/pain2.wav", &"player/pain3.wav", &"player/pain4.wav", &"player/pain5.wav", &"player/pain6.wav" ]
@@ -50,6 +52,7 @@ const tele_death_audio = [ &"player/teledth1.wav" ]
 const death_audio = [ &"player/death1.wav",  &"player/death2.wav",  &"player/death3.wav",  &"player/death4.wav",  &"player/death5.wav" ]
 const water_death_audio = [ &"player/h2odeath.wav" ]
 const gib_death_audio = [ &"player/gib.wav", &"player/udeath.wav" ]
+const air_gasp_audio = [ &'player/gasp1.wav', &'player/gasp2.wav']
 	
 # cache some values:
 var _p_size : Vector3
@@ -72,6 +75,13 @@ func _ready() :
 	_sc_half_height = _sc_height / 2
 	# around (head container)
 	_head_height = around.position.y
+	# setup query points
+	mid_level.set_collide_with_areas(true)
+	mid_level.set_collide_with_bodies(false)
+	mid_level.set_collision_mask(pow(2, 3-1)) # 3rd layer is LIQUID
+	eye_level.set_collide_with_areas(true)
+	eye_level.set_collide_with_bodies(false)
+	eye_level.set_collision_mask(pow(2, 3-1)) # 3rd layer is LIQUID
 	
 	
 func hurt(type: StringName, amount: int, duration: float) :
@@ -98,7 +108,6 @@ func teleport_to(dest : Node3D, play_sound : bool = false) :
 		p.stream = (
 			viewer.hub.load_audio('misc/r_tele%d.wav' % (randi() % 5 + 1))
 		)
-		
 		p.finished.connect(func() : p.queue_free())
 		viewer.add_child(p)
 		p.global_position = global_position
@@ -233,32 +242,11 @@ func _physics_process(delta : float) -> void :
 		around.position.y = smooth_y + _head_height
 		
 		
-func _play_sound(s_type: StringName) :
-	if sound.is_playing() : return
+func _play_sound(s_type: StringName, force: bool = false) :
+	if not force and sound.is_playing() : return
 	
-	var psnd : StringName
-	match s_type :
-		&'jump' :
-			psnd = jump_audio.pick_random()
-		&'axe_pain' :
-			psnd = axe_pain_audio.pick_random()
-		&'pain' :
-			psnd = pain_audio.pick_random()
-		&'water_pain' :
-			psnd = water_pain_audio.pick_random()
-		&'lava_pain' :
-			psnd = lava_pain_audio.pick_random()
-		&'slime_pain' :
-			psnd = slime_pain_audio.pick_random()
-		&'tele_death' : 
-			psnd = tele_death_audio.pick_random()
-		&'death' :
-			psnd = death_audio.pick_random()
-		&'water_death' :
-			psnd = water_death_audio.pick_random()
-		&'gib_death_audio' :
-			psnd = gib_death_audio.pick_random()
-			
+	# access by convention: s_type + "_audio"
+	var psnd = get("%s_audio" % s_type).pick_random()
 	if psnd.is_empty() : return
 	sound.stream = viewer.hub.load_audio(psnd)
 	sound.play()
@@ -295,16 +283,30 @@ func _fluid_enter(f : QmapbspQuakeFluidVolume) :
 	fluid = f
 
 
-# return 1, 2, 3 levels (ankle deep, halfway, submerged)
-func _get_submerged_level():
-	# TODO: calculate proper level
-	return 3 # FIXME: hardcoded for testing
+# return 0, 1, 2, 3 levels (none, ankle deep, halfway, submerged)
+func _get_submerged_level() -> int :
+	# setup query points position
+	mid_level.position = global_position
+	eye_level.position = around.global_position
+	# query space
+	var space_state := get_world_3d().direct_space_state
+	if space_state.intersect_point(eye_level) : return 3
+	elif space_state.intersect_point(mid_level) : return 2
+	elif fluid : return 1 # if we are touching a fluid body at all
+	else : return 0
 
 
 func _process_liquid_hurt(delta) :
 	if !fluid : return
 	
-	var s_level = _get_submerged_level()
+	var prev_s_level = s_level
+	s_level = _get_submerged_level()
+	
+	# was fully submersed, now coming up for air
+	if prev_s_level == 3 and s_level < 3 :
+		# play gasping sound only if ~drowning
+		if (max_time_submerged - time_submerged) < 1:
+			_play_sound(&'air_gasp', true)
 	
 	match fluid.liquid_type() :
 		&'water' :  
