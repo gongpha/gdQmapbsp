@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, shadows_disabled, depth_prepass_alpha;
+render_mode unshaded, shadows_disabled, depth_prepass_alpha, specular_disabled;
 
 uniform sampler2D tex : source_color;
 uniform float alpha = 0.8;

@@ -1,8 +1,87 @@
-[gd_scene load_steps=4 format=3 uid="uid://b4fsmrslaowwn"]
+[gd_scene load_steps=12 format=3 uid="uid://b4fsmrslaowwn"]
 
 [ext_resource type="Script" path="res://quake1_example/quake1_hub.gd" id="1_2c1wm"]
 [ext_resource type="Texture2D" uid="uid://dwa5a34uawid4" path="res://quake1_example/background.png" id="1_q0fs5"]
 [ext_resource type="Texture2D" uid="uid://ddgo0qldm1jtp" path="res://icon.svg" id="2_c3pq6"]
+[ext_resource type="Script" path="res://quake1_example/mdl_instance.gd" id="4_q5pgd"]
+
+[sub_resource type="Environment" id="Environment_8m3j4"]
+ambient_light_color = Color(0.72549, 0.282353, 0.0784314, 1)
+
+[sub_resource type="Animation" id="Animation_v10ej"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("root/mesh:seek")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_dc32k"]
+resource_name = "seekloop"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("root/mesh:seek")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_eflf5"]
+_data = {
+"RESET": SubResource("Animation_v10ej"),
+"seekloop": SubResource("Animation_dc32k")
+}
+
+[sub_resource type="Animation" id="Animation_dy4w6"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("root/mesh:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_flwlq"]
+resource_name = "spin"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("root/mesh:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, 6.28319, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_iedm2"]
+_data = {
+"RESET": SubResource("Animation_dy4w6"),
+"spin": SubResource("Animation_flwlq")
+}
 
 [node name="hub" type="Control"]
 layout_mode = 3
@@ -119,23 +198,77 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 hide_root = true
 
-[node name="texview" type="VBoxContainer" parent="tabs/PAK Viewer/vbox/hbox3"]
-visible = false
+[node name="view" type="Control" parent="tabs/PAK Viewer/vbox/hbox3"]
 layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="texview" type="VBoxContainer" parent="tabs/PAK Viewer/vbox/hbox3/view"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 0.5
 
-[node name="tex" type="TextureRect" parent="tabs/PAK Viewer/vbox/hbox3/texview"]
+[node name="tex" type="TextureRect" parent="tabs/PAK Viewer/vbox/hbox3/view/texview"]
 layout_mode = 2
 size_flags_vertical = 3
 texture = ExtResource("2_c3pq6")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="info" type="Label" parent="tabs/PAK Viewer/vbox/hbox3/texview"]
+[node name="info" type="Label" parent="tabs/PAK Viewer/vbox/hbox3/view/texview"]
 layout_mode = 2
 text = "Select an LMP or WAD entry file to view a texture !"
 autowrap_mode = 2
+
+[node name="mdlview" type="VBoxContainer" parent="tabs/PAK Viewer/vbox/hbox3/view"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="vc" type="SubViewportContainer" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview"]
+layout_mode = 2
+size_flags_vertical = 3
+stretch = true
+
+[node name="vp" type="SubViewport" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc"]
+handle_input_locally = false
+size = Vector2i(2, 2)
+render_target_update_mode = 0
+
+[node name="root" type="Node3D" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp"]
+
+[node name="mesh" type="MeshInstance3D" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root"]
+transform = Transform3D(0.031, 0, 0, 0, 0.031, 0, 0, 0, 0.031, 0, 0, 0)
+script = ExtResource("4_q5pgd")
+
+[node name="cam3d" type="Camera3D" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+environment = SubResource("Environment_8m3j4")
+current = true
+
+[node name="light" type="DirectionalLight3D" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root"]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 0, 0)
+
+[node name="animesh" type="AnimationPlayer" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp"]
+unique_name_in_owner = true
+speed_scale = 0.1
+libraries = {
+"": SubResource("AnimationLibrary_eflf5")
+}
+
+[node name="anispin" type="AnimationPlayer" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp"]
+unique_name_in_owner = true
+libraries = {
+"": SubResource("AnimationLibrary_iedm2")
+}
 
 [node name="status" type="Label" parent="tabs/PAK Viewer/vbox"]
 layout_mode = 2

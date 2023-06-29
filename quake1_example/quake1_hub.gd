@@ -12,10 +12,15 @@ class_name QmapbspQuake1Hub
 @onready var load : Button = $"tabs/PAK Viewer/vbox/hbox2/load"
 @onready var bsponly : CheckButton = $"tabs/PAK Viewer/vbox/hbox2/bsponly"
 @onready var wavplay : AudioStreamPlayer = $"wavplay"
-@onready var texview_root : Control = $"tabs/PAK Viewer/vbox/hbox3/texview"
-@onready var texview : TextureRect = $"tabs/PAK Viewer/vbox/hbox3/texview/tex"
-@onready var texinfo : Label = $"tabs/PAK Viewer/vbox/hbox3/texview/info"
+@onready var view : Control = $"tabs/PAK Viewer/vbox/hbox3/view"
+@onready var texview_root : Control = $"tabs/PAK Viewer/vbox/hbox3/view/texview"
+@onready var texview : TextureRect = $"tabs/PAK Viewer/vbox/hbox3/view/texview/tex"
+@onready var texinfo : Label = $"tabs/PAK Viewer/vbox/hbox3/view/texview/info"
 @onready var mapupper : CheckBox = $"tabs/PAK Viewer/vbox/mapupper"
+
+@onready var mdlview : VBoxContainer = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview"
+@onready var current_mdl : QmapbspMDLInstance = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root/mesh"
+
 
 @onready var s_registered : CheckBox = %"s_registered"
 @onready var s_occlusion_culling : CheckBox = %"s_occlusion_culling"
@@ -31,6 +36,8 @@ func _ready() :
 	cfg.load("user://quake1.cfg")
 	pathshow.text = cfg.get_value("pak", "pakpath", "")
 	pathshow_map.text = cfg.get_value("pak", "mappath", "")
+	
+	view.hide()
 	
 	DirAccess.remove_absolute("user://packcache/")
 	DirAccess.make_dir_recursive_absolute("user://packcache/")
@@ -210,6 +217,9 @@ func _show_tree(only_bsp : bool = true) :
 					elif ss[-1].ends_with('.wav') and i >= ss.size() - 1 :
 						currroot.set_custom_color(0, Color.RED)
 						currroot.set_meta(&'open', [&'wav', p])
+					elif ss[-1].ends_with('.mdl') and i >= ss.size() - 1 :
+						currroot.set_custom_color(0, Color.MAGENTA)
+						currroot.set_meta(&'open', [&'mdl', p])
 					var newdir := {}
 					currdir[s] = [currroot, newdir]
 					currdir = newdir
@@ -252,24 +262,48 @@ func _on_tree_item_activated():
 			_play_bsp(arr[1])
 
 
-func _on_tree_item_selected():
+func _on_tree_item_selected() -> void :
 	var that := tree.get_selected()
 	if !that.has_meta(&'open') : return
 	var arr : Array = that.get_meta(&'open')
 	match arr[0] :
 		&'lmp' :
+			mdlview.hide()
+			texview_root.show()
+			view.show()
 			var item := load_as_texture(arr[1])
 			if item :
 				_show_tex(item)
 		&'wad' :
+			mdlview.hide()
+			texview_root.show()
+			view.show()
 			var wad : QmapbspWadFile = globaldirs[arr[1]]
 			_show_tex(wad.load_pic(arr[2]))
+		&'mdl' :
+			texview_root.hide()
+			mdlview.show()
+			view.show()
+			_show_mdl(arr[1])
+			
+var loaded_models : Dictionary # <path : QmapbspMDLFile>
+func _show_mdl(p : String) -> void :
+	var mdl : QmapbspMDLFile = loaded_models.get(p)
+	if !mdl :
+		mdl = QmapbspMDLFile.load_from_file(
+			FileAccess.open("user://packcache/".path_join(p), FileAccess.READ),
+			global_pal
+		)
+		loaded_models[p] = mdl
+	current_mdl.mdl = mdl
+	%animesh.play(&'seekloop')
+	%anispin.play(&'spin')
 
-func _show_tex(tex : Texture2D) :
+func _show_tex(tex : Texture2D) -> void :
 	texview.texture = tex
 	texinfo.text = "(%d, %d)" % [tex.get_width(), tex.get_height()]
 
-func _play_bsp(pakpath : String) :
+func _play_bsp(pakpath : String) -> void :
 	var mapname := pakpath.get_basename().split('/')[-1]
 	
 	viewer = preload("res://quake1_example/viewer.tscn").instantiate()
