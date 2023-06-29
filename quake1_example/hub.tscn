@@ -250,9 +250,11 @@ transform = Transform3D(0.031, 0, 0, 0, 0.031, 0, 0, 0, 0.031, 0, 0, 0)
 script = ExtResource("4_q5pgd")
 
 [node name="cam3d" type="Camera3D" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.125)
 environment = SubResource("Environment_8m3j4")
 current = true
+near = 0.001
+far = 32.0
 
 [node name="light" type="DirectionalLight3D" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root"]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 0, 0)

@@ -1,9 +1,9 @@
 extends QmapbspQuakeLight
-class_name QmapbspQuakeLightTorchSmallWalltorch
+class_name QmapbspQuakeLightFlameLargeYellow
 
 func _map_ready() -> void :
 	var viewer : QmapbspQuakeViewer = get_meta(&'viewer')
-	var mdl : QmapbspMDLFile = viewer.hub.load_model("progs/flame.mdl")
+	var mdl : QmapbspMDLFile = viewer.hub.load_model("progs/flame2.mdl")
 	var mdli := QmapbspMDLInstance.new()
 	mdli.mdl = mdl
 	mdli.name = &"MODEL"
