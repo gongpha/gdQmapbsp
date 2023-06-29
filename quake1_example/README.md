@@ -9,4 +9,4 @@ This viewer requires PAK files and **MAP files of maps** inside the PAK to load.
 Tested on some ID Software's Quake (Shareware) maps. Not all entities are implemented yet. And remember that you have to run this viewer on the full project. Because it contains bound keys for the player character.
 
 ## Usage
-Run `hub.tscn` then enter your Mod and MAP paths. And hit `Load`. The tree will display a file structure inside the PAK files. You can click on some resources to play (\*.bsp, \*.wav) or view (\*.wad, \*.lmp). MDL files are not supported yet
+Run `hub.tscn` then enter your Mod and MAP paths. And hit `Load`. The tree will display a file structure inside the PAK files. You can click on some resources to play (\*.bsp, \*.wav) or view (\*.wad, \*.lmp).
