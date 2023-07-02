@@ -13,7 +13,7 @@ func _get_unit_scale_f() -> float :
 func _entity_region_size(ent_id : int) -> float :
 	return map_config.mesh_splitting_size
 	
-func _texture_get_no_texture() -> Material :
+func _texture_get_missing_texture() -> Material :
 	var no := map_config.default_material
 	if no : return no
 	return super()
