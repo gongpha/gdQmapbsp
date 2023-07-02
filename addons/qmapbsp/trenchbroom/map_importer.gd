@@ -128,7 +128,7 @@ func _import(
 	var ret : Array
 	
 	var err := wis.begin_load_absolute(
-		source_file, bsp_path, ret
+		bsp_path, source_file, ret
 	)
 	
 	if err != StringName() :

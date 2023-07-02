@@ -119,9 +119,10 @@ func _entity_your_shape(
 	ent_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
+	type : StringName,
 	known_texture_names : PackedStringArray
 ) -> void :
-	super(ent_id, brush_id, shape, origin, known_texture_names)
+	super(ent_id, brush_id, shape, origin, type, known_texture_names)
 	
 	if ent_id == 0 :
 		# distinquish between Lava, Slime and Water

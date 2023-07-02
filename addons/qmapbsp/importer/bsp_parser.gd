@@ -13,6 +13,10 @@ var read_lightmaps : bool = true
 var known_palette : PackedColorArray
 var bsp_shader : Shader
 var known_map_textures : PackedStringArray
+# turn these on if no .map file is specified to get collision shapes
+var import_clipnodes : bool = true
+var import_bspnodes : bool = true
+var import_visdata : bool = false
 
 var model_map : Dictionary # <model_id : ent_id>
 	
@@ -46,7 +50,7 @@ func _GatheringAllEntities() -> float :
 
 	return super()
 	
-func _brush_found() :
+func _brush_found() -> void :
 	# impossible to reach here
 	breakpoint
 	
@@ -71,8 +75,14 @@ var texture_ids : PackedByteArray # for built-in bsp material
 var texinfos : Array[Array]
 var models : Array[Array]
 var faces : Array[Array]
-#var clipnodes : Array[Array]
+var face_list : PackedInt32Array
+var bspnodes : Array[Array]
+var clipnodes : Array[Array]
 var entities : Array[Array]
+var visilist : PackedByteArray
+var leaves : Array[Array]
+
+var level_aabb : AABB
 
 # Built-in BSP material
 var global_surface_mat : ShaderMaterial
@@ -85,12 +95,20 @@ const GLOBAL_TEXTURE_LIMIT := 96 # device dependent
 var import_tasks := [
 	[_read_vertices, 128],
 	[_read_edges, 128],
-	[_read_ledges, 128],
+	[_read_ledges, 256],
 	[_read_planes, 128],
 	[_read_mip_textures, 16],
 	[_read_texinfo, 128],
 	[_read_models, 64],
-	[_read_faces, 64]
+	[_read_faces, 64],
+	[_read_bspnodes, 64],
+	[_read_clipnodes, 128],
+	[_read_lface, 256],
+	[_read_visilist, 256],
+	[_read_leaves, 64],
+	
+	[_construct_bspnodes, 16],
+	[_construct_clipnodes, 16]
 ]
 var import_curr_index : int = 0
 var import_curr_func : Callable = import_tasks[0][0]
@@ -125,13 +143,15 @@ func _read_vertices() -> float :
 		curr_entry = entries['vertices']
 		file.seek(curr_entry.x)
 		vertices.resize(curr_entry.y / VEC3_SIZE)
-	vertices[load_index] = _qpos_to_vec3(
+	var v := _qpos_to_vec3(
 		Vector3(
 			file.get_float(),
 			file.get_float(),
 			file.get_float()
 		)
 	)
+	vertices[load_index] = v
+	level_aabb = level_aabb.expand(v)
 	load_index += 1
 	return float(load_index) / vertices.size()
 			
@@ -217,7 +237,7 @@ func _read_mip_textures() -> float :
 			Vector2i(-1, -1)
 		)
 	else :
-		mat = wim.get_no_texture()
+		mat = wim.get_missing_texture()
 		mat.set_meta(&'size', Vector2i(64, 64))
 		
 	var tex : Texture2D
@@ -276,7 +296,7 @@ func _read_mip_textures() -> float :
 				global_surface_mat.set_meta(&'apply_lightmaps', true)
 			mat = global_surface_mat
 	if !mat :
-		mat = wim.get_no_texture()
+		mat = wim.get_missing_texture()
 	mat.set_meta(&'size', tsize)
 	textures[load_index] = mat
 		
@@ -351,6 +371,174 @@ func _read_faces() -> float :
 	load_index += 1
 	return float(load_index) / faces.size()
 	
+func _read_bspnodes() -> float :
+	if load_index == 0 :
+		if !import_bspnodes : return 1.0
+		curr_entry = entries['nodes']
+		file.seek(curr_entry.x)
+		bspnodes.resize(curr_entry.y / (44 if is_bsp2 else 24))
+		if bspnodes.is_empty() : return 1.0
+	bspnodes[load_index] = [
+		file.get_32(), # plane
+		file.get_32() if is_bsp2 else _get16as32(file), # front
+		file.get_32() if is_bsp2 else _get16as32(file), # back
+		_read_bbfloat(file) if is_bsp2 else _read_bbshort(file), # boundbox short
+		file.get_32() if is_bsp2 else file.get_16(),
+		file.get_32() if is_bsp2 else file.get_16() # face id, num
+	]
+	#print(bspnodes[load_index][3])
+	load_index += 1
+	return float(load_index) / bspnodes.size()
+	
+func _read_clipnodes() -> float :
+	if load_index == 0 :
+		if !import_clipnodes : return 1.0
+		curr_entry = entries['clipnodes']
+		file.seek(curr_entry.x)
+		clipnodes.resize(curr_entry.y / (12 if is_bsp2 else 8))
+		if clipnodes.is_empty() : return 1.0
+	clipnodes[load_index] = [
+		file.get_32(), # plane
+		file.get_32() if is_bsp2 else _get16as32(file), # front
+		file.get_32() if is_bsp2 else _get16as32(file), # back
+	]
+	load_index += 1
+	return float(load_index) / clipnodes.size()
+	
+func _read_lface() -> float :
+	if load_index == 0 :
+		curr_entry = entries['lface']
+		file.seek(curr_entry.x)
+		face_list.resize(curr_entry.y / 2)
+	face_list[load_index] = file.get_16()
+	load_index += 1
+	return float(load_index) / face_list.size()
+	
+func _read_visilist() -> float :
+	if !import_visdata : return 1.0
+	curr_entry = entries['visilist']
+	file.seek(curr_entry.x)
+	visilist = file.get_buffer(curr_entry.y)
+	return 1.0
+	
+func _read_leaves() -> float :
+	if load_index == 0 :
+		if !(import_bspnodes or import_visdata) : return 1.0
+		curr_entry = entries['leaves']
+		file.seek(curr_entry.x)
+		leaves.resize(curr_entry.y / 28)
+		
+	var arr : Array = leaves[load_index]
+	arr.append_array([
+		u32toi32(file.get_32()), # type
+		u32toi32(file.get_32()), # vislist
+		_qpos_to_vec3_read_16(file), _qpos_to_vec3_read_16(file), # bound
+		file.get_16(), # f_id
+		file.get_16(), # f_num
+		
+		# ambient sounds
+		file.get_8(), # water
+		file.get_8(), # sky
+		file.get_8(), # slime
+		file.get_8(), # lava
+	])
+	
+	load_index += 1
+	return float(load_index) / leaves.size()
+	
+func _dump_bspnodes_tree(node : int, deep : int = 0) -> void :
+	var nodearr : Array = bspnodes[node]
+	
+	var plane : Plane = planes[nodearr[0]]
+	print("-".repeat(deep), plane)
+	for i in [0, 1] :
+		var child : int = nodearr[1 + i]
+		if child >= 0 :
+			print("-".repeat(deep), i)
+			_dump_bspnodes_tree(child, deep + 1)
+		else :
+			print("-".repeat(deep), i, " ", leaves[~child][0])
+	
+var expanded_aabb : AABB
+func _construct_bspnodes() -> float :
+	return _construct_nodes(true)
+	
+func _construct_clipnodes() -> float :
+	return _construct_nodes(false)
+	
+func _construct_nodes(is_bsp : bool) -> float :
+	if load_index == 0 :
+		if !(import_bspnodes if is_bsp else import_clipnodes) : return 1.0
+		expanded_aabb = level_aabb.grow(4.0)
+	var convexplanes : Array[Array]
+	var tempplanes : Array[Plane]
+	
+	_node_cut(models[load_index][3 if is_bsp else 4],
+		tempplanes, convexplanes,
+		is_bsp
+	)
+		
+	for o in convexplanes :
+		var cvx := ConvexPolygonShape3D.new()
+		cvx.points = o[1]
+		
+		# use node id instead of brush id
+		wim._entity_your_shape(load_index, o[0], cvx, Vector3(),
+			&'BSP' if is_bsp else &'CLIP',
+			PackedStringArray()
+		)
+	
+	load_index += 1
+	return float(load_index) / models.size()
+	
+# outplanes : [node_id : int, planes : Array[Plane]]...
+func _node_cut(
+	node : int,
+	tempplanes : Array[Plane],
+	convexplanes : Array[Array],
+	is_bsp : bool
+) -> void :
+	var arr : Array[Array] = (bspnodes if is_bsp else clipnodes)
+	var nodearr : Array = arr[node] if arr.size() > node else []
+	if nodearr.is_empty() : return
+	
+	for i in [0, 1] :
+		var plane : Plane = planes[nodearr[0]]
+		if i == 0 :
+			# front
+			plane.normal *= -1
+			plane.d *= -1
+			
+		tempplanes.append(plane)
+		
+		var child : int = nodearr[1 + i]
+		if child >= 0 :
+			# child node
+			_node_cut(
+				child, tempplanes,
+				convexplanes, is_bsp
+			)
+		else :
+			var leaf_type : int = leaves[~child][0] if is_bsp else 0
+			if (leaf_type == CONTENTS_EMPTY) if is_bsp else child == -1 :
+				pass
+			elif (leaf_type == CONTENTS_SOLID) if is_bsp else child == -2 :
+				# solid area
+				var j := tempplanes.size() - 1
+				var clipper := QmapbspClipper.new()
+				clipper.begin(expanded_aabb)
+				for k in j + 1 :
+					var p := tempplanes[k]
+					clipper.clip_plane(p)
+				clipper.filter_and_clean()
+				
+				if clipper.vertices.size() >= 3 :
+					convexplanes.append(
+						[node, clipper.vertices]
+					)
+			
+		tempplanes.pop_back()
+		
 var entity_geo : Dictionary # <model_id : <region or 0 : [...]> >
 var lightmapdata : PackedByteArray
 var ip : QmapbspImagePacker
@@ -454,6 +642,9 @@ func _model_geo() -> bool :
 			tsize = tex.get_size()
 	else :
 		tsize = texture.get_meta(&'size') if texture else Vector2i()
+	
+	tsize.x = 16 if tsize.x == 0 else tsize.x
+	tsize.y = 16 if tsize.y == 0 else tsize.y
 	
 	var tscale := Vector2(
 		1.0 / (tsize.x * unit_scale),
@@ -902,6 +1093,15 @@ const ENTRY_LIST := [
 	'nodes', 'texinfo', 'faces', 'lightmaps', 'clipnodes',
 	'leaves', 'lface', 'edges', 'ledges', 'models',
 ]
+
+const CONTENTS_EMPTY  := -1
+const CONTENTS_SOLID  := -2
+const CONTENTS_WATER  := -3
+const CONTENTS_SLIME  := -4
+const CONTENTS_LAVA   := -5
+const CONTENTS_SKY    := -6
+const CONTENTS_ORIGIN := -7
+const CONTENTS_CLIP   := -8
 
 func _make_im(
 	s : Vector2i, d : PackedByteArray

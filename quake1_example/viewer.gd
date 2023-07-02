@@ -124,8 +124,8 @@ func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	
 	var retc : Array
 	var ret := parser.begin_load_absolute(
-		mappath,
 		bspdir.path_join('/maps/' + mapname + '.bsp'),
+		mappath,
 		retc
 	)
 	if ret != StringName() :
