@@ -259,7 +259,7 @@ func _on_bsponly_toggled(yes : bool) :
 	texview_root.visible = !yes
 	_show_tree(yes)
 
-func _on_tree_item_activated():
+func _on_tree_item_activated() :
 	var that := tree.get_selected()
 	if !that.has_meta(&'open') : return
 	var arr : Array = that.get_meta(&'open')
