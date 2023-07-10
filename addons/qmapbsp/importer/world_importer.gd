@@ -35,8 +35,25 @@ func _texture_get_material_for_integrated(
 ) -> Material :
 	return null
 	
+# returns [group name, texture index in the group]
+func _texture_get_animated_textures_group(
+	name : String
+) -> Array :
+	return []
+	
 func _texture_get_global_surface_material() -> ShaderMaterial :
 	return ShaderMaterial.new()
+	
+# out
+
+# items :
+# - Texture2D : static
+# - Array[Texture2D] : animated
+func _texture_your_bsp_textures(
+	textures : Array,
+	textures_fullbright : Array
+) -> void :
+	return
 
 ###########################################
 

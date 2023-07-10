@@ -8,6 +8,10 @@ var props : Dictionary
 func _get_properties(dict : Dictionary) : props = dict
 
 var surface : ShaderMaterial
+var bsp_textures : Array
+var bsp_textures_fullbright : Array
+var frame_textures : Array[Texture2D]
+var frame_textures_fullbright : Array[Texture2D]
 
 func _init() -> void :
 	lightstyles.resize(MAX_LIGHTSTYLE)
@@ -30,6 +34,13 @@ func _init() -> void :
 func _map_ready() :
 	var viewer : QmapbspQuakeViewer = get_meta(&'viewer', null)
 	if viewer :
+		surface = viewer.world_surface
+		bsp_textures = viewer.bsp_textures
+		bsp_textures_fullbright = viewer.bsp_textures_fullbright
+		frame_textures.resize(bsp_textures.size())
+		frame_textures_fullbright.resize(bsp_textures.size())
+		_update_texs(0)
+		
 		music.stream = viewer.get_music(props.get('sounds', 0))
 		music.play()
 		
@@ -73,6 +84,8 @@ const MAX_LIGHTSTYLE := 64
 const SWITCHABLE_LIGHT_BEGIN := 32 # to 62
 
 const DEFAULT_LIGHT_M := (0x6D - 0x61) / ZA # M light (0.48)
+	
+var update_tex_delay : int = 0
 
 func _process(delta : float) :
 	if !surface : return # ?
@@ -83,6 +96,26 @@ func _process(delta : float) :
 		lightstyles_f[i] = pf32a[frame % pf32a.size()]
 		
 	surface.set_shader_parameter(&'lightstyles', lightstyles_f)
+	
+	# animate textures
+	if update_tex_delay <= 0 :
+		_update_texs(Engine.get_frames_drawn() / 20)
+		update_tex_delay = 20
+	else :
+		update_tex_delay -= 1
+	
+func _update_texs(frame : int) -> void :
+	for i in frame_textures.size() :
+		var e = bsp_textures[i]
+		var e2 = bsp_textures_fullbright[i]
+		if e is Array :
+			frame_textures[i] = e[frame % e.size()]
+			frame_textures_fullbright[i] = e2[frame % e.size()]
+		else :
+			frame_textures[i] = e
+			frame_textures_fullbright[i] = e2
+	surface.set_shader_parameter(&'texs', frame_textures)
+	surface.set_shader_parameter(&'texfs', frame_textures_fullbright)
 
 func set_lightstyle(style : int, light : String) -> void :
 	var lightraw : PackedFloat32Array

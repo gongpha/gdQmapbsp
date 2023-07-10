@@ -23,6 +23,8 @@ var tracklist : Dictionary
 var trackcaches : Dictionary # <sounds : AudioStreamMP3>
 	
 var world_surface : ShaderMaterial
+var bsp_textures : Array
+var bsp_textures_fullbright : Array
 
 var registered : bool = false
 var occlusion_culling : bool = false
@@ -201,11 +203,19 @@ func found_secret() :
 	message.set_emitter("You found a secret area!", true, null)
 
 var mode : int = 0
+var filter : int = 0
 func switch_render_mode() :
 	if mode == 3 :
 		mode = 0
 	else :
 		mode += 1
+	world_surface.set_shader_parameter(&'mode', mode)
+	
+func switch_texture_filtering() -> void :
+	if filter == 3 :
+		filter = 0
+	else :
+		filter += 1
 	world_surface.set_shader_parameter(&'mode', mode)
 
 var lightmap_boost : float = 4.0
