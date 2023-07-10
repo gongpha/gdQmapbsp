@@ -77,6 +77,9 @@ var entities : Array[Array]
 # Built-in BSP material
 var global_surface_mat : ShaderMaterial
 var global_textures : Array[Texture2D]
+var global_textures_fullbright : Array[Texture2D]
+var grouped_textures : Array
+var grouped_textures_idx : Dictionary # <group_name : String, indexes : PackedIntArray32>
 const GLOBAL_TEXTURE_LIMIT := 96 # device dependent
 
 var import_tasks := [
@@ -218,6 +221,7 @@ func _read_mip_textures() -> float :
 		mat.set_meta(&'size', Vector2i(64, 64))
 		
 	var tex : Texture2D
+	var tex2 : Texture2D
 	if ret is Texture2D :
 		tsize = ret.get_size()
 		tex = ret
@@ -236,8 +240,10 @@ func _read_mip_textures() -> float :
 			file.seek(toffset + doffset)
 			var data := file.get_buffer(tsize.x * tsize.y)
 			var im := _make_im_from_pal(tsize, data)
-			tex = ImageTexture.create_from_image(im)
+			tex = ImageTexture.create_from_image(im[0])
+			tex2 = ImageTexture.create_from_image(im[1])
 		mat = wim._texture_get_material_for_integrated(tname, tex)
+		
 		if !mat :
 			if global_textures.size() > GLOBAL_TEXTURE_LIMIT :
 				# oof
@@ -245,6 +251,23 @@ func _read_mip_textures() -> float :
 			else :
 				texture_ids[load_index] = global_textures.size()
 				global_textures.append(tex)
+				global_textures_fullbright.append(tex2)
+				
+				var group : Array = wim._texture_get_animated_textures_group(tname)
+				if !group.is_empty() :
+					var group_name : String = group[0]
+					var frame_index : int = group[1]
+					if !group_name.is_empty() :
+						var pia32 := PackedInt32Array()
+						if grouped_textures_idx.has(group_name) :
+							pia32 = grouped_textures_idx[group_name]
+						else :
+							pia32.fill(-1)
+							grouped_textures_idx[group_name] = pia32
+							
+						if frame_index >= pia32.size() :
+							pia32.resize(frame_index + 1)
+						pia32[frame_index] = global_textures.size() - 1
 			
 			if !global_surface_mat :
 				global_surface_mat = wim._texture_get_global_surface_material()
@@ -601,13 +624,25 @@ var pos_list : PackedVector2Array
 var lightmap_image : Image
 var lightmap_size : Vector2
 var lmtex : ImageTexture
+var palette_tex : ImageTexture
 func _BuildingData() -> float :
 	if load_index == 0 and loc_load_index == 0 :
 		if read_lightmaps :
 			lightmap_image = ip.commit(Image.FORMAT_L8, pos_list)
 			lightmap_size = lightmap_image.get_size()
 			lmtex = ImageTexture.create_from_image(lightmap_image)
-			#lightmap_image.save_png('a.png')
+			
+			var paldata : PackedByteArray
+			paldata.resize(3 * known_palette.size())
+			for i in known_palette.size() :
+				var col := known_palette[i]
+				paldata[i * 3 + 0] = col.r * 255.0
+				paldata[i * 3 + 1] = col.g * 255.0
+				paldata[i * 3 + 2] = col.b * 255.0
+			palette_tex = lmtex.create_from_image(Image.create_from_data(
+				known_palette.size(), 1, false, Image.FORMAT_RGB8, paldata
+			))
+			
 		entity_geo_keys = entity_geo.keys()
 		if entity_geo_keys.is_empty() : return 1.0
 	
@@ -661,8 +696,32 @@ func _build_geo() -> bool :
 		
 		if global_surface_mat :
 			global_textures.resize(GLOBAL_TEXTURE_LIMIT)
+			global_textures_fullbright.resize(GLOBAL_TEXTURE_LIMIT)
 			global_surface_mat.set_shader_parameter(&'texs', global_textures)
+			global_surface_mat.set_shader_parameter(&'texfs', global_textures)
 			global_surface_mat.set_shader_parameter(&'lmp', lmtex)
+			
+			var texseqs : Array
+			var texfseqs : Array
+			texseqs.resize(global_textures.size())
+			texfseqs.resize(global_textures.size())
+			for i in global_textures.size() :
+				texseqs[i] = global_textures[i]
+				texfseqs[i] = global_textures_fullbright[i]
+			# 1 3 5
+			# 2 4 6
+			var grouped_textures_tex : Dictionary # <group : array of texture2d>
+			for k in grouped_textures_idx :
+				var arr : Array[Texture2D]
+				var arr2 : Array[Texture2D]
+				var pia32 : PackedInt32Array = grouped_textures_idx[k]
+				for l in pia32 :
+					arr.append(global_textures[l])
+					arr2.append(global_textures_fullbright[l])
+					texseqs[l] = arr
+					texfseqs[l] = arr2
+				pass
+			wim._texture_your_bsp_textures(texseqs, texfseqs)
 			
 		if wim._entity_prefers_occluder(target_ent) :
 			occ = ArrayOccluder3D.new()
@@ -844,18 +903,31 @@ const ENTRY_LIST := [
 	'leaves', 'lface', 'edges', 'ledges', 'models',
 ]
 
-func _make_im_from_pal(
+func _make_im(
 	s : Vector2i, d : PackedByteArray
 ) -> Image :
+	var im := Image.create_from_data(
+		s.x, s.y, false, Image.FORMAT_R8, d
+	)
+	return im
+
+func _make_im_from_pal(
+	s : Vector2i, d : PackedByteArray
+) -> Array :
 	if known_palette.size() < 256 :
 		known_palette.resize(256) # dummy pal for avoiding errors
 	var im := Image.create(s.x, s.y, false, Image.FORMAT_RGB8)
+	var im2 := Image.create(s.x, s.y, false, Image.FORMAT_L8)
 	for i in d.size() :
 		var p := d[i]
-		im.set_pixelv(Vector2i(
+		var v := Vector2i(
 			i % s.x, i / s.x
-		), known_palette[p])
-	return im
+		)
+		var c := known_palette[p]
+		var c2 := 1.0 if p >= 240 else 0.0
+		im.set_pixelv(v, c)
+		im2.set_pixelv(v, Color(c2, c2, c2))
+	return [im, im2]
 
 const MAX_LIGHTMAPS := 4
 func _gen_lightmap(

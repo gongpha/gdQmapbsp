@@ -15,10 +15,30 @@ func _texture_get_global_surface_material() -> ShaderMaterial :
 	surface.set_shader_parameter(&'mode', viewer.mode)
 	surface.set_shader_parameter(&'lmboost', viewer.lightmap_boost)
 	surface.set_shader_parameter(&'regionhl', viewer.region_highlighting)
-	var node : Node = entity_nodes.get(0)
-	if node is QmapbspQuakeWorldspawn :
-		node.surface = surface
 	return surface
+	
+func _texture_your_bsp_textures(
+	textures : Array,
+	textures_fullbright : Array
+) -> void :
+	viewer.bsp_textures = textures
+	viewer.bsp_textures_fullbright = textures_fullbright
+	
+func _texture_get_animated_textures_group(
+	name : String
+) -> Array :
+	if name.unicode_at(0) == 43 : # +
+		var groupi : String
+		var framei : int
+		var u := name.unicode_at(1)
+		if u >= 48 and u <= 57 :
+			groupi = '0'
+			framei = u - 48
+		elif u >= 97 and u <= 106 :
+			groupi = '1'
+			framei = u - 97
+		return [groupi + name.substr(2), framei] # remove first two characters
+	return []
 	
 func _get_custom_bsp_textures_shader() -> Shader :
 	if viewer.rendering != 0 :
