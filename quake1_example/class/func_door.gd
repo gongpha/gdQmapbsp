@@ -4,18 +4,32 @@ class_name QmapbspQuakeFunctionDoor
 # this is written from scratch. No QuakeC code was applied here
 # maybe not accurate to the original approach
 
+# Spawnflags:
+# 1 = Starts Open
+# 4 = Don't link
+# 8 = Gold Key required
+# 16 = Silver Key required
+# 32 = Toggle
+const START_OPEN : int = 1;
+const DONT_LINK : int = 4;
+const GOLD_KEY : int = 8;
+const SILVER_KEY : int = 16;
+const TOGGLE : int = 32;
+
 const GOLD_KEY_MESSAGE = 'You require the Gold Key!'
 const SILVER_KEY_MESSAGE = 'You require the Silver Key!'
 
 var tween : Tween
 var add : Vector3
-var add_reveal : Vector3
 var dura : float
 var wait : int
 var calc_ : bool = false
 var streams : Array
 var viewer : QmapbspQuakeViewer
 var open : bool = false
+var open_pos : Vector3
+var close_pos : Vector3
+var init_pos : Vector3
 
 var player : AudioStreamPlayer3D
 var player_end : bool = false
@@ -40,18 +54,19 @@ var func_door := [
 	['doors/basetry.wav', 'doors/baseuse.wav'],
 ]
 
-func _can_create_trigger() -> bool : return true
-func _get_trigger_padding() -> Vector3 : return Vector3(1.8, 0.25, 1.8)
-
 func _def_lip() -> String : return '8'
 func _def_wait() -> String : return '3'
 func _def_speed() -> String : return '100'
 
+func _get_trigger_padding() -> Vector3 : return Vector3(1.8, 0.25, 1.8)
+func _get_sound_index_loop() -> int : return 0
+func _get_sound_index_motion_end() -> int : return 1
 
 func _map_ready() :
+	init_pos = position
 	add_to_group(&'doors')
 	_calc_add()
-	_starts_open()
+	_calc_anim_pos()
 	
 	
 func _entities_ready() : 
@@ -61,11 +76,12 @@ func _entities_ready() :
 func _doors_ready() :
 	if is_in_group(&'primary_doors') and not props.has(&'targetname') : 
 		_create_primary_trigger()
-
-
-func _starts_open() :
-	if props.get('spawnflags', 0) & 0b01 :
+	if _starts_open() : 
 		_open_direct()
+
+
+func _starts_open() -> bool :
+	return _flag(START_OPEN)
 
 
 func _add_link(n : QmapbspQuakeFunctionDoor) :
@@ -75,7 +91,7 @@ func _add_link(n : QmapbspQuakeFunctionDoor) :
 
 
 func _no_linking() -> bool :
-	return props.get('spawnflags', 0) & 0b100
+	return _flag(DONT_LINK)
 
 
 func _get_angle() -> int :
@@ -105,30 +121,33 @@ func _calc_add() :
 		viewer = get_meta(&'viewer')
 		var angle : int = _get_angle()
 		var s : float = get_meta(&'scale', 32.0)
-		wait = props.get('wait', _def_wait()).to_int()
-		var lip : float = props.get('lip', _def_lip()).to_int() / s
-		
+		wait = props.get(&'wait', _def_wait()).to_int()
+		var lip : float = props.get(&'lip', _def_lip()).to_int() / s
 		if angle == -1 :
 			add = Vector3(0.0, aabb.size.y - lip, 0.0)
 		elif angle == -2 :
 			add = Vector3(0.0, -aabb.size.y + lip, 0.0)
 		else :
 			var rot := (angle / 180.0) * PI
-			var dir := -(Vector3(
-				aabb.size.x, 0.0, aabb.size.z
-			)) + Vector3(lip, 0.0, lip)
-			add = Vector3.BACK.rotated(Vector3.UP, rot) * dir
-			add_reveal = Vector3.RIGHT.rotated(Vector3.UP, -rot) * -(Vector3(
-				aabb.size.x, 0.0, aabb.size.z
-			))
-		dura = add.length() / (props.get('speed', _def_speed()).to_int() / s)
+			var dir := Vector3(aabb.size.x, 0.0, aabb.size.z)
+			var lip_v := Vector3(lip, 0.0, lip)
+			add = Vector3.BACK.rotated(Vector3.UP, rot) * (-dir + lip_v)
+		dura = add.length() / (props.get(&'speed', _def_speed()).to_int() / s)
 		
-		var sounds : int = clampi(props.get('sounds', '0').to_int(), 0, 5)
+		var sounds : int = clampi(props.get(&'sounds', '0').to_int(), 0, 5)
 		_get_sounds(sounds)
+
+
+func _calc_anim_pos() :
+	if _starts_open() :
+		open_pos = init_pos + add
+		close_pos = init_pos
+	else :
+		open_pos = init_pos + add
+		close_pos = init_pos 
 		
 		
 func _set_primary() :
-	if !_can_create_trigger() : return
 	if has_meta(&'primary') : return
 	if _requires_key() : return
 	
@@ -143,7 +162,6 @@ func _set_primary() :
 		
 		
 func _create_primary_trigger() :
-	if !_can_create_trigger() : return
 	if _requires_key() : return
 	if trigger : return
 	
@@ -155,7 +173,7 @@ func _create_primary_trigger() :
 	trigger.name = &'trigger_%s' % name
 	trigger.set_meta(&'viewer', viewer)
 	trigger.set_meta(&'scale', get_meta("scale"))
-	trigger._get_properties({ "target": props[&'targetname'] })
+	trigger._get_properties({ 'target': props[&'targetname'] })
 	# add trigger to scene
 	get_parent().add_child(trigger)
 	# create trigger collision shape
@@ -175,7 +193,8 @@ func _create_primary_trigger() :
 			props[&'message'] = l.props.get(&'message')
 		# grow trigger shape around linked door
 		_update_trigger_shape(l, trigger)
-		
+
+
 func _set_primary_trigger_position(col : CollisionShape3D, aabb: AABB) :
 	col.set_position(aabb.get_center())
 		
@@ -199,7 +218,7 @@ func _update_trigger_shape(
 func _get_sounds(sounds : int) :
 	if sounds == 5 :
 		streams = func_door[
-			viewer.worldspawn.props.get("worldtype", ['', '']) % 3
+			viewer.worldspawn.props.get('worldtype', ['', '']) % 3
 		]
 	else :
 		streams = audio_paths[sounds]
@@ -222,10 +241,6 @@ func _make_player() :
 		add_child(player)
 		
 		
-func _get_sound_index_loop() -> int : return 0
-func _get_sound_index_motion_end() -> int : return 1
-		
-		
 func _play_snd(idx : int) :
 	_make_player()
 	var s : String = streams[idx]
@@ -243,78 +258,80 @@ func _audf() :
 		player.play()
 
 
-func _move_pre(tween : Tween) -> Vector3 : return position
-
-
-func _move_end(destroy_tween : bool = false) :
-	player_end = true
-	_play_snd(_get_sound_index_motion_end())
-	if destroy_tween :
-		tween.kill()
-		tween = null
+func _move_pre(tween : Tween) -> Vector3 : 
+	if open : return close_pos
+	else : return open_pos
+	
 
 # TODO: check if something is blocking the door before closing
 # TODO: apply damage to player if blocking and trying to close door
 func _move() :
+	if tween : return
+
 	tween = create_tween()
+	var target_pos : Vector3 = _move_pre(tween) 
+	tween.tween_property(self, ^'position',
+		target_pos, dura
+	)
+	if wait > 0 : # add delay
+		if not open and not _starts_open() :
+			tween.tween_interval(wait)
+		elif open and _starts_open() :
+			tween.tween_interval(wait)
+	tween.finished.connect(_move_end)
 	
-	var basepos := _move_pre(tween)
-	
-	if open : # close open door
-		tween.tween_property(self, ^'position',
-			basepos - add, dura
-		).finished.connect(_move_end.bind(true))
-	else : # open closed door
-		tween.tween_property(self, ^'position',
-			basepos + add, dura
-		).finished.connect(_move_end)
 	open = !open
+	
 	_play_snd(_get_sound_index_loop())
-	player_end = false
+	player_end = true
+
+
+func _move_end() :
+	tween.kill()
+	tween = null
 	
-	if wait == -1 : return
+	# sound
+	player_end = true
+	_play_snd(_get_sound_index_motion_end())
 	
-	tween.tween_interval(wait)
-	tween.finished.connect(_move)
-		
+	if wait == -1 : return # permanently open
+	
+	# close
+	# TODO: check if player is still inside the trigger
+	if _starts_open() and not open :
+		_move()
+	elif not _starts_open() and open :
+		_move()
+
 
 func _open_direct() :
-	player_end = false
+#	player_end = false
 	position += add
+	init_pos = position
 	open = true
 
 
 func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 	var can_trigger : bool = true
 	if props.has(&'targetname') : can_trigger = false
-	if props.has("message") : 
-		emit_message_once.emit(props["message"])
+	if props.has('message') : 
+		emit_message_once.emit(props['message'])
 	
 	for l in links :
 		if l.props.has(&'targetname') : can_trigger = false
-		if l.props.has("message") :
-			l.emit_message_once.emit(l.props["message"])
+		if l.props.has('message') :
+			l.emit_message_once.emit(l.props['message'])
 	
 	if can_trigger : _trigger(p)
 
 
 func _requires_key() -> bool :
-	print('SF: ', props.get('spawnflags'))
-	if (_requires_silver_key() or _requires_gold_key()) : 
-		return true
-	else:
-		return false
+	return _requires_silver_key() or _requires_gold_key()
 
 
-func _requires_silver_key() -> bool:
-	if (props.get('spawnflags', 0) & 0b10000) : 
-		return true
-	else:
-		return false
+func _requires_silver_key() -> bool :
+	return _flag(SILVER_KEY)
 
 
-func _requires_gold_key() -> bool:
-	if (props.get('spawnflags', 0) & 0b1000) : 
-		return true
-	else:
-		return false
+func _requires_gold_key() -> bool :
+	return _flag(GOLD_KEY)

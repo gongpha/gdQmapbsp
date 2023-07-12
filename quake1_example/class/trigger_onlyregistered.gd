@@ -1,6 +1,11 @@
 extends QmapbspQuakeTrigger
 class_name QmapbspQuakeTriggerOnlyregistered
 
+# Spawnflags:
+# 1: "Not touchable" : 0
+const NO_TOUCH : int = 1
+
+
 func _bo_en(b : Node3D) :
 	if (get_meta(&'viewer') as QmapbspQuakeViewer).registered :
 		_trigger(b)
