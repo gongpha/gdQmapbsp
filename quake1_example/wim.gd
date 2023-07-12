@@ -37,12 +37,26 @@ var worldspawn_fluid_brush : PackedInt32Array
 var added_brush : Dictionary # <worldspawn_brush_id : col>
 	
 var fluid_area : QmapbspQuakeFluidVolume
+var lava_area : QmapbspQuakeLavaVolume
+var slime_area : QmapbspQuakeSlimeVolume
 
 func _new_fluid_area() :
 	if fluid_area : return
 	fluid_area = QmapbspQuakeFluidVolume.new()
 	fluid_area.name = &"FLUID"
 	root.add_child(fluid_area)
+
+func _new_lava_area() :
+	if lava_area : return
+	lava_area = QmapbspQuakeLavaVolume.new()
+	lava_area.name = &"FLUID_LAVA"
+	root.add_child(lava_area)
+	
+func _new_slime_area() :
+	if slime_area : return
+	slime_area = QmapbspQuakeSlimeVolume.new()
+	slime_area.name = &"FLUID_SLIME"
+	root.add_child(slime_area)
 
 func _texture_get_material_for_integrated(
 	name : String, tex : Texture2D
@@ -85,22 +99,42 @@ func _entity_your_shape(
 	ent_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
-	
 	known_texture_names : PackedStringArray
 ) -> void :
 	super(ent_id, brush_id, shape, origin, known_texture_names)
 	
 	if ent_id == 0 :
+		# distinquish between Lava, Slime and Water
 		var is_fluid : bool = false
+		var is_lava : bool = false
+		var is_slime : bool = false
 		for s in known_texture_names :
-			if s.begins_with('*') :
-				is_fluid = true
-				break
+			var s_lower = s.to_lower()
+			if s_lower.begins_with('*') : 
+				if 'water' in s_lower :
+					is_fluid = true
+					break
+				if 'lava' in s_lower :
+					is_lava = true
+					break
+				if 'slime' in s_lower :
+					is_slime = true
+					break
+				
 		if is_fluid :
 			_new_fluid_area()
-			# MOVE
 			last_added_col.get_parent().remove_child(last_added_col)
 			fluid_area.add_child(last_added_col)
+			last_added_col.position = origin
+		if is_lava :
+			_new_lava_area()
+			last_added_col.get_parent().remove_child(last_added_col)
+			lava_area.add_child(last_added_col)
+			last_added_col.position = origin
+		if is_slime :
+			_new_slime_area()
+			last_added_col.get_parent().remove_child(last_added_col)
+			slime_area.add_child(last_added_col)
 			last_added_col.position = origin
 
 	
