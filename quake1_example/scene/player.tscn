@@ -1,36 +1,29 @@
-[gd_scene load_steps=4 format=3 uid="uid://bjrvl643qpvsm"]
+[gd_scene load_steps=3 format=3 uid="uid://bjrvl643qpvsm"]
 
-[ext_resource type="Script" path="res://quake1_example/scene/player.gd" id="1_rapov"]
+[ext_resource type="Script" path="res://quake1_example/scene/player.gd" id="1_ud8p8"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_c8hfp"]
-size = Vector3(1, 1.5, 1)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_qf3qb"]
-resource_local_to_scene = true
-size = Vector3(1, 0.175, 1)
+[sub_resource type="SphereShape3D" id="SphereShape3D_i4i8h"]
+radius = 0.008
 
 [node name="player" type="CharacterBody3D"]
 collision_layer = 3
+floor_stop_on_slope = false
 floor_constant_speed = true
 floor_snap_length = 0.5
-platform_on_leave = 2
-script = ExtResource("1_rapov")
+script = ExtResource("1_ud8p8")
 
 [node name="col" type="CollisionShape3D" parent="."]
-shape = SubResource("BoxShape3D_c8hfp")
+shape = SubResource("SphereShape3D_i4i8h")
 
 [node name="around" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.688, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.668, 0)
 
 [node name="head" type="Node3D" parent="around"]
 
 [node name="cam" type="Camera3D" parent="around/head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.202, 0)
 current = true
 
-[node name="staircast" type="ShapeCast3D" parent="."]
-shape = SubResource("BoxShape3D_qf3qb")
-target_position = Vector3(0, -0.688, 0)
-max_results = 4
+[node name="staircast" type="RayCast3D" parent="."]
+target_position = Vector3(0, -0.172, 0)
 
 [node name="jump" type="AudioStreamPlayer3D" parent="."]
