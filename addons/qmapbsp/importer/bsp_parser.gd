@@ -15,7 +15,7 @@ var bsp_shader : Shader
 var known_map_textures : PackedStringArray
 # turn these on if no .map file is specified to get collision shapes
 var import_clipnodes : bool = true
-var import_bspnodes : bool = true
+var import_bspnodes : bool = false#true
 var import_visdata : bool = false
 
 var model_map : Dictionary # <model_id : ent_id>
@@ -446,8 +446,8 @@ func _read_leaves() -> float :
 	load_index += 1
 	return float(load_index) / leaves.size()
 	
-func _dump_bspnodes_tree(node : int, deep : int = 0) -> void :
-	var nodearr : Array = bspnodes[node]
+func _dump_bspnodes_tree(node : int, is_bsp : bool, deep : int = 0) -> void :
+	var nodearr : Array = (bspnodes if is_bsp else clipnodes)[node]
 	
 	var plane : Plane = planes[nodearr[0]]
 	print("-".repeat(deep), plane)
@@ -455,9 +455,9 @@ func _dump_bspnodes_tree(node : int, deep : int = 0) -> void :
 		var child : int = nodearr[1 + i]
 		if child >= 0 :
 			print("-".repeat(deep), i)
-			_dump_bspnodes_tree(child, deep + 1)
+			_dump_bspnodes_tree(child, is_bsp, deep + 1)
 		else :
-			print("-".repeat(deep), i, " ", leaves[~child][0])
+			print("-".repeat(deep), i, " ", leaves[~child][0] if is_bsp else child)
 	
 var expanded_aabb : AABB
 func _construct_bspnodes() -> float :
@@ -467,11 +467,14 @@ func _construct_clipnodes() -> float :
 	return _construct_nodes(false)
 	
 func _construct_nodes(is_bsp : bool) -> float :
+	# load_index is MODEL ID. NOT ENTITY ID !!!
 	if load_index == 0 :
 		if !(import_bspnodes if is_bsp else import_clipnodes) : return 1.0
 		expanded_aabb = level_aabb.grow(4.0)
 	var convexplanes : Array[Array]
 	var tempplanes : Array[Plane]
+	
+	#_dump_bspnodes_tree(models[load_index][3 if is_bsp else 4], is_bsp)
 	
 	_node_cut(models[load_index][3 if is_bsp else 4],
 		tempplanes, convexplanes,
@@ -483,7 +486,7 @@ func _construct_nodes(is_bsp : bool) -> float :
 		cvx.points = o[1]
 		
 		# use node id instead of brush id
-		wim._entity_your_shape(load_index, o[0], cvx, Vector3(),
+		wim._entity_your_shape(model_map[load_index], o[0], cvx, Vector3(),
 			&'BSP' if is_bsp else &'CLIP',
 			PackedStringArray()
 		)
@@ -502,7 +505,7 @@ func _node_cut(
 	var nodearr : Array = arr[node] if arr.size() > node else []
 	if nodearr.is_empty() : return
 	
-	for i in [0, 1] :
+	for i in 2 :
 		var plane : Plane = planes[nodearr[0]]
 		if i == 0 :
 			# front
