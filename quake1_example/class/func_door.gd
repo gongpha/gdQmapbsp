@@ -224,6 +224,8 @@ func _is_blocked() -> bool :
 		
 		
 func _trigger(b : Node3D) :
+	if tween : return
+	
 	# TODO: check player for key
 	if _requires_key() :
 		# doors that require keys, stay open
@@ -232,17 +234,16 @@ func _trigger(b : Node3D) :
 			_play_snd(&'key_try')
 			_show_key_message()
 		return
-	if tween : return
 	
 	_move_toggle()
 	for l in links : l._trigger(b)
 		
 		
 func _trigger_exit(b : Node3D) :
-	if _requires_key() : return
 	if tween : return
+	if _requires_key() : return
 	
-	if not _flag(TOGGLE) :
+	if not _flag(TOGGLE) and wait > 0 :
 		_move_close()
 		for l in links : l._trigger_exit(b)
 	
@@ -265,6 +266,7 @@ func _move_close() :
 	if tween : return
 	if not open : return
 	if _is_blocked() : return
+	if not _flag(START_OPEN) and wait == -1 : return # stay open
 
 	tween = create_tween()
 	tween.tween_callback(_play_snd.bind(&'door_loop'))
