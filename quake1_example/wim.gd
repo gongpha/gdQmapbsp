@@ -114,6 +114,9 @@ func _entity_your_shape(
 				if 'water' in s_lower :
 					is_fluid = true
 					break
+				if '04mwat' in s_lower :
+					is_fluid = true
+					break
 				if 'lava' in s_lower :
 					is_lava = true
 					break
