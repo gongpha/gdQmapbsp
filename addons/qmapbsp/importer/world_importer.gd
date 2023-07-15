@@ -78,8 +78,7 @@ func _entity_your_shape(
 	ent_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
-	type : StringName,
-	known_texture_names : PackedStringArray # require .map file
+	metadata : Dictionary
 ) -> void :
 	pass
 	

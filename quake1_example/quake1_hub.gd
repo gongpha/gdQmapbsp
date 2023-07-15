@@ -11,9 +11,10 @@ class_name QmapbspQuake1Hub
 @onready var load : Button = $"tabs/PAK Viewer/vbox/hbox2/load"
 @onready var bsponly : CheckButton = $"tabs/PAK Viewer/vbox/hbox2/bsponly"
 @onready var wavplay : AudioStreamPlayer = $"wavplay"
-@onready var texview_root : Control = $"tabs/PAK Viewer/vbox/hbox3/texview"
-@onready var texview : TextureRect = $"tabs/PAK Viewer/vbox/hbox3/texview/tex"
-@onready var texinfo : Label = $"tabs/PAK Viewer/vbox/hbox3/texview/info"
+@onready var texview_root : Control = $"tabs/PAK Viewer/vbox/hbox3/view/texview"
+@onready var texview : TextureRect = $"tabs/PAK Viewer/vbox/hbox3/view/texview/tex"
+@onready var texinfo : Label = $"tabs/PAK Viewer/vbox/hbox3/view/texview/info"
+@onready var view : Control = $"tabs/PAK Viewer/vbox/hbox3/view"
 
 @onready var mdlview : VBoxContainer = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview"
 @onready var current_mdl : QmapbspMDLInstance = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root/mesh"
@@ -199,8 +200,13 @@ func _show_tree(only_bsp : bool = true) :
 					currdir[s] = [currroot, newdir]
 					currdir = newdir
 		
-func load_audio(pakpath : String) -> AudioStream :
-	return load_resource("sound/" + pakpath)
+func load_audio(pakpath : String, as_loop : bool = false) -> AudioStreamWAV :
+	var r := load_resource("sound/" + pakpath)
+	if as_loop :
+		if r is AudioStreamWAV :
+			r.loop_mode = AudioStreamWAV.LOOP_FORWARD
+			r.loop_end = r.get_meta(&'length', 0)
+	return r
 	
 func load_resource(pakpath : String) -> Resource :
 	return globaldirs.get(pakpath, null)

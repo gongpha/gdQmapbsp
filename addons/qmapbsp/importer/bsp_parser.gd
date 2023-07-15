@@ -15,7 +15,7 @@ var bsp_shader : Shader
 var known_map_textures : PackedStringArray
 # turn these on if no .map file is specified to get collision shapes
 var import_clipnodes : bool = true
-var import_bspnodes : bool = false#true
+var import_bspnodes : bool = true
 var import_visdata : bool = false
 
 var model_map : Dictionary # <model_id : ent_id>
@@ -430,17 +430,19 @@ func _read_leaves() -> float :
 		
 	var arr : Array = leaves[load_index]
 	arr.append_array([
-		u32toi32(file.get_32()), # type
-		u32toi32(file.get_32()), # vislist
-		_qpos_to_vec3_read_16(file), _qpos_to_vec3_read_16(file), # bound
-		file.get_16(), # f_id
-		file.get_16(), # f_num
+		u32toi32(file.get_32()), # type 0
+		u32toi32(file.get_32()), # vislist 1
+		_qpos_to_vec3_read_16(file), _qpos_to_vec3_read_16(file), # bound 2 3
+		file.get_16(), # f_id 4
+		file.get_16(), # f_num 5
 		
-		# ambient sounds
-		file.get_8(), # water
-		file.get_8(), # sky
-		file.get_8(), # slime
-		file.get_8(), # lava
+		# ambient sounds 6
+		Vector4(
+			file.get_8() / 255.0, # water
+			file.get_8() / 255.0, # sky
+			file.get_8() / 255.0, # slime
+			file.get_8() / 255.0  # lava
+		)
 	])
 	
 	load_index += 1
@@ -486,10 +488,10 @@ func _construct_nodes(is_bsp : bool) -> float :
 		cvx.points = o[1]
 		
 		# use node id instead of brush id
-		wim._entity_your_shape(model_map[load_index], o[0], cvx, Vector3(),
-			&'BSP' if is_bsp else &'CLIP',
-			PackedStringArray()
-		)
+		var metadata : Dictionary = { 'from' : &'BSP' if is_bsp else &'CLIP' }
+		metadata.merge(o[2])
+		
+		wim._entity_your_shape(model_map[load_index], o[0], cvx, Vector3(), metadata)
 	
 	load_index += 1
 	return float(load_index) / models.size()
@@ -522,11 +524,24 @@ func _node_cut(
 				convexplanes, is_bsp
 			)
 		else :
-			var leaf_type : int = leaves[~child][0] if is_bsp else 0
-			if (leaf_type == CONTENTS_EMPTY) if is_bsp else child == -1 :
-				pass
-			elif (leaf_type == CONTENTS_SOLID) if is_bsp else child == -2 :
-				# solid area
+			var create_volume : bool = false
+			var leaf_type : int
+			var ambsnds : Vector4
+			if is_bsp :
+				var leaf : Array = leaves[~child]
+				leaf_type = leaf[0]
+				ambsnds = leaf[6]
+				if leaf_type != CONTENTS_EMPTY :
+					create_volume = true
+				if !ambsnds.is_zero_approx() :
+					# this volume plays sound
+					create_volume = true
+			else :
+				if child == -2 :
+					create_volume = true
+			
+			if create_volume :
+				# solid/liquid area
 				var j := tempplanes.size() - 1
 				var clipper := QmapbspClipper.new()
 				clipper.begin(expanded_aabb)
@@ -537,7 +552,10 @@ func _node_cut(
 				
 				if clipper.vertices.size() >= 3 :
 					convexplanes.append(
-						[node, clipper.vertices]
+						[node, clipper.vertices, {
+							'leaf_type' : leaf_type,
+							'ambsnds' : ambsnds,
+						} if is_bsp else {}]
 					)
 			
 		tempplanes.pop_back()

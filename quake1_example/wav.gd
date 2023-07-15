@@ -25,4 +25,8 @@ static func load_from_file(f : FileAccess) :
 	a.format = 0 # force 8-bit (OO)???
 	a.mix_rate = samrate
 	a.stereo = channel == 2
+	
+	# metadata
+	a.set_meta(&'length', datsize)
+	
 	return a

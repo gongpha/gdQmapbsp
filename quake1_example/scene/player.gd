@@ -24,6 +24,7 @@ var noclip : bool = false
 @onready var camera : Camera3D = $around/head/cam
 @onready var staircast : RayCast3D = $staircast
 @onready var jump : AudioStreamPlayer3D = $jump
+@onready var origin : Node3D = $origin
 
 var wishdir : Vector3
 var wish_jump : bool = false
@@ -90,14 +91,14 @@ func move_ground(delta : float) -> void :
 	if !staircast.is_colliding() :
 		apply_stairs_collision()
 
-var ppqp : PhysicsPointQueryParameters3D
+var ppqp_stair : PhysicsPointQueryParameters3D
 func apply_stairs_collision() -> void :
-	if !ppqp :
-		ppqp = PhysicsPointQueryParameters3D.new()
-		ppqp.collision_mask = staircast.collision_mask
-		ppqp.exclude.append(get_rid())
-	ppqp.position = staircast.global_position
-	var arr := get_world_3d().direct_space_state.intersect_point(ppqp)
+	if !ppqp_stair :
+		ppqp_stair = PhysicsPointQueryParameters3D.new()
+		ppqp_stair.collision_mask = staircast.collision_mask
+		ppqp_stair.exclude.append(get_rid())
+	ppqp_stair.position = staircast.global_position
+	var arr := get_world_3d().direct_space_state.intersect_point(ppqp_stair)
 	if !arr.is_empty() : return
 	
 	staircast.target_position.y = -(0.008 + stairstep) # (?)
@@ -105,12 +106,12 @@ func apply_stairs_collision() -> void :
 	if staircast.is_colliding() and staircast.get_collision_normal().y >= 0.8 :
 		var height := staircast.get_collision_point().y - (global_position.y)
 		if height < stairstep :
-			position.y += height * 1.125 # bonus
+			position.y += height * 1.2 # bonus
 			smooth_y -= height
 			around.position.y += smooth_y
 	
 func _stairs(delta : float) :
-	var w := (velocity / max_speed) * Vector3(1.0, 0.0, 1.0) * delta
+	var w := (velocity / max_speed) * Vector3(1.001, 0.0, 1.001) * delta
 	var ws := w * max_speed
 	
 	# stair stuffs
@@ -134,6 +135,7 @@ func move_noclip(delta : float) -> void :
 	friction(delta)
 	accelerate(max_speed, delta)
 	translate(velocity * delta)
+	_watercoltest()
 
 func _physics_process(delta : float) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
@@ -192,15 +194,35 @@ func _physics_process(delta : float) -> void :
 		around.position.y = smooth_y + 0.668
 	#Engine.time_scale = 0.2
 		
-func _coltest() :
+var ppqp_water : PhysicsPointQueryParameters3D
+func _coltest() -> void :
 	for i in get_slide_collision_count() :
 		var k := get_slide_collision(i)
 		for j in k.get_collision_count() :
 			var obj := k.get_collider(j)
+			if obj is QmapbspQuakeClipProxyStatic :
+				obj = obj.get_parent()
+			if obj is QmapbspQuakeClipProxyAnimated :
+				obj = obj.get_parent()
+				
 			if obj.has_method(&'_player_touch') :
 				obj._player_touch(self, k.get_position(j), k.get_normal(j))
 				return
+	_watercoltest()
 		
+func _watercoltest() -> void :
+	# water touch test
+	if !ppqp_water :
+		ppqp_water = PhysicsPointQueryParameters3D.new()
+		ppqp_water.collision_mask = 0b10
+		ppqp_water.collide_with_bodies = false
+		ppqp_water.collide_with_areas = true
+		
+	fluid = null
+	ppqp_water.position = origin.global_position
+	var arr := get_world_3d().direct_space_state.intersect_point(ppqp_water)
+	if !arr.is_empty() :
+		fluid = arr[0]["collider"]
 		
 func _input(event : InputEvent) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
@@ -218,11 +240,11 @@ func _input(event : InputEvent) -> void :
 		hrot.x = clampf(hrot.x, -PI/2, PI/2)
 		head.rotation = hrot
 		
-func _fluid_enter(f : QmapbspQuakeFluidVolume) :
-	fluid = f
-	
-func _fluid_exit(f : QmapbspQuakeFluidVolume) :
-	if f == fluid : fluid = null
+#func _fluid_enter(f : QmapbspQuakeFluidVolume) :
+#	fluid = f
+#
+#func _fluid_exit(f : QmapbspQuakeFluidVolume) :
+#	if f == fluid : fluid = null
 
 #########################################
 
