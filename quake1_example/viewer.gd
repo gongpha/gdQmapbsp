@@ -31,6 +31,7 @@ var rendering : int = 0
 
 var skytex : ImageTexture
 
+
 func _ready() :
 	get_viewport().use_occlusion_culling = occlusion_culling
 	hud.setup(self)
@@ -52,10 +53,12 @@ func _ready() :
 	$loading/loading.pivot_offset = t.get_size() / 2
 	loading.texture = hub.load_as_texture("gfx/conback.lmp")
 	
+	
 func set_rendering(i : int) -> void :
 	rendering = i
 	if i == 1 :
 		lightmap_boost = 8.0
+
 
 func play_by_node() :
 	hud.show()
@@ -89,6 +92,7 @@ func play_by_node() :
 		player.global_position = pspawn.global_position
 		player.around.rotation = pspawn.rotation
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 
 func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -138,8 +142,8 @@ func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	set_process(true)
 	return true
 
-var oldprog : int
 
+var oldprog : int
 func _process(delta) :
 	for I in iterations :
 		var reti := parser.poll()
@@ -157,11 +161,14 @@ func _process(delta) :
 		elif reti != StringName() :
 			breakpoint
 
+
 func toggle_noclip() :
 	if !player : return
 	player.toggle_noclip()
 
+
 ###################################################
+
 
 func change_level(mapname : String) :
 	loading.show()
@@ -169,26 +176,36 @@ func change_level(mapname : String) :
 	
 	play_by_mapname.call_deferred(mapname, true)
 
+
 func set_skill(s : int) :
 	skill = s
 	
+	
 func trigger_targets(targetname : String, activator : Node3D) :
 	get_tree().call_group('T_' + targetname, &'_trigger', activator)
+
+
+func trigger_targets_exit(targetname : String, activator : Node3D) :
+	get_tree().call_group('T_' + targetname, &'_trigger_exit', activator)
+	
 	
 func killtarget(targetname : String) :
 	for n in get_tree().get_nodes_in_group('T_' + targetname) :
 		n.queue_free()
 
-func _emit_message_state(msg : String, show : bool, from : Node) :
+
+func emit_message_state(msg : String, show : bool, from : Node) :
 	if show :
 		message.set_talk_sound(hub.load_audio("misc/talk.wav"))
 	else :
 		if message.current_emitter != from : return
 	message.set_emitter(msg, show, from)
 
+
 func emit_message_once(msg : String, from : Node) :
 	message.set_talk_sound(hub.load_audio("misc/talk.wav"))
-	message.set_emitter(msg, true, null)
+	message.set_emitter(msg, true, from)
+
 
 func get_music(sounds : int) -> AudioStreamMP3 :
 	var mp3 : AudioStreamMP3 = trackcaches.get(sounds)
@@ -203,9 +220,11 @@ func get_music(sounds : int) -> AudioStreamMP3 :
 	trackcaches[sounds] = mp3
 	return mp3
 	
+	
 func found_secret() :
 	message.set_talk_sound(hub.load_audio("misc/secret.wav"))
 	message.set_emitter("You found a secret area!", true, null)
+
 
 var mode : int = 0
 func switch_render_mode() :
@@ -214,6 +233,7 @@ func switch_render_mode() :
 	else :
 		mode += 1
 	world_surface.set_shader_parameter(&'mode', mode)
+
 
 var lightmap_boost : float = 4.0
 var lightmap_boost_min : float = 0.0
@@ -224,16 +244,23 @@ func add_lightmap_boost(add : int) :
 		lightmap_boost_min, lightmap_boost_max
 	)
 	world_surface.set_shader_parameter(&'lmboost', lightmap_boost)
+
+
 func get_lightmap_boost_val() -> float :
 	return inverse_lerp(lightmap_boost_min, lightmap_boost_max, lightmap_boost)
+
+
 var region_highlighting : bool = false
 func toggle_region_highlighting() -> void :
 	region_highlighting = !region_highlighting
 	world_surface.set_shader_parameter(&'regionhl', region_highlighting)
+
+
 var wireframe_enabled : bool = false
 func toggle_wireframe_mode() -> void :
 	wireframe_enabled = !wireframe_enabled
 	_update_wireframe_mode()
+	
 	
 func _update_wireframe_mode() -> void :
 	get_viewport().debug_draw = (
@@ -246,6 +273,7 @@ func _update_wireframe_mode() -> void :
 		if wireframe_enabled else
 		Color.BLACK
 	)
+
 
 # according to QC builtin functions
 func qc_lightstyle(style : int, light : String) -> void :
