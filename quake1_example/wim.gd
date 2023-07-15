@@ -9,6 +9,8 @@ func _get_bsp_palette() -> PackedColorArray : return pal
 
 func _texture_include_bsp_textures() -> bool : return true
 
+var importing_clip_shape := false
+
 func _texture_get_global_surface_material() -> ShaderMaterial :
 	surface = ShaderMaterial.new()
 	viewer.world_surface = surface
@@ -56,23 +58,24 @@ var specials : Dictionary # <name : ShaderMaterial>
 var worldspawn_fluid_brush : PackedInt32Array
 var added_brush : Dictionary # <worldspawn_brush_id : col>
 	
+var empty_area : QmapbspQuakeLeafVolume
 var fluid_area : QmapbspQuakeFluidVolume
 var lava_area : QmapbspQuakeLavaVolume
 var slime_area : QmapbspQuakeSlimeVolume
 
-func _new_fluid_area() :
+func _new_fluid_area() -> void :
 	if fluid_area : return
 	fluid_area = QmapbspQuakeFluidVolume.new()
 	fluid_area.name = &"FLUID"
 	root.add_child(fluid_area)
 
-func _new_lava_area() :
+func _new_lava_area() -> void :
 	if lava_area : return
 	lava_area = QmapbspQuakeLavaVolume.new()
 	lava_area.name = &"FLUID_LAVA"
 	root.add_child(lava_area)
 	
-func _new_slime_area() :
+func _new_slime_area() -> void :
 	if slime_area : return
 	slime_area = QmapbspQuakeSlimeVolume.new()
 	slime_area.name = &"FLUID_SLIME"
@@ -119,48 +122,103 @@ func _entity_your_shape(
 	ent_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
-	type : StringName,
-	known_texture_names : PackedStringArray
+	metadata : Dictionary
 ) -> void :
-	super(ent_id, brush_id, shape, origin, type, known_texture_names)
+	var imported_from : StringName = metadata.get('from', &'')
+	if imported_from == &'CLIP' :
+		importing_clip_shape = true
+	super(ent_id, brush_id, shape, origin, metadata)
+	importing_clip_shape = false
 	
-	if ent_id == 0 :
-		# distinquish between Lava, Slime and Water
-		var is_fluid : bool = false
-		var is_lava : bool = false
-		var is_slime : bool = false
-		for s in known_texture_names :
-			var s_lower = s.to_lower()
-			if s_lower.begins_with('*') : 
-				if 'water' in s_lower :
-					is_fluid = true
-					break
-				if 'lava' in s_lower :
-					is_lava = true
-					break
-				if 'slime' in s_lower :
-					is_slime = true
-					break
+	# -1 = do not create a vol
+	#  0 = empty
+	#  1 = water
+	#  2 = lava
+	#  3 = slime
+	var what : int = -1
+	
+	if imported_from == &'MAP_BRUSH' :
+		var known_texture_names : PackedStringArray = metadata.get(
+			'known_texture_names', PackedStringArray()
+		)
+		
+		if ent_id == 0 :
+			# distinquish between Lava, Slime and Water
+			var target_area : Area3D
+			
+			for s in known_texture_names :
+				var s_lower = s.to_lower()
+				if s_lower.begins_with('*') : 
+					if 'water' in s_lower :
+						what = 1
+						break
+					if 'lava' in s_lower :
+						what = 2
+						break
+					if 'slime' in s_lower :
+						what = 3
+						break
+						
+	elif imported_from == &'BSP' :
+		var leaf_type : int = metadata.get(
+			'leaf_type', -1
+		)
+		var ambsnds : Vector4 = metadata.get(
+			'ambsnds', Vector4()
+		)
+		
+		# set ambsnds data to each colshape
+		last_added_col.set_meta(&'ambsnds', ambsnds)
+		
+		match leaf_type :
+			QmapbspBSPParser.CONTENTS_EMPTY : what = 0
+			QmapbspBSPParser.CONTENTS_WATER : what = 1
+			QmapbspBSPParser.CONTENTS_LAVA : what = 2
+			QmapbspBSPParser.CONTENTS_SLIME : what = 3
+					
+	if what != -1 :
+		# create a leaf volume
+		var new_area : Area3D
+		match what :
+			0 :
+				if !empty_area :
+					empty_area = QmapbspQuakeLeafVolume.new()
+					empty_area.name = &"FLUID"
+					root.add_child(empty_area)
+					empty_area.set_meta(&'viewer', viewer)
+				new_area = empty_area
+			1 :
+				if !fluid_area :
+					fluid_area = QmapbspQuakeFluidVolume.new()
+					fluid_area.name = &"FLUID"
+					root.add_child(fluid_area)
+					fluid_area.set_meta(&'viewer', viewer)
+				new_area = fluid_area
+			2 :
+				if !lava_area :
+					lava_area = QmapbspQuakeLavaVolume.new()
+					lava_area.name = &"FLUID_LAVA"
+					root.add_child(lava_area)
+					lava_area.set_meta(&'viewer', viewer)
+				new_area = lava_area
+			3 :
+				if !slime_area :
+					slime_area = QmapbspQuakeSlimeVolume.new()
+					slime_area.name = &"FLUID_SLIME"
+					root.add_child(slime_area)
+					slime_area.set_meta(&'viewer', viewer)
+				new_area = slime_area
 				
-		if is_fluid :
-			_new_fluid_area()
-			last_added_col.get_parent().remove_child(last_added_col)
-			fluid_area.add_child(last_added_col)
-			last_added_col.position = origin
-		if is_lava :
-			_new_lava_area()
-			last_added_col.get_parent().remove_child(last_added_col)
-			lava_area.add_child(last_added_col)
-			last_added_col.position = origin
-		if is_slime :
-			_new_slime_area()
-			last_added_col.get_parent().remove_child(last_added_col)
-			slime_area.add_child(last_added_col)
-			last_added_col.position = origin
-
-	
-	#if ent_id == 0 and last_added_col :
-	#	added_brush[brush_id] = last_added_col
+		last_added_col.get_parent().remove_child(last_added_col)
+		new_area.add_child(last_added_col)
+		
+		if what >= 1 and what <= 3 : # fluid types
+			new_area.collision_layer = 0b10
+			new_area.collision_mask = 0b10
+		elif what == 0 :
+			new_area.collision_layer = 0b1000
+			new_area.collision_mask = 0b1000
+		last_added_col.position = origin
 	
 func _entity_occluder_includes_region(
 	ent_id : int,
@@ -172,6 +230,38 @@ func _entity_occluder_includes_region(
 			# do not add an occluder to water/sky brushes
 			return false
 	return super(ent_id, occluder, region)
+	
+func _try_create_clipbody(node : Node) -> Node :
+	if importing_clip_shape :
+		var clip_body : CollisionObject3D = node.get_node_or_null(^'CLIPBODY')
+		if !clip_body :
+			# new
+			if node is StaticBody3D :
+				clip_body = QmapbspQuakeClipProxyStatic.new()
+			elif node is AnimatableBody3D :
+				clip_body = QmapbspQuakeClipProxyAnimated.new()
+			elif node is Area3D :
+				clip_body = QmapbspQuakeClipProxyArea.new()
+				clip_body.set_area(node)
+			else :
+				clip_body = Area3D.new()
+				
+			if node is CollisionObject3D :
+				var m : int
+				m = node.collision_layer
+				if m & 0b1 :
+					m = (m | 0b100) & ~(0b1)
+				clip_body.collision_layer = m
+				
+				m = node.collision_mask
+				if m & 0b1 :
+					m = (m | 0b100) & ~(0b1)
+				clip_body.collision_mask = m
+				
+			clip_body.name = &'CLIPBODY'
+			node.add_child(clip_body)
+		return clip_body
+	return node
 
 func _new_entity_node(classname : StringName) -> Node :
 	var node : Node = super(classname)
@@ -214,7 +304,8 @@ func _get_entity_node(id : int) -> Node :
 	
 	if dict.has('targetname') :
 		node.add_to_group('T_' + dict['targetname'])
-	return node
+		
+	return _try_create_clipbody(node)
 
 func _entity_prefers_occluder(ent_id : int) -> bool :
 	return ent_id == 0 and viewer.occlusion_culling

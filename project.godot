@@ -97,6 +97,10 @@ trenchbroom_test_toggle_noclip={
 
 [layer_names]
 
+3d_physics/layer_1="bsp"
+3d_physics/layer_2="bsp_water"
+3d_physics/layer_3="clip"
+3d_physics/layer_4="player"
 3d_physics/layer_29="LEAVES"
 
 [physics]
