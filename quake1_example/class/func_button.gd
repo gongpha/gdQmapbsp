@@ -127,7 +127,7 @@ func _trigger_now(b: Node3D) :
 
 
 func _get_sounds() :
-	noise = audio_paths[clampi(_prop(&'sounds', 0), 0, 3)]
+	noise = audio_paths[_prop(&'sounds', 0)]
 
 
 func _make_player() :
