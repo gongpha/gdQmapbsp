@@ -4,12 +4,30 @@ class_name QmapbspQuakeFunctionPlat
 # Spawnflags:
 # 1 = Low trigger volume
 const PLAT_LOW_TRIGGER : int = 1;
+# Properties defaults
+const SPEED : int = 150
+const HEIGHT : int = 0 # Travel altitude (can be negative)
+const WAIT : int = 3
+const LIP : int = -8
+const ANGLE : int = -1 # not used, hardcoded to go up and down
+const TRIGGER_PADDING : Vector3 = Vector3(-0.75, 0, -0.75)
+const SOUND : int = 2
+const SOUND_LOOP_IDX : int = 0
+const SOUND_IMP_IDX : int = 1
+
+# 0: "None"
+# 1: "Base fast"
+# 2: "Chain Slow"
+const audio_paths := [
+	['misc/null.wav', 'misc/null.wav'],
+	['plats/plat1.wav', 'plats/plat2.wav'],
+	['plats/medplat1.wav', 'plats/medplat2.wav'],
+]
 
 var tween : Tween
-var add : Vector3
+var height_add : Vector3
 var dura : float
 var wait : int
-var calc_ : bool = false
 var streams : Array
 var viewer : QmapbspQuakeViewer
 var open : bool = false
@@ -18,51 +36,26 @@ var close_pos : Vector3
 var init_pos : Vector3
 
 var player : AudioStreamPlayer3D
-var player_end : bool = false
 var links : Array[QmapbspQuakeFunctionDoor]
 var trigger : QmapbspQuakeTrigger
+var low_trigger_height : float = 0.25
 
 signal emit_message_once(m : String)
-
-const audio_paths := [
-	['', ''],
-	['doors/drclos4.wav', 'doors/doormv1.wav'],
-	['doors/hydro1.wav', 'doors/hydro2.wav'],
-	['doors/stndr1.wav', 'doors/stndr2.wav'],
-	['doors/ddoor1.wav', 'doors/ddoor2.wav'],
-	['', ''],
-]
-
-var func_door := [
-	['doors/medtry.wav', 'doors/meduse.wav'],
-	['doors/runetry.wav', 'doors/runeuse.wav'],
-	['doors/basetry.wav', 'doors/baseuse.wav'],
-]
-
-func _def_wait() -> String : return '3'
-func _def_speed() -> String : return '150'
-func _def_lip() -> String : return '-8' # >O_O<
-
-func _get_angle() -> int : return -1
-func _get_trigger_padding() -> Vector3 : return Vector3(-0.75, 0, -0.75)
-func _get_sound_index_loop() -> int : return 0
-func _get_sound_index_motion_end() -> int : return 1
 
 
 func _map_ready() :
 	viewer = get_meta(&'viewer')
-	wait = props.get(&'wait', _def_wait()).to_int()
+	wait = _prop(&'wait', WAIT)
 	init_pos = position
 	add_to_group(&'plat')
 	_gen_aabb()
 	_calc_add()
 	_calc_dura()
-	_create_trigger()
-	_starts_open()
+	_get_sounds()
+	if !props.has(&'targetname') : 
+		_create_trigger()
+		_start_open()
 	_calc_anim_pos()
-	# TODO: make sounds less worse
-	var sounds : int = clampi(props.get(&'sounds', '0').to_int(), 0, 5)
-	_get_sounds(sounds)
 
 
 func _get_scale() -> float :
@@ -70,33 +63,32 @@ func _get_scale() -> float :
 	
 
 func _get_lip() -> float :
-	return props.get(&'lip', _def_lip()).to_int() / _get_scale()
+	return _prop(&'lip', LIP) / _get_scale()
 
 
 func _get_height() -> float :
 	var height : float
 	if props.has(&'height') : 
-		height = props.get(&'height', '0').to_int() / _get_scale()
+		height = _prop(&'height', HEIGHT) / _get_scale()
 	else :
 		height = aabb.size.y + _get_lip()
 	return height
 
 
 func _calc_add() :
-	add = Vector3(0.0, _get_height(), 0.0)
+	height_add = Vector3(0.0, _get_height(), 0.0)
 
 
 func _calc_dura() :
-	dura = add.length() / (props.get(&'speed', _def_speed()).to_int() / _get_scale())
+	dura = height_add.length() / (_prop(&'speed', SPEED) / _get_scale())
 
 
-# TODO: for targeted plats only create trigger after target has been activated
 func _create_trigger() :
 	if trigger : return
 	
 	# self setup
 	if not props.has(&'targetname') : props[&'targetname'] = name
-	add_to_group('T_' + props['targetname'])
+	add_to_group('T_' + props[&'targetname'])
 	# create trigger
 	trigger = QmapbspQuakeTriggerMultiple.new()
 	trigger.name = &'trigger_%s' % name
@@ -109,10 +101,12 @@ func _create_trigger() :
 	var col = CollisionShape3D.new()
 	col.name = &'col_shape'
 	col.shape = BoxShape3D.new()
-	var t_pad = _get_trigger_padding()
+	var t_pad = TRIGGER_PADDING
 	var t_pos : Vector3 = aabb.position - t_pad
 	var t_end : Vector3 = aabb.end + t_pad
 	col.shape.size = (t_end - t_pos).abs()
+	if _flag(PLAT_LOW_TRIGGER) :
+		col.shape.size.y = low_trigger_height
 	_set_trigger_position(col, aabb)
 	# add collision shape to trigger
 	trigger.add_child(col)
@@ -120,114 +114,103 @@ func _create_trigger() :
 
 func _set_trigger_position(col : CollisionShape3D, aabb: AABB) :
 	col.set_position(aabb.get_center())
-	if props.has(&'height') :
-		col.position.y -= add.y - aabb.size.y
+	if _flag(PLAT_LOW_TRIGGER) :
+		col.position.y -= height_add.y - aabb.size.y/2 - low_trigger_height/2
 	else :
-		col.position.y -= _get_lip()
+		col.position.y -= height_add.y - aabb.size.y
 
 
-func _starts_open() :
-	# TODO: if targetname set, it should start at top (extended)
-	# otherwise start at bottom
-	_open_direct()
+func _is_blocked() -> bool :
+	# check if player has not exited the trigger area
+	if trigger and trigger.blocked : return true
+	else :
+		for l in links :
+			if l.trigger and l.trigger.blocked : return true
+	return false
 
 
-func _open_direct() :
-	position -= add
+func _start_open() :
+	position -= height_add
 	init_pos = position
 	open = true
 	
 
 func _calc_anim_pos() :
-	open_pos = init_pos - add
+	open_pos = init_pos - height_add
 	close_pos = init_pos
 
 
-func _target_pos() -> Vector3 : 
-	if open : return close_pos
-	else : return open_pos
-
-
-func _move() :
+func _move_up() :
 	if tween : return
+	if not open : return
 	
 	tween = create_tween()
-	var target_pos : Vector3 = _target_pos() 
-	tween.tween_property(self, ^'position',
-		target_pos, dura
-	)
-	if open : tween.tween_interval(wait)
+	tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
+	tween.tween_property(self, ^'position', close_pos, dura)
+	tween.tween_callback(_play_snd.bind(SOUND_IMP_IDX))
 	tween.finished.connect(_move_end)
 	
-	# sound
-	player_end = true
-	_play_snd(_get_sound_index_loop())
+	open = false
 	
-	open = !open
+	
+func _move_down() :
+	if tween : return
+	if open : return
+	
+	tween = create_tween()
+	if wait > 0 : tween.tween_interval(wait) # pause before going down
+	tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
+	tween.tween_property(self, ^'position', open_pos, dura)
+	tween.tween_callback(_play_snd.bind(SOUND_IMP_IDX))
+	tween.finished.connect(_move_end)
+	
+	open = true
 
 
 func _move_end() :
-	tween.kill()
-	tween = null
+	if tween :
+		tween.kill()
+		tween = null
 	
-	# sound
-	# TODO: change sound played based on tob or bottom position
-	player_end = true
-	_play_snd(_get_sound_index_motion_end())
+	if wait == -1 : return # stay open
 	
-	if wait == -1 : return # permanently open
-	
-	# close
-	# TODO: check if player is still inside the trigger
-	if not open : _move()
+	if not _is_blocked() and not open : _move_down()
 
 
-func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
-	_trigger(p)
-
-
-func _get_sounds(sounds : int) :
-	if sounds == 5 :
-		streams = func_door[
-			viewer.worldspawn.props.get(&'worldtype', ['', '']) % 3
-		]
-	else :
-		streams = audio_paths[sounds]
+func _move_toggle() :
+	if open : _move_up()
+	else : _move_down()
 
 
 func _trigger(b : Node3D) :
-	_create_trigger()
-	if not tween : _move()
+	if not trigger : _create_trigger()
+	_move_toggle()
 
 
-func _trigger_off(b : Node3D) :
-	# TODO: connect this to area that will trigger it when trigger is exited
-	# use to set `player_on = false`
-	pass
+func _trigger_exit(b : Node3D) :
+	_move_down()
+
+
+func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
+	# if sides of plat were touched, trigger
+	if not open and _touch_vertical(nor) : _trigger(p)
+
+
+func _get_sounds() :
+	var sounds : int = _prop(&'sounds', SOUND)
+	streams = audio_paths[sounds]
 
 
 func _make_player() :
-	if !player :
-		player = AudioStreamPlayer3D.new()
-		player.finished.connect(_audf)
-		add_child(player)
+	player = AudioStreamPlayer3D.new()
+	add_child(player)
 
 
 func _play_snd(idx : int) :
-	_make_player()
+	print('PLAY SND ', idx, ' ', self)
+	if not player : _make_player()
+	player.stop()
 	var s : String = streams[idx]
 	if s.is_empty() : return
 	player.stream = viewer.hub.load_audio(s)
 	player.play()
-	
-	
-func _audf() :
-	if player_end :
-		player.queue_free()
-		player = null
-	else :
-		_make_player()
-		player.play()
-
-
-
