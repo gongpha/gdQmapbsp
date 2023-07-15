@@ -207,7 +207,6 @@ func _make_player() :
 
 
 func _play_snd(idx : int) :
-	print('PLAY SND ', idx, ' ', self)
 	if not player : _make_player()
 	player.stop()
 	var s : String = streams[idx]
