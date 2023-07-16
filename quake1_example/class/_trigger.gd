@@ -59,12 +59,14 @@ func _bo_en(b : Node3D) :
 	if b == self : return
 	blocked = true
 	_trigger(b)
+	_message()
 
 
 func _bo_ex(b : Node3D) :
 	if b == self : return
 	blocked = false
 	_trigger_exit(b)
+	_show_message_end()
 
 
 func _message(msg : String = '') :
@@ -84,7 +86,6 @@ func _trigger(b : Node3D) :
 	
 
 func _trigger_exit(b : Node3D) :
-	_show_message_end()
 	var delay : float = _prop(&'delay', 0)
 	if delay > 0 :
 		get_tree().create_timer(delay, false).timeout.connect(
@@ -95,7 +96,6 @@ func _trigger_exit(b : Node3D) :
 
 	
 func _trigger_now(b : Node3D) :
-	_message()
 	var target : String = _prop(&'target', '')
 	if !target.is_empty() :
 		v.trigger_targets(target, b)

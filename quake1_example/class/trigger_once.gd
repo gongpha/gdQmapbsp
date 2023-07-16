@@ -16,4 +16,5 @@ func _bo_ex(b : Node3D) :
 
 func _trigger_now(b : Node3D) :
 	super(b)
+	_message()
 	queue_free()
