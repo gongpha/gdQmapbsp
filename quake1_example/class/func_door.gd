@@ -132,9 +132,8 @@ func _calc_add() :
 			add = Vector3(0.0, -aabb.size.y + lip, 0.0)
 		else :
 			var rot := (angle / 180.0) * PI
-			var dir := Vector3(aabb.size.x, 0.0, aabb.size.z)
-			var lip_v := Vector3(lip, 0.0, lip)
-			add = Vector3.BACK.rotated(Vector3.UP, rot) * (-dir + lip_v)
+			var lip_v := Vector3(lip, lip, lip)
+			add = Vector3.BACK.rotated(Vector3.UP, rot) *  -(aabb.size - lip_v)
 		dura = add.length() / (_prop(&'speed', SPEED) / s)
 
 
