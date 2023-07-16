@@ -84,6 +84,7 @@ func _map_ready() :
 	_calc_add()
 	_get_sounds()
 	_calc_anim_pos()
+	if _flag(START_OPEN) : _open_direct()
 	
 	
 func _entities_ready() : 
@@ -93,7 +94,6 @@ func _entities_ready() :
 func _doors_ready() :
 	if is_in_group(&'primary_doors') and not props.has(&'targetname') : 
 		_create_primary_trigger()
-	if _flag(START_OPEN) : _open_direct()
 
 
 func _add_link(n : QmapbspQuakeFunctionDoor) :
@@ -138,12 +138,8 @@ func _calc_add() :
 
 
 func _calc_anim_pos() :
-	if _flag(START_OPEN) :
-		open_pos = init_pos + add
-		close_pos = init_pos
-	else :
-		open_pos = init_pos + add
-		close_pos = init_pos 
+	open_pos = init_pos + add
+	close_pos = init_pos 
 		
 		
 func _set_primary() :
@@ -222,29 +218,36 @@ func _is_blocked() -> bool :
 	return false
 		
 		
-func _trigger(b : Node3D) :
+func _trigger(b : Node3D, source: Node3D = null) :
 	if tween : return
 	
 	# TODO: check player for key
-	if _requires_key() :
-		# doors that require keys, stay open
-		if open : return
-		else :
-			_play_snd(&'key_try')
-			_show_key_message()
+	if not open and _requires_key() :
+		_play_snd(&'key_try')
+		_show_key_message()
 		return
 	
 	_move_toggle()
-	for l in links : l._trigger(b)
+	
+	for l in links : 
+		# prevent infinite loop triggering
+		if not l == b:
+			l._trigger(self)
 		
 		
-func _trigger_exit(b : Node3D) :
+func _trigger_exit(b : Node3D, source: Node3D = null) :
 	if tween : return
 	if _requires_key() : return
 	
-	if not _flag(TOGGLE) and wait > 0 :
-		_move_close()
-		for l in links : l._trigger_exit(b)
+	# don't auto-close, when exiting trigger area
+	if _flag(TOGGLE) and wait == -1 : return
+	
+	_move_close()
+	
+	for l in links : 
+		# prevent infinite loop triggering
+		if not l == b:
+			l._trigger_exit(self)
 	
 	
 func _move_open() :
@@ -302,6 +305,8 @@ func _open_direct() :
 
 
 func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
+	if open and not _flag(START_OPEN) : return
+	
 	var can_trigger : bool = true
 	if props.has(&'targetname') : can_trigger = false
 	if props.has(&'message') : 
@@ -311,10 +316,10 @@ func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 	for l in links :
 		if l.props.has(&'targetname') : can_trigger = false
 		if l.props.has(&'message') :
-			if not _prop(&'message', '').is_empty(): 
+			if not l._prop(&'message', '').is_empty(): 
 				l.emit_message_once.emit(l._prop(&'message', ''))
 	
-	if can_trigger : _trigger(p)
+	if can_trigger : _trigger(p, self)
 
 
 func _requires_key() -> bool :
