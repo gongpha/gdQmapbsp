@@ -218,7 +218,7 @@ func _is_blocked() -> bool :
 	return false
 		
 		
-func _trigger(b : Node3D, source: Node3D = null) :
+func _trigger(b : Node3D) :
 	if tween : return
 	
 	# TODO: check player for key
@@ -231,11 +231,10 @@ func _trigger(b : Node3D, source: Node3D = null) :
 	
 	for l in links : 
 		# prevent infinite loop triggering
-		if not l == b:
-			l._trigger(self)
+		if not l == b: l._trigger(self)
 		
 		
-func _trigger_exit(b : Node3D, source: Node3D = null) :
+func _trigger_exit(b : Node3D) :
 	if tween : return
 	if _requires_key() : return
 	
@@ -246,8 +245,7 @@ func _trigger_exit(b : Node3D, source: Node3D = null) :
 	
 	for l in links : 
 		# prevent infinite loop triggering
-		if not l == b:
-			l._trigger_exit(self)
+		if not l == b: l._trigger_exit(self)
 	
 	
 func _move_open() :
@@ -319,7 +317,7 @@ func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 			if not l._prop(&'message', '').is_empty(): 
 				l.emit_message_once.emit(l._prop(&'message', ''))
 	
-	if can_trigger : _trigger(p, self)
+	if can_trigger : _trigger(p)
 
 
 func _requires_key() -> bool :
