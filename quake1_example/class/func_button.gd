@@ -100,8 +100,8 @@ func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 
 
 func _trigger(b : Node3D) :
-	if open and wait == -1 : return
 	if tween : return
+	if open : return
 	
 	_move()
 	
@@ -116,7 +116,6 @@ func _trigger(b : Node3D) :
 
 func _trigger_now(b: Node3D) :
 	if not props.has(&'target') : return
-	
 	for t in get_tree().get_nodes_in_group(
 		'T_' + _prop(&'target', '')
 	) :
