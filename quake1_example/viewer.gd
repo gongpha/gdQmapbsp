@@ -17,6 +17,7 @@ var worldspawn : QmapbspQuakeWorldspawn
 var current_mapname : String
 var pal : PackedColorArray
 var bspdir : String
+var mapdir : String
 var map_upper : bool = false
 var tracklist : Dictionary
 var trackcaches : Dictionary # <sounds : AudioStreamMP3>
@@ -115,10 +116,16 @@ func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	parser.pal = pal
 	parser.root = map
 	
+	var mappath := mapdir.path_join((
+		mapname.to_upper() + '.MAP' if map_upper else mapname + '.map'
+	))
+	if !FileAccess.file_exists(mappath) :
+		return false
+	
 	var retc : Array
 	var ret := parser.begin_load_absolute(
 		bspdir.path_join('/maps/' + mapname + '.bsp'),
-		"",
+		mappath,
 		retc
 	)
 	if ret != StringName() :
