@@ -21,7 +21,7 @@ const SOUND_IMP_IDX : int = 1
 const audio_paths := [
 	['misc/null.wav', 'misc/null.wav'],
 	['plats/plat1.wav', 'plats/plat2.wav'],
-	['plats/medplat1.wav', 'plats/medplat2.wav'],
+	['plats/medplat1.wav', 'plats/medplat2.wav']
 ]
 
 var tween : Tween

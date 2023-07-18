@@ -9,7 +9,8 @@ var curve : Curve3D
 func _map_ready() :
 	# gen path
 	curve = Curve3D.new()
-	curve.add_point(position)
+	var offset = Vector3(0, 0, 0)
+	curve.add_point(position + offset)
 	
 	var t : String = props.get('target', '')
 	var added : PackedStringArray
@@ -18,7 +19,7 @@ func _map_ready() :
 		t = 'T_' + t
 		var node := get_tree().get_first_node_in_group(t)
 		if node is QmapbspQuakePathCorner :
-			curve.add_point(node.position)
+			curve.add_point(node.position + offset)
 			t = node.props.get('target', '')
 		else :
 			break
