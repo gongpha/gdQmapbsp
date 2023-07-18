@@ -148,6 +148,26 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
 		
 	
+func _load_clip_nodes(model_id : int) -> bool :
+	return false
+		
+func _load_bsp_nodes(model_id : int) -> bool :
+	return false
+	
+# return true, if want the parser creates a collision shape
+# and returns it via _entity_your_shape
+func _leaf_your_bsp_planes(
+	model_id : int, leaf_type : int,
+	planes_const : Array[Plane] # do not modify !
+) -> bool :
+	return false
+	
+func _leaf_your_clip_planes(
+	model_id : int,
+	planes_const : Array[Plane] # do not modify !
+) -> bool :
+	return false
+	
 #########################################
 
 func _custom_work_bsp(bsp : RefCounted) -> void :
@@ -224,11 +244,6 @@ func begin_load_files(bspf : FileAccess, mapf : FileAccess = null, ret := []) ->
 		if bspp.read_miptextures :
 			bspp.bsp_shader = _get_custom_bsp_textures_shader()
 			bspp.known_palette = _get_bsp_palette()
-			
-		if mapf :
-			# disable nodes
-			bspp.import_bspnodes = false
-			bspp.import_clipnodes = false
 			
 	if mapf :
 		mapp = QmapbspMAPParser.new()

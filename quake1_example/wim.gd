@@ -63,24 +63,6 @@ var fluid_area : QmapbspQuakeFluidVolume
 var lava_area : QmapbspQuakeLavaVolume
 var slime_area : QmapbspQuakeSlimeVolume
 
-func _new_fluid_area() -> void :
-	if fluid_area : return
-	fluid_area = QmapbspQuakeFluidVolume.new()
-	fluid_area.name = &"FLUID"
-	root.add_child(fluid_area)
-
-func _new_lava_area() -> void :
-	if lava_area : return
-	lava_area = QmapbspQuakeLavaVolume.new()
-	lava_area.name = &"FLUID_LAVA"
-	root.add_child(lava_area)
-	
-func _new_slime_area() -> void :
-	if slime_area : return
-	slime_area = QmapbspQuakeSlimeVolume.new()
-	slime_area.name = &"FLUID_SLIME"
-	root.add_child(slime_area)
-
 func _texture_get_material_for_integrated(
 	name : String, tex : Texture2D
 ) -> Material :
@@ -130,7 +112,8 @@ func _entity_your_shape(
 	super(ent_id, brush_id, shape, origin, metadata)
 	importing_clip_shape = false
 	
-	# -1 = do not create a vol
+	# -2 = delete
+	# -1 = do not create a volume
 	#  0 = empty
 	#  1 = water
 	#  2 = lava
@@ -143,20 +126,18 @@ func _entity_your_shape(
 		)
 		
 		if ent_id == 0 :
-			# distinquish between Lava, Slime and Water
-			var target_area : Area3D
-			
+			# The BSP tree has already done the collision shape creation process
 			for s in known_texture_names :
 				var s_lower = s.to_lower()
 				if s_lower.begins_with('*') : 
 					if 'water' in s_lower :
-						what = 1
+						what = -2
 						break
 					if 'lava' in s_lower :
-						what = 2
+						what = -2
 						break
 					if 'slime' in s_lower :
-						what = 3
+						what = -2
 						break
 						
 	elif imported_from == &'BSP' :
@@ -176,7 +157,9 @@ func _entity_your_shape(
 			QmapbspBSPParser.CONTENTS_LAVA : what = 2
 			QmapbspBSPParser.CONTENTS_SLIME : what = 3
 					
-	if what != -1 :
+	if what == -2 :
+		last_added_col.free()
+	elif what != -1 :
 		# create a leaf volume
 		var new_area : Area3D
 		match what :
@@ -309,3 +292,19 @@ func _get_entity_node(id : int) -> Node :
 
 func _entity_prefers_occluder(ent_id : int) -> bool :
 	return ent_id == 0 and viewer.occlusion_culling
+		
+func _load_bsp_nodes(model_id : int) -> bool :
+	return true
+
+func _leaf_your_bsp_planes(
+	model_id : int, leaf_type : int,
+	planes_const : Array[Plane]
+) -> bool :
+	# only create collision shapes for fluid and empty spaces (for ambient sounds)
+	return leaf_type != QmapbspBSPParser.CONTENTS_SOLID
+	
+func _leaf_your_clip_planes(
+	model_id : int,
+	planes_const : Array[Plane]
+) -> bool :
+	return false
