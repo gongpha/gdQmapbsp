@@ -13,9 +13,7 @@ var read_lightmaps : bool = true
 var known_palette : PackedColorArray
 var bsp_shader : Shader
 var known_map_textures : PackedStringArray
-# turn these on if no .map file is specified to get collision shapes
-var import_clipnodes : bool = true
-var import_bspnodes : bool = true
+
 var import_visdata : bool = false
 
 var model_map : Dictionary # <model_id : ent_id>
@@ -373,7 +371,7 @@ func _read_faces() -> float :
 	
 func _read_bspnodes() -> float :
 	if load_index == 0 :
-		if !import_bspnodes : return 1.0
+		if !wim._load_bsp_nodes(load_index) : return 1.0
 		curr_entry = entries['nodes']
 		file.seek(curr_entry.x)
 		bspnodes.resize(curr_entry.y / (44 if is_bsp2 else 24))
@@ -392,7 +390,7 @@ func _read_bspnodes() -> float :
 	
 func _read_clipnodes() -> float :
 	if load_index == 0 :
-		if !import_clipnodes : return 1.0
+		if !wim._load_clip_nodes(load_index) : return 1.0
 		curr_entry = entries['clipnodes']
 		file.seek(curr_entry.x)
 		clipnodes.resize(curr_entry.y / (12 if is_bsp2 else 8))
@@ -423,7 +421,7 @@ func _read_visilist() -> float :
 	
 func _read_leaves() -> float :
 	if load_index == 0 :
-		if !(import_bspnodes or import_visdata) : return 1.0
+		if !(wim._load_bsp_nodes(load_index) or import_visdata) : return 1.0
 		curr_entry = entries['leaves']
 		file.seek(curr_entry.x)
 		leaves.resize(curr_entry.y / 28)
@@ -471,7 +469,7 @@ func _construct_clipnodes() -> float :
 func _construct_nodes(is_bsp : bool) -> float :
 	# load_index is MODEL ID. NOT ENTITY ID !!!
 	if load_index == 0 :
-		if !(import_bspnodes if is_bsp else import_clipnodes) : return 1.0
+		if !(wim._load_bsp_nodes(load_index) if is_bsp else wim._load_clip_nodes(load_index)) : return 1.0
 		expanded_aabb = level_aabb.grow(4.0)
 	var convexplanes : Array[Array]
 	var tempplanes : Array[Plane]
@@ -539,6 +537,12 @@ func _node_cut(
 			else :
 				if child == -2 :
 					create_volume = true
+			
+			create_volume = create_volume and (
+				(is_bsp and wim._leaf_your_bsp_planes(load_index, leaf_type, tempplanes))
+				or
+				(!is_bsp and wim._leaf_your_clip_planes(load_index, tempplanes))
+			)
 			
 			if create_volume :
 				# solid/liquid area
