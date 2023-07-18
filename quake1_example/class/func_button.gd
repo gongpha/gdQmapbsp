@@ -48,11 +48,11 @@ func _map_ready() :
 
 func _calc_add() :
 	viewer = get_meta(&'viewer')
-	wait = _prop(&'wait', WAIT)
-	var s : float = get_meta(&'scale', 32.0)
-	var angle : int = _prop(&'angle', ANGLE)
-	var speed : int = _prop(&'speed', SPEED) / s
-	var lip : float = _prop(&'lip', LIP) / s
+	wait = _prop('wait', WAIT)
+	var s : float = get_meta('scale', 32.0)
+	var angle : int = _prop('angle', ANGLE)
+	var speed : int = _prop('speed', SPEED) / s
+	var lip : float = _prop('lip', LIP) / s
 	if angle == -1 :
 		add = Vector3(0.0, aabb.size.y - lip, 0.0)
 	elif angle == -2 :
@@ -105,7 +105,7 @@ func _trigger(b : Node3D) :
 	
 	_move()
 	
-	var delay : float = _prop(&'delay', 0.0)
+	var delay : float = _prop('delay', 0.0)
 	if delay > 0 :
 		get_tree().create_timer(delay, false).timeout.connect(
 			_trigger_now.bind(b)
@@ -115,9 +115,9 @@ func _trigger(b : Node3D) :
 
 
 func _trigger_now(b: Node3D) :
-	if not props.has(&'target') : return
+	if not props.has('target') : return
 	for t in get_tree().get_nodes_in_group(
-		'T_' + _prop(&'target', '')
+		'T_' + _prop('target', '')
 	) :
 		if !t : continue
 		if !t.has_method(&'_trigger') : continue
@@ -125,7 +125,7 @@ func _trigger_now(b: Node3D) :
 
 
 func _get_sounds() :
-	noise = audio_paths[_prop(&'sounds', 0)]
+	noise = audio_paths[_prop('sounds', 0)]
 
 
 func _make_player() :

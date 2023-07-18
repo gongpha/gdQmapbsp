@@ -13,14 +13,14 @@ func _get_properties(dict : Dictionary) : props = dict
 
 
 func _flag(spawnflag : int) -> bool :
-	if not props.has(&'spawnflags') : 
+	if not props.has('spawnflags') : 
 		printerr('Missing Spawnflags! ', spawnflag, ' ', self)
 		return false
-	var result : bool = _prop(&'spawnflags', 0) & spawnflag
+	var result : bool = _prop('spawnflags', 0) & spawnflag
 	return result
 
 
-func _prop(name : StringName, def) :
+func _prop(name : String, def) :
 	var result = props.get(name, def)
 	if typeof(result) == typeof(def) : return result
 	match typeof(def) :
@@ -70,13 +70,13 @@ func _bo_ex(b : Node3D) :
 
 
 func _message(msg : String = '') :
-	var message = _prop(&'message', msg)
+	var message = _prop('message', msg)
 	if not message.is_empty() :
 		_show_message_start(message)
 
 
 func _trigger(b : Node3D) :
-	var delay : float = _prop(&'delay', 0)
+	var delay : float = _prop('delay', 0)
 	if delay > 0 :
 		get_tree().create_timer(delay, false).timeout.connect(
 			_trigger_now.bind(b)
@@ -86,7 +86,7 @@ func _trigger(b : Node3D) :
 	
 
 func _trigger_exit(b : Node3D) :
-	var delay : float = _prop(&'delay', 0)
+	var delay : float = _prop('delay', 0)
 	if delay > 0 :
 		get_tree().create_timer(delay, false).timeout.connect(
 			_trigger_exit_now.bind(b)
@@ -96,15 +96,15 @@ func _trigger_exit(b : Node3D) :
 
 	
 func _trigger_now(b : Node3D) :
-	var target : String = _prop(&'target', '')
+	var target : String = _prop('target', '')
 	if !target.is_empty() :
 		v.trigger_targets(target, b)
-	var killtarget : String = _prop(&'killtarget', '')
+	var killtarget : String = _prop('killtarget', '')
 	if !killtarget.is_empty() :
 		v.killtarget(killtarget)
 
 
 func _trigger_exit_now(b: Node3D) :
-	var target : String = _prop(&'target', '')
+	var target : String = _prop('target', '')
 	if !target.is_empty() :
 		v.trigger_targets_exit(target, b)

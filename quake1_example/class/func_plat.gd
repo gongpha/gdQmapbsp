@@ -45,14 +45,14 @@ signal emit_message_once(m : String)
 
 func _map_ready() :
 	viewer = get_meta(&'viewer')
-	wait = _prop(&'wait', WAIT)
+	wait = _prop('wait', WAIT)
 	init_pos = position
 	add_to_group(&'plat')
 	_gen_aabb()
 	_calc_add()
 	_calc_dura()
 	_get_sounds()
-	if !props.has(&'targetname') : 
+	if !props.has('targetname') : 
 		_create_trigger()
 		_start_open()
 	_calc_anim_pos()
@@ -63,13 +63,13 @@ func _get_scale() -> float :
 	
 
 func _get_lip() -> float :
-	return _prop(&'lip', LIP) / _get_scale()
+	return _prop('lip', LIP) / _get_scale()
 
 
 func _get_height() -> float :
 	var height : float
-	if props.has(&'height') : 
-		height = _prop(&'height', HEIGHT) / _get_scale()
+	if props.has('height') : 
+		height = _prop('height', HEIGHT) / _get_scale()
 	else :
 		height = aabb.size.y + _get_lip()
 	return height
@@ -80,21 +80,21 @@ func _calc_add() :
 
 
 func _calc_dura() :
-	dura = height_add.length() / (_prop(&'speed', SPEED) / _get_scale())
+	dura = height_add.length() / (_prop('speed', SPEED) / _get_scale())
 
 
 func _create_trigger() :
 	if trigger : return
 	
 	# self setup
-	if not props.has(&'targetname') : props[&'targetname'] = name
-	add_to_group('T_' + props[&'targetname'])
+	if not props.has('targetname') : props['targetname'] = name
+	add_to_group('T_' + props['targetname'])
 	# create trigger
 	trigger = QmapbspQuakeTriggerMultiple.new()
 	trigger.name = &'trigger_%s' % name
 	trigger.set_meta(&'viewer', viewer)
 	trigger.set_meta(&'scale', get_meta("scale"))
-	trigger._get_properties({ "target": props[&'targetname'] })
+	trigger._get_properties({ "target": props['targetname'] })
 	# add trigger to scene
 	get_parent().add_child(trigger)
 	# create trigger collision shape
@@ -197,7 +197,7 @@ func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 
 
 func _get_sounds() :
-	var sounds : int = _prop(&'sounds', SOUND)
+	var sounds : int = _prop('sounds', SOUND)
 	streams = audio_paths[sounds]
 
 

@@ -14,7 +14,7 @@ func _bo_ex(b : Node3D) : return
 
 
 func _map_ready() :
-	counter_max = _prop(&'count', COUNT)
+	counter_max = _prop('count', COUNT)
 
 
 func _trigger(b : Node3D) :

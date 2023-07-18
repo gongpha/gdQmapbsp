@@ -92,7 +92,7 @@ func _entities_ready() :
 
 
 func _doors_ready() :
-	if is_in_group(&'primary_doors') and not props.has(&'targetname') : 
+	if is_in_group(&'primary_doors') and not props.has('targetname') : 
 		_create_primary_trigger()
 
 
@@ -122,10 +122,10 @@ func _calc_add() :
 						n._add_link(self)
 		
 		viewer = get_meta(&'viewer')
-		var angle : int = _prop(&'angle', 0)
+		var angle : int = _prop('angle', 0)
 		var s : float = get_meta(&'scale', 32.0)
-		wait = _prop(&'wait', WAIT)
-		var lip : float = _prop(&'lip', LIP) / s
+		wait = _prop('wait', WAIT)
+		var lip : float = _prop('lip', LIP) / s
 		if angle == -1 :
 			add = Vector3(0.0, aabb.size.y - lip, 0.0)
 		elif angle == -2 :
@@ -134,7 +134,7 @@ func _calc_add() :
 			var rot := (angle / 180.0) * PI
 			var lip_v := Vector3(lip, lip, lip)
 			add = Vector3.BACK.rotated(Vector3.UP, rot) *  -(aabb.size - lip_v)
-		dura = add.length() / (_prop(&'speed', SPEED) / s)
+		dura = add.length() / (_prop('speed', SPEED) / s)
 
 
 func _calc_anim_pos() :
@@ -149,7 +149,7 @@ func _set_primary() :
 	var make_primary : bool = true
 	for l in links :
 		if l.has_meta(&'primary') : make_primary = false
-		if l.props.has(&'targetname') : make_primary = false
+		if l.props.has('targetname') : make_primary = false
 	if make_primary : 
 		set_meta(&'primary', true)
 		add_to_group(&'primary_doors')
@@ -160,14 +160,14 @@ func _create_primary_trigger() :
 	if trigger : return
 	
 	# self setup
-	if not props.has(&'targetname') : props[&'targetname'] = name
+	if not props.has('targetname') : props['targetname'] = name
 	add_to_group('T_' + props['targetname'])
 	# create trigger
 	trigger = QmapbspQuakeTriggerMultiple.new()
 	trigger.name = &'trigger_%s' % name
 	trigger.set_meta(&'viewer', viewer)
-	trigger.set_meta(&'scale', get_meta("scale"))
-	trigger._get_properties({ 'target': props[&'targetname'] })
+	trigger.set_meta(&'scale', get_meta(&'scale'))
+	trigger._get_properties({ 'target': props['targetname'] })
 	# add trigger to scene
 	get_parent().add_child(trigger)
 	# create trigger collision shape
@@ -183,8 +183,8 @@ func _create_primary_trigger() :
 	trigger.add_child(col)
 	for l in links :
 		# copy message from linked door to primary door
-		if !props.has(&'message') and l.props.has(&'message'): 
-			props[&'message'] = l.props.get(&'message')
+		if !props.has('message') and l.props.has('message'): 
+			props['message'] = l.props.get('message')
 		# grow trigger shape around linked door
 		_update_trigger_shape(l, trigger)
 
@@ -306,16 +306,16 @@ func _player_touch(p : QmapbspQuakePlayer, pos : Vector3, nor : Vector3) :
 	if open and not _flag(START_OPEN) : return
 	
 	var can_trigger : bool = true
-	if props.has(&'targetname') : can_trigger = false
-	if props.has(&'message') : 
-		if not _prop(&'message', '').is_empty(): 
-			emit_message_once.emit(_prop(&'message', ''))
+	if props.has('targetname') : can_trigger = false
+	if props.has('message') : 
+		if not _prop('message', '').is_empty(): 
+			emit_message_once.emit(_prop('message', ''))
 	
 	for l in links :
-		if l.props.has(&'targetname') : can_trigger = false
-		if l.props.has(&'message') :
-			if not l._prop(&'message', '').is_empty(): 
-				l.emit_message_once.emit(l._prop(&'message', ''))
+		if l.props.has('targetname') : can_trigger = false
+		if l.props.has('message') :
+			if not l._prop('message', '').is_empty(): 
+				l.emit_message_once.emit(l._prop('message', ''))
 	
 	if can_trigger : _trigger(p)
 
@@ -333,7 +333,7 @@ func _requires_gold_key() -> bool :
 
 
 func _show_key_message() -> void :
-	var world_idx : int = viewer.worldspawn.props.get(&'worldtype', 0)
+	var world_idx : int = viewer.worldspawn.props.get('worldtype', 0)
 	if _requires_gold_key() : 
 		emit_message_once.emit(gold_keys_message[world_idx])
 	elif _requires_silver_key() : 
@@ -341,8 +341,8 @@ func _show_key_message() -> void :
 
 
 func _get_sounds() :
-	var world_idx : int = viewer.worldspawn.props.get(&'worldtype', 0)
-	var noise_idx : int = _prop(&'sounds', 0)
+	var world_idx : int = viewer.worldspawn.props.get('worldtype', 0)
+	var noise_idx : int = _prop('sounds', 0)
 
 	noise_key = keys_audio_paths[world_idx]
 	noise_door = audio_paths[noise_idx]

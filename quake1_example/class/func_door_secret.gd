@@ -122,10 +122,10 @@ func _move_end() :
 	
 func _calc_add() :
 	viewer = get_meta(&'viewer')
-	var angle : int = _prop(&'angle', ANGLE)
+	var angle : int = _prop('angle', ANGLE)
 	var s : float = get_meta(&'scale', 32.0)
 	wait = _prop('wait', WAIT)
-	var lip : float = _prop(&'lip', LIP) / s
+	var lip : float = _prop('lip', LIP) / s
 	var rot := (angle / 180.0) * PI
 	var dir := Vector3(aabb.size.x, 0.0, aabb.size.z)
 	var lip_v := Vector3(lip, 0.0, lip)
@@ -154,7 +154,7 @@ func _trigger(b : Node3D) :
 
 
 func _get_sounds() :
-	var sounds : int = _prop(&'sounds', SOUNDS)
+	var sounds : int = _prop('sounds', SOUNDS)
 	streams = audio_paths[sounds]
 
 

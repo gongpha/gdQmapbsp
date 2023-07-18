@@ -19,14 +19,14 @@ func _get_properties(dict : Dictionary) : props = dict
 
 
 func _flag(spawnflag : int) -> bool :
-	if not props.has(&'spawnflags') : 
+	if not props.has('spawnflags') : 
 		printerr('Missing Spawnflags! ', spawnflag, ' ', self)
 		return false
-	var result : bool = _prop(&'spawnflags', 0) & spawnflag
+	var result : bool = _prop('spawnflags', 0) & spawnflag
 	return result
 
 
-func _prop(name : StringName, def) :
+func _prop(name : String, def) :
 	var result = props.get(name, def)
 	if typeof(result) == typeof(def) : return result
 	match typeof(def) :
