@@ -22,7 +22,7 @@ var noclip : bool = false
 @onready var around : Node3D = $around
 @onready var head : Node3D = $around/head
 @onready var camera : Camera3D = $around/head/cam
-@onready var staircast : RayCast3D = $staircast
+@onready var staircast : ShapeCast3D = $staircast
 @onready var jump : AudioStreamPlayer3D = $jump
 @onready var origin : Node3D = $origin
 
@@ -42,10 +42,6 @@ func teleport_to(dest : Node3D, play_sound : bool = false) :
 	around.rotation = dest.rotation
 	old = around.rotation - old
 	velocity = velocity.rotated(Vector3.UP, old.y)
-	
-	# there's a somewhat stuck point after teleporting
-	apply_stairs_collision()
-	
 	if play_sound :
 		var p := AudioStreamPlayer3D.new()
 		p.stream = (
@@ -86,43 +82,31 @@ func move_ground(delta : float) -> void :
 	_coltest()
 	
 	# test ceiling
-	staircast.target_position.y = 0.008 + stairstep
-	staircast.force_raycast_update()
-	if !staircast.is_colliding() :
-		apply_stairs_collision()
-
-var ppqp_stair : PhysicsPointQueryParameters3D
-func apply_stairs_collision() -> void :
-	if !ppqp_stair :
-		ppqp_stair = PhysicsPointQueryParameters3D.new()
-		ppqp_stair.collision_mask = staircast.collision_mask
-		ppqp_stair.exclude.append(get_rid())
-	ppqp_stair.position = staircast.global_position
-	var arr := get_world_3d().direct_space_state.intersect_point(ppqp_stair)
-	if !arr.is_empty() : return
-	
-	staircast.target_position.y = -(0.008 + stairstep) # (?)
-	staircast.force_raycast_update()
-	if staircast.is_colliding() and staircast.get_collision_normal().y >= 0.8 :
-		var height := staircast.get_collision_point().y - (global_position.y)
-		if height < stairstep :
-			position.y += height * 1.2 # bonus
-			smooth_y -= height
-			around.position.y += smooth_y
+	staircast.target_position.y = 0.66 + stairstep
+	staircast.force_shapecast_update()
+	if staircast.get_collision_count() == 0 :
+		staircast.target_position.y = -stairstep # (?)
+		staircast.force_shapecast_update()
+		if staircast.get_collision_count() > 0 and staircast.get_collision_normal(0).y >= 0.8 :
+			var height := staircast.get_collision_point(0).y - (global_position.y - 0.75)
+			if height < stairstep :
+				position.y += height * 1.125 # additional bonus
+				smooth_y = -height
+				around.position.y += smooth_y
+				# 0.688 is an initial value of around.y
 	
 func _stairs(delta : float) :
-	var w := (velocity / max_speed) * Vector3(1.001, 0.0, 1.001) * delta
+	var w := (velocity / max_speed) * Vector3(2.0, 0.0, 2.0) * delta
 	var ws := w * max_speed
 	
 	# stair stuffs
-#	var shape : BoxShape3D = staircast.shape
-#	shape.size = Vector3(
-#		0.25 + ws.length(), shape.size.y, 0.25 + ws.length()
-#	)
+	var shape : BoxShape3D = staircast.shape
+	shape.size = Vector3(
+		1.0 + ws.length(), shape.size.y, 1.0 + ws.length()
+	)
 	
-	# 0.1875 = 0.75 * 0.25
 	staircast.position = Vector3(
-		ws.x, stairstep, ws.z
+		ws.x, 0.175 + stairstep - 0.75, ws.z
 	)
 
 func move_air(delta : float) -> void :
@@ -191,7 +175,7 @@ func _physics_process(delta : float) -> void :
 	else :
 		#print(smooth_y)
 		smooth_y /= 1.125
-		around.position.y = smooth_y + 0.668
+		around.position.y = smooth_y + 0.688
 	#Engine.time_scale = 0.2
 		
 var ppqp_water : PhysicsPointQueryParameters3D
