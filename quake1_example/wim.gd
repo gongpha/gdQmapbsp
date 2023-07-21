@@ -29,7 +29,7 @@ func _texture_your_bsp_textures(
 func _texture_get_animated_textures_group(
 	name : String
 ) -> Array :
-	if name.unicode_at(0) == 43 : # +
+	if !name.is_empty() and name.unicode_at(0) == 43 : # +
 		var groupi : String
 		var framei : int
 		var u := name.unicode_at(1)

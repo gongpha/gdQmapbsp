@@ -655,7 +655,7 @@ func _model_geo() -> bool :
 	if read_lightmaps :
 		face_uvrs.resize(edge_count)
 	
-	var centroid : Vector3
+	var centroid_aabb : AABB
 	
 	var texture_info : Array = texinfos[face[4]] # tinfo id
 	var texture : Material = textures[texture_info[4]] # from texture index
@@ -682,6 +682,7 @@ func _model_geo() -> bool :
 	var uv_max := Vector2(-INF, -INF)
 	
 	var smooth_group : int = -1
+	var first_e : bool = true
 	
 	for k in edge_count :
 		var edge_index : int = edge_list[edge_start + k]
@@ -741,10 +742,13 @@ func _model_geo() -> bool :
 		if uv.y < uv_min.y : uv_min.y = uv.y
 		if uv.x > uv_max.x : uv_max.x = uv.x
 		if uv.y > uv_max.y : uv_max.y = uv.y
-		centroid += vert
+		if first_e :
+			centroid_aabb.position = vert
+			first_e = false
+		else :
+			centroid_aabb = centroid_aabb.expand(vert)
 		
-	var center := centroid
-	centroid /= face_vertices.size()
+	var center := centroid_aabb.get_center()
 	var region_or_alone = wim._model_get_region(
 		load_index, face_array_index, texture
 	)
@@ -764,7 +768,7 @@ func _model_geo() -> bool :
 	
 	if region_or_alone == null : 
 		if wim._entity_prefers_region_partition(load_index) :
-			region_or_alone = Vector3i((centroid / (
+			region_or_alone = Vector3i((center / (
 				region_size
 			) + Vector3(0.5, 0.5, 0.5)).floor())
 		else :
@@ -814,8 +818,7 @@ func _model_geo() -> bool :
 			texdict[texturekey].append(arr[0].size() - 1)
 		else :
 			texdict[texturekey] = PackedInt32Array([arr[0].size() - 1])
-		arr[2] += center
-		arr[4] += face_vertices.size()
+		arr[2] = arr[2].expand(center)
 	else :
 		entity_geo_d[region_or_alone] = [
 			[
@@ -827,9 +830,8 @@ func _model_geo() -> bool :
 				]
 			],
 			{texturekey : PackedInt32Array([0])},
-			center,
-			extents,
-			face_vertices.size()
+			AABB(center, Vector3()),
+			extents
 		]
 		
 	loc_load_index += 1
@@ -961,7 +963,7 @@ func _build_geo() -> bool :
 	var rarray : Array = regions[r]
 	var surfaces : Array = rarray[0]
 	var texdict : Dictionary = rarray[1]
-	var center : Vector3 = rarray[2] / rarray[4]
+	var center : Vector3 = rarray[2].get_center()
 	var extents : Vector3 = rarray[3]
 	var mesh : ArrayMesh
 	
