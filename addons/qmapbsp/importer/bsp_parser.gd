@@ -781,12 +781,14 @@ func _model_geo() -> bool :
 	if read_lightmaps :
 		var min : Vector2i = (uv_min / 16.0).floor()
 		var max : Vector2i = (uv_max / 16.0).ceil()
-		var extent := (max - min) * 16
-		lsize = Vector2((extent.x >> 4) + 1, (extent.y >> 4) + 1)
+		var extent := (max - min) + Vector2i(1, 1)
 		var retlst : PackedByteArray
-		var lim := _gen_lightmap(lightmapdata, face[9], lsize, [
+		var lim := _gen_lightmap(face[9], extent, [
 			face[5], face[6], face[7], face[8]
 		], retlst)
+		
+		lsize = max - min
+		
 		lstyle = retlst[0]
 		if lim :
 			lid = ip.add(lim.get_size(), lim)
@@ -795,8 +797,8 @@ func _model_geo() -> bool :
 			
 		for i in face_uvrs.size() :
 			var uv := face_uvrs[i]
-			uv.x = inverse_lerp(uv_min.x, uv_max.x, uv.x)
-			uv.y = inverse_lerp(uv_min.y, uv_max.y, uv.y)
+			uv.x = inverse_lerp(min.x * 16.0, max.x * 16.0, uv.x)
+			uv.y = inverse_lerp(min.y * 16.0, max.y * 16.0, uv.y)
 			face_uvrs[i] = uv
 	
 	var texturekey = (
@@ -1022,7 +1024,7 @@ func _build_geo() -> bool :
 				if !uvrs.is_empty() :
 					C_UV2.call(uvrs[i])
 				if is_global :
-					C_CT.call(0, Color(s, lstyle, lsize.x / lightmap_size.x, UUU))
+					C_CT.call(0, Color(s, lstyle, lsize.x / lightmap_size.x, 1.0 / lightmap_size.x))
 					C_CT.call(1, lights)
 				var V := verts[i]
 				var nor := nors[i]
@@ -1063,25 +1065,23 @@ func _build_geo() -> bool :
 			var offset : Vector2
 			if read_lightmaps :
 				pos = pos_list[lid]
+				pos += Vector2(
+					0.5,
+					0.5
+				)
 				offset = (
 					pos / lightmap_size
 				)
 			
 			if read_lightmaps :
+				var fsize : Vector2
 				if lid == unlit :
-					var fsize := (Vector2(2, 2) / lightmap_size)
-					for i in uvrs.size() :
-						uvrs[i] = (uvrs[i] * fsize) + offset
+					fsize = (Vector2(2, 2) / lightmap_size)
 				else :
-					var fsize := (lsize / lightmap_size)
+					fsize = (lsize / lightmap_size)
 					
-					for i in uvrs.size() :
-						var uv := uvrs[i]
-						# avoiding bleeding
-						# (definitely not the right solution. but it works well)
-						uv.x = inverse_lerp(-0.6, lsize.x + 0.6, uv.x * lsize.x)
-						uv.y = inverse_lerp(-0.6, lsize.y + 0.6, uv.y * lsize.y)
-						uvrs[i] = (uv * fsize) + offset
+				for i in uvrs.size() :
+					uvrs[i] = (uvrs[i] * fsize) + offset
 				
 			for i in verts.size() - 2 :
 				ADD.call(0, refv)
@@ -1158,7 +1158,7 @@ func _make_im_from_pal(
 
 const MAX_LIGHTMAPS := 4
 func _gen_lightmap(
-	lightmapdata : PackedByteArray, offset : int, size : Vector2i,
+	offset : int, size : Vector2i,
 	lightstyles : PackedByteArray, ret_lstyle : PackedByteArray
 ) -> Image :
 	if offset == -1 :
@@ -1172,7 +1172,6 @@ func _gen_lightmap(
 		ist |= 1 << i
 		
 	var im := Image.create(size.x * lightmaps, size.y, false, Image.FORMAT_L8)
-	var xpos : int = 0
 	for l in MAX_LIGHTMAPS :
 		if lightstyles[l] == 255 : continue
 		var new := offset + size.x * size.y
@@ -1182,8 +1181,7 @@ func _gen_lightmap(
 			size.x, size.y, false, Image.FORMAT_L8,
 			c
 		)
-		im.blit_rect(sim, Rect2i(0.0, 0.0, size.x, size.y), Vector2(xpos * size.x, 0.0))
+		im.blit_rect(sim, Rect2i(0, 0, size.x, size.y), Vector2i(l * size.x, 0))
 		offset = new
-		xpos += 1
 	ret_lstyle.append(ist)
 	return im

@@ -21,6 +21,7 @@ vec3 hsv2rgb(vec3 c) {
 varying flat int texidx;
 varying flat int lstyles;
 varying float lwidth;
+varying float lx2pix;
 varying float lights[4];
 
 void vertex() {
@@ -33,6 +34,7 @@ void vertex() {
 	texidx = int(CUSTOM0.x);
 	lstyles = int(CUSTOM0.y);
 	lwidth = CUSTOM0.z;
+	lx2pix = CUSTOM0.w;
 }
 
 float lightmap(in vec2 uv2) {
@@ -40,8 +42,8 @@ float lightmap(in vec2 uv2) {
 	float lcursor = 0.0;
 	for (int l = 0; l < 4; l++) {
 		if ((lstyles & (1 << l)) == 0) continue;
-		lighttotal += texture(lmp, uv2 + vec2(lwidth * lcursor, 0.0)).x * lights[l];
-		lcursor += 1.0;
+		lighttotal += texture(lmp, uv2 + vec2(lcursor, 0.0)).x * lights[l];
+		lcursor += lwidth + lx2pix;
 	}
 	return lighttotal;
 }
