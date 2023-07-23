@@ -5,7 +5,7 @@ uniform int mode = 0;
 uniform float lmboost = 4.0;
 uniform bool regionhl = false;
 uniform sampler2D[96] texs : source_color; // device dependent
-uniform sampler2D[96] texfs : source_color; // device dependent
+uniform sampler2D[96] texfs; // device dependent
 uniform sampler2D lmp : repeat_disable;
 uniform float[64] lightstyles;
 
@@ -52,7 +52,7 @@ void fragment() {
 	vec3 color = texture(texs[texidx], UV).xyz;
 	
 	if (mode == 0) {
-		ALBEDO = clamp(color, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0)) * (mix(
+		ALBEDO = color * (mix(
 			lightmap(UV2),
 			1.0f,
 			texture(texfs[texidx], UV).r
@@ -60,7 +60,7 @@ void fragment() {
 	} else if (mode == 1) {
 		ALBEDO = color;
 	} else if (mode == 2) {
-		ALBEDO = vec3(lightmap(UV2));
+		ALBEDO = vec3(lightmap(UV2) * lmboost);
 	} else if (mode == 3) {
 		ALBEDO = NORMAL;
 	}
