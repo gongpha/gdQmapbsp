@@ -4,39 +4,35 @@ class_name QmapbspWorldImporter
 ## An abstract extension.
 ## Provides only fundamental properties.
 ## For loading the map into the nodes, see [QmapbspWorldImporterScene].
-
-func _start() : pass
 	
 # for loading textures from the wad/bsp file
 func _get_bsp_palette() -> PackedColorArray : return PackedColorArray()
 func _get_unit_scale_f() -> float : return 32.0
-func _get_custom_bsp_textures_shader() -> Shader :
-	return preload(
-		"../resource/shader/surface.gdshader"
-	)
-	
-# Returning [code]false[/code] will ignore all BSP textures and loading slightly faster
-func _texture_include_bsp_textures() -> bool :
-	return false
 
-func _texture_get_no_texture() -> Material :
-	var t := StandardMaterial3D.new()
-	t.albedo_color = Color.RED
-	return t
-
-## Returns [Material] or [Texture2D] (for lightmaps)
-func _texture_get(name : String, size : Vector2i) :
-	return null
+func _texture_get_missing_texture() -> Array :
+	return [load("res://addons/qmapbsp/texture/missing.tres"), Vector2i(64, 64)]
 	
-## Calls when using a texture from the BSP file or textures from [code]_texture_get[/code]
-## that return [Texture2D]
-func _texture_get_material_for_integrated(
-	name : String, tex : Texture2D
-) -> Material :
-	return null
+func _texture_get_mip_count(size : int) -> void :
+	return
 	
-func _texture_get_global_surface_material() -> ShaderMaterial :
-	return ShaderMaterial.new()
+# [material, preferred texture size (or just return the argument "texture_size")]
+# returns an empty array if want the mip texture
+func _texture_get_material(
+	index : int, texture_name : String, texture_size : Vector2i
+) -> Array :
+	return []
+	
+# returns like the above method
+func _texture_your_bsp_texture(
+	index : int, texture_name : String,
+	texture : ImageTexture, texture_meta : ImageTexture
+) -> Array :
+	return []
+	
+func _texture_read_lightmap_texture() -> bool : return true
+	
+func _texture_your_lightmap_texture(lmtex : ImageTexture) -> void :
+	return
 
 ###########################################
 
@@ -45,6 +41,20 @@ func _model_get_region(
 	face_index : int, facemat : Material
 ) :
 	return null
+	
+# the "customs" array has allocated 4 slots for putting either null or colors
+func _model_put_custom_data(
+	# out
+	customs : Array,
+	
+	# in
+	texture_index : int,
+	lightmap_position : float,
+	lightmap_texel : float,
+	lights : Color,
+	lightstyle : int
+) :
+	return
 
 ###########################################
 # entities (models & worldspawn)
@@ -62,8 +72,7 @@ func _entity_your_shape(
 	ent_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
-	
-	known_texture_names : PackedStringArray
+	metadata : Dictionary
 ) -> void :
 	pass
 	
@@ -133,6 +142,26 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
 		
 	
+func _load_clip_nodes(model_id : int) -> bool :
+	return false
+		
+func _load_bsp_nodes(model_id : int) -> bool :
+	return false
+	
+# return true, if want the parser creates a collision shape
+# and returns it via _entity_your_shape
+func _leaf_your_bsp_planes(
+	model_id : int, leaf_type : int,
+	planes_const : Array[Plane] # do not modify !
+) -> bool :
+	return false
+	
+func _leaf_your_clip_planes(
+	model_id : int,
+	planes_const : Array[Plane] # do not modify !
+) -> bool :
+	return false
+	
 #########################################
 
 func _custom_work_bsp(bsp : RefCounted) -> void :
@@ -141,17 +170,22 @@ func _custom_work_bsp(bsp : RefCounted) -> void :
 #########################################
 
 func __sections__() -> Dictionary : return {
-	&'GATHERING_ALL_ENTITIES' : [_GatheringAllEntities, 0.5],
-	&'IMPORTING_DATA' : _ImportingData,
-	&'CONSTRUCTING_DATA' : _ConstructingData,
-	&'BUILDING_DATA' : _BuildingData,
-	&'BUILDING_DATA_CUSTOM' : [_BuildingDataCustom, 0.1],
-	&'FINALLY' : [_Finally, 0.1],
+	'BEGIN' : [_Begin, 0.5],
+	'GATHERING_ALL_ENTITIES' : [_GatheringAllEntities, 0.5],
+	'IMPORTING_DATA' : _ImportingData,
+	'CONSTRUCTING_DATA' : _ConstructingData,
+	'BUILDING_DATA' : _BuildingData,
+	'BUILDING_DATA_CUSTOM' : [_BuildingDataCustom, 0.1],
+	'FINALLY' : [_Finally, 0.1],
 }
 
+func _Begin() -> float :
+	_begin()
+	return 1.0
 func _GatheringAllEntities() -> float : return _race(0)
 func _ImportingData() -> float :
-	bspp.known_map_textures = mapp.known_textures
+	if mapp :
+		bspp.known_map_textures = mapp.known_textures
 	return _race(1)
 func _ConstructingData() -> float : return _race(2)
 func _BuildingData() -> float : return _race(3)
@@ -160,6 +194,7 @@ func _Finally() -> float :
 	_finally()
 	return 1.0
 	
+func _begin() -> void : return
 func _finally() -> void : return
 	
 var mapp : QmapbspMAPParser
@@ -168,49 +203,49 @@ var bspp : QmapbspBSPParser
 #############################################
 # public methods
 
+# ! MAP file is optional
+
 func begin_load(mapbsp_name : String, basedir : String, ret := []) -> StringName :
 	return begin_load_absolute(
-		basedir.path_join(mapbsp_name + '.map') if !mapbsp_name.is_empty() else
-		'',
 		basedir.path_join(mapbsp_name + '.bsp') if !mapbsp_name.is_empty() else
+		'',
+		basedir.path_join(mapbsp_name + '.map') if !mapbsp_name.is_empty() else
 		'',
 		ret
 	)
 
-func begin_load_absolute(map_path : String, bsp_path : String, ret := []) -> StringName :
+func begin_load_absolute(bsp_path : String, map_path : String = "", ret := []) -> StringName :
 	var M : FileAccess
 	var B : FileAccess
+	
+	if !bsp_path.is_empty() :
+		B = FileAccess.open(bsp_path, FileAccess.READ)
+		if !B :
+			ret.append(FileAccess.get_open_error())
+			return &'CANNOT_OPEN_BSP_FILE'
 	
 	if !map_path.is_empty() :
 		M = FileAccess.open(map_path, FileAccess.READ)
 		if !M :
 			ret.append(FileAccess.get_open_error())
 			return &'CANNOT_OPEN_MAP_FILE'
-			
-	if !bsp_path.is_empty() :
-		B = FileAccess.open(bsp_path, FileAccess.READ)
-		if !B :
-			ret.append(FileAccess.get_open_error())
-			return &'CANNOT_OPEN_BSP_FILE'
 		
-	return begin_load_files(M, B, ret)
+	return begin_load_files(B, M, ret)
 	
-func begin_load_files(mapf : FileAccess, bspf : FileAccess, ret := []) -> StringName :
+func begin_load_files(bspf : FileAccess, mapf : FileAccess = null, ret := []) -> StringName :
 	var err : StringName
-	if mapf :
-		mapp = QmapbspMAPParser.new()
-		err = mapp.begin_file(mapf)
-		if err != StringName() : return err
-		mapp.tell_collision_shapes.connect(_entity_your_shape)
 	if bspf :
 		bspp = QmapbspBSPParser.new()
 		err = bspp.begin_file(bspf)
 		if err != StringName() : return err
 		
-		bspp.read_miptextures = _texture_include_bsp_textures()
-		if bspp.read_miptextures :
-			bspp.bsp_shader = _get_custom_bsp_textures_shader()
-			bspp.known_palette = _get_bsp_palette()
+		bspp.known_palette = _get_bsp_palette()
+			
+	if mapf :
+		mapp = QmapbspMAPParser.new()
+		err = mapp.begin_file(mapf)
+		if err != StringName() : return err
+		mapp.tell_collision_shapes.connect(_entity_your_shape)
 		
 	for e in [mapp, bspp] :
 		if !e : continue
@@ -268,7 +303,8 @@ func _end() :
 #############################################
 # DO NOT TOUCH
 
-var no_texture : Material
-func get_no_texture() -> Material :
-	if !no_texture : no_texture = _texture_get_no_texture()
-	return no_texture
+var missing_texture : Array
+func get_missing_texture() -> Array :
+	if missing_texture.is_empty() :
+		missing_texture = _texture_get_missing_texture()
+	return missing_texture

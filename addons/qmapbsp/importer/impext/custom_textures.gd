@@ -22,7 +22,7 @@ func _construct_new_material(texture : Texture2D) -> Material :
 	return mat
 	
 #################################################
-var _created_textures : Dictionary # <name, Material>
+var _created_textures : Dictionary # <name, [Material, size : Vector2i]>
 
 func _texture_include_bsp_textures() -> bool : return true
 
@@ -38,24 +38,26 @@ func _build_paths(
 		paths.append(texdir.path_join('%s.%s' % [_rename_texture(name), e]))
 	return paths
 
-func _texture_get(name : String, size : Vector2i) :
-	var existed : Material = _created_textures.get(name, null)
-	if existed : return existed
+func _texture_get_material(
+	index : int, texture_name : String, texture_size : Vector2i
+) -> Array :
+	var existed : Array = _created_textures.get(texture_name, [])
+	if !existed.is_empty() : return existed
 	
-	var paths := _build_paths(name)
-	var rsc : Resource
+	var paths := _build_paths(texture_name)
+	var rsc : Array
 	
 	# finding the best resource file for this texture
 	for p in paths :
 		if !ResourceLoader.exists(p) : continue
-		rsc = load(p)
-		if rsc is Texture2D :
-			rsc = _construct_new_material(rsc)
-			_created_textures[name] = rsc
-			break
-		elif rsc is Material :
-			break
-		rsc = null
-		continue
-	if !rsc : return super(name, size)
-	return rsc
+		var mat_or_tex2d = load(p)
+		if mat_or_tex2d is Texture2D :
+			rsc = [_construct_new_material(mat_or_tex2d), mat_or_tex2d.get_size()]
+			_created_textures[texture_name] = rsc
+			return rsc
+		elif mat_or_tex2d is StandardMaterial3D :
+			if mat_or_tex2d.albedo_texture :
+				rsc = [mat_or_tex2d, mat_or_tex2d.albedo_texture.get_size()]
+				_created_textures[texture_name] = [rsc]
+				return rsc
+	return super(index, texture_name, texture_size)

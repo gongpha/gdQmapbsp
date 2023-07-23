@@ -24,6 +24,7 @@ var noclip : bool = false
 @onready var camera : Camera3D = $around/head/cam
 @onready var staircast : ShapeCast3D = $staircast
 @onready var jump : AudioStreamPlayer3D = $jump
+@onready var origin : Node3D = $origin
 
 var wishdir : Vector3
 var wish_jump : bool = false
@@ -125,6 +126,7 @@ func move_noclip(delta : float) -> void :
 	friction(delta)
 	accelerate(max_speed, delta)
 	translate(velocity * delta)
+	_watercoltest()
 
 
 func _physics_process(delta : float) -> void :
@@ -184,16 +186,35 @@ func _physics_process(delta : float) -> void :
 		around.position.y = smooth_y + 0.688
 	#Engine.time_scale = 0.2
 		
-		
-func _coltest() :
+var ppqp_water : PhysicsPointQueryParameters3D
+func _coltest() -> void :
 	for i in get_slide_collision_count() :
 		var k := get_slide_collision(i)
 		for j in k.get_collision_count() :
 			var obj := k.get_collider(j)
+			if obj is QmapbspQuakeClipProxyStatic :
+				obj = obj.get_parent()
+			if obj is QmapbspQuakeClipProxyAnimated :
+				obj = obj.get_parent()
+				
 			if obj.has_method(&'_player_touch') :
 				obj._player_touch(self, k.get_position(j), k.get_normal(j))
 				return
+	_watercoltest()
 		
+func _watercoltest() -> void :
+	# water touch test
+	if !ppqp_water :
+		ppqp_water = PhysicsPointQueryParameters3D.new()
+		ppqp_water.collision_mask = 0b10
+		ppqp_water.collide_with_bodies = false
+		ppqp_water.collide_with_areas = true
+		
+	fluid = null
+	ppqp_water.position = origin.global_position
+	var arr := get_world_3d().direct_space_state.intersect_point(ppqp_water)
+	if !arr.is_empty() :
+		fluid = arr[0]["collider"]
 		
 func _input(event : InputEvent) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
@@ -210,14 +231,6 @@ func _input(event : InputEvent) -> void :
 		var hrot = head.rotation
 		hrot.x = clampf(hrot.x, -PI/2, PI/2)
 		head.rotation = hrot
-		
-		
-func _fluid_enter(f : QmapbspQuakeFluidVolume) :
-	fluid = f
-	
-	
-func _fluid_exit(f : QmapbspQuakeFluidVolume) :
-	if f == fluid : fluid = null
 
 
 #########################################

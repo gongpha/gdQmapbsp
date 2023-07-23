@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://ykmjbk4bx4vg"]
+
+[ext_resource type="Texture2D" uid="uid://2d52247jrmj6" path="res://addons/qmapbsp/texture/missing.png" id="1_ld8ep"]
+
+[resource]
+albedo_texture = ExtResource("1_ld8ep")
+texture_filter = 2

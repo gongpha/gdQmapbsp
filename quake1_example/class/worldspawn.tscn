@@ -18,3 +18,15 @@ environment = SubResource("Environment_dlsko")
 
 [node name="music" type="AudioStreamPlayer" parent="."]
 process_mode = 3
+
+[node name="water" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+
+[node name="sky" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+
+[node name="slime" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+
+[node name="lava" type="AudioStreamPlayer" parent="."]
+process_mode = 3
