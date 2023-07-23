@@ -1,5 +1,5 @@
 ## An example extension that loads Quake1 maps from pak files
-extends QmapbspWorldImporterScene
+extends QmapbspWorldImporterQuake1Style
 class_name QmapbspWorldImporterQuake1
 
 var viewer : QmapbspQuakeViewer
@@ -11,50 +11,15 @@ func _texture_include_bsp_textures() -> bool : return true
 
 var importing_clip_shape := false
 
-func _texture_get_global_surface_material() -> ShaderMaterial :
-	surface = ShaderMaterial.new()
-	viewer.world_surface = surface
-	surface.set_shader_parameter(&'mode', viewer.mode)
-	surface.set_shader_parameter(&'lmboost', viewer.lightmap_boost)
-	surface.set_shader_parameter(&'regionhl', viewer.region_highlighting)
-	return surface
-	
-func _texture_your_bsp_textures(
-	textures : Array,
-	textures_fullbright : Array
-) -> void :
-	viewer.bsp_textures = textures
-	viewer.bsp_textures_fullbright = textures_fullbright
-	
-func _texture_get_animated_textures_group(
-	name : String
-) -> Array :
-	if !name.is_empty() and name.unicode_at(0) == 43 : # +
-		var groupi : String
-		var framei : int
-		var u := name.unicode_at(1)
-		if u >= 48 and u <= 57 :
-			groupi = '0'
-			framei = u - 48
-		elif u >= 97 and u <= 106 :
-			groupi = '1'
-			framei = u - 97
-		return [groupi + name.substr(2), framei] # remove first two characters
-	return []
-	
-func _get_custom_bsp_textures_shader() -> Shader :
-	if viewer.rendering != 0 :
-		return preload(
-			"res://addons/qmapbsp/resource/shader/surface_and_shade.gdshader"
-		)
-	return super()
+func _begin() -> void :
+	super()
+	viewer.world_shader = surface_shader
 
 func _entity_node_directory_paths() -> PackedStringArray :
 	return PackedStringArray(
 		["res://quake1_example/class/"]
 	) + super()
 
-var specials : Dictionary # <name : ShaderMaterial>
 var worldspawn_fluid_brush : PackedInt32Array
 var added_brush : Dictionary # <worldspawn_brush_id : col>
 	
@@ -62,31 +27,6 @@ var empty_area : QmapbspQuakeLeafVolume
 var fluid_area : QmapbspQuakeFluidVolume
 var lava_area : QmapbspQuakeLavaVolume
 var slime_area : QmapbspQuakeSlimeVolume
-
-func _texture_get_material_for_integrated(
-	name : String, tex : Texture2D
-) -> Material :
-	if name.begins_with('sky') :
-		var sky : ShaderMaterial = specials.get(name)
-		if !sky :
-			sky = load("res://quake1_example/material/sky.tres")
-			sky.set_shader_parameter(&'skytex', tex)
-			if name == 'sky4' :
-				sky.set_shader_parameter(&'threshold', 0.4)
-			specials[name] = sky
-			sky.set_meta(&'sky', true)
-		viewer.skytex = tex
-		return sky
-	elif name.begins_with('*') :
-		var fluid : ShaderMaterial = specials.get(name)
-		if !fluid :
-			fluid = ShaderMaterial.new()
-			fluid.shader = preload("res://quake1_example/material/fluid.gdshader")
-			fluid.set_shader_parameter(&'tex', tex)
-			fluid.set_meta(&'fluid', true)
-			specials[name] = fluid
-		return fluid
-	return super(name, tex)
 	
 func _entity_your_mesh(
 	ent_id : int,

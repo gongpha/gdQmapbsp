@@ -22,7 +22,6 @@ var map_upper : bool = false
 var tracklist : Dictionary
 var trackcaches : Dictionary # <sounds : AudioStreamMP3>
 	
-var world_surface : ShaderMaterial
 var bsp_textures : Array
 var bsp_textures_fullbright : Array
 
@@ -32,6 +31,7 @@ var skill : int = 1
 var rendering : int = 0
 
 var skytex : ImageTexture
+var world_shader : QmapbspQuake1StyleShader
 
 func _ready() :
 	get_viewport().use_occlusion_culling = occlusion_culling
@@ -209,14 +209,14 @@ func switch_render_mode() :
 		mode = 0
 	else :
 		mode += 1
-	world_surface.set_shader_parameter(&'mode', mode)
+	worldspawn.set_rendering_mode(mode)
 	
 func switch_texture_filtering() -> void :
-	if filter == 3 :
+	if filter == 1 :
 		filter = 0
 	else :
 		filter += 1
-	world_surface.set_shader_parameter(&'mode', mode)
+	worldspawn.set_filter_mode(filter)
 
 var lightmap_boost : float = 4.0
 var lightmap_boost_min : float = 0.0
@@ -226,13 +226,11 @@ func add_lightmap_boost(add : int) :
 		lightmap_boost + add * 2.0,
 		lightmap_boost_min, lightmap_boost_max
 	)
-	world_surface.set_shader_parameter(&'lmboost', lightmap_boost)
+	RenderingServer.global_shader_parameter_set(
+		&'lmboost', lightmap_boost
+	)
 func get_lightmap_boost_val() -> float :
 	return inverse_lerp(lightmap_boost_min, lightmap_boost_max, lightmap_boost)
-var region_highlighting : bool = false
-func toggle_region_highlighting() -> void :
-	region_highlighting = !region_highlighting
-	world_surface.set_shader_parameter(&'regionhl', region_highlighting)
 var wireframe_enabled : bool = false
 func toggle_wireframe_mode() -> void :
 	wireframe_enabled = !wireframe_enabled

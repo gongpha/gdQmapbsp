@@ -7,16 +7,14 @@ class_name QmapbspQuakeWorldspawn
 var props : Dictionary
 func _get_properties(dict : Dictionary) : props = dict
 
-var surface : ShaderMaterial
-var bsp_textures : Array
-var bsp_textures_fullbright : Array
-var frame_textures : Array[Texture2D]
-var frame_textures_fullbright : Array[Texture2D]
+var world_shader : QmapbspQuake1StyleShader
 
 func _init() -> void :
 	lightstyles.resize(MAX_LIGHTSTYLE)
-	lightstyles_f.resize(MAX_LIGHTSTYLE)
-	lightstyles.fill(PackedFloat32Array([DEFAULT_LIGHT_M])) # normal light
+	#lightstyles_f.resize(MAX_LIGHTSTYLE)
+	lightstyles.fill(PackedColorArray([
+		Color(DEFAULT_LIGHT_M, 0.0, 0.0, 0.0)
+	])) # normal light
 	
 	# stock lightstyles (world.qc)
 	set_lightstyle(1, 'mmnmmommommnonmmonqnmmo')
@@ -32,14 +30,17 @@ func _init() -> void :
 	set_lightstyle(11, 'abcdefghijklmnopqrrqponmlkjihgfedcba')
 
 func _map_ready() :
+	lightstyles_i = Image.create(64, 1, false, Image.FORMAT_RF)
+	lightstyles_t = ImageTexture.create_from_image(lightstyles_i)
+	
+	RenderingServer.global_shader_parameter_set(
+		&'lightstyle_tex',
+		lightstyles_t
+	)
+	
 	var viewer : QmapbspQuakeViewer = get_meta(&'viewer', null)
 	if viewer :
-		surface = viewer.world_surface
-		bsp_textures = viewer.bsp_textures
-		bsp_textures_fullbright = viewer.bsp_textures_fullbright
-		frame_textures.resize(bsp_textures.size())
-		frame_textures_fullbright.resize(bsp_textures.size())
-		_update_texs(0)
+		world_shader = viewer.world_shader
 		
 		music.stream = viewer.get_music(props.get('sounds', 0))
 		music.play()
@@ -85,8 +86,10 @@ func _map_ready() :
 
 #####################################################################
 # lightstyles
-var lightstyles : Array[PackedFloat32Array]
-var lightstyles_f : PackedFloat32Array
+var lightstyles : Array[PackedColorArray]
+#var lightstyles_f : PackedFloat32Array
+var lightstyles_i : Image
+var lightstyles_t : ImageTexture
 
 const ZA : float = 0x7a - 0x61
 const MAX_LIGHTSTYLE := 64
@@ -95,6 +98,8 @@ const SWITCHABLE_LIGHT_BEGIN := 32 # to 62
 const DEFAULT_LIGHT_M := (0x6D - 0x61) / ZA # M light (0.48)
 	
 var update_tex_delay : int = 0
+var update_ls_delay : int = 0
+var ls_frame : int = 0
 
 #####################################################################
 # ambient sounds
@@ -107,21 +112,13 @@ var ambtarget : Vector4
 var ambplayers : Array[AudioStreamPlayer]
 
 func _process(delta : float) :
-	if !surface : return # ?
+	#if !surface : return # ?
 	
-	var frame := Engine.get_frames_drawn() / 10
-	for i in MAX_LIGHTSTYLE :
-		var pf32a := lightstyles[i]
-		lightstyles_f[i] = pf32a[frame % pf32a.size()]
-		
-	surface.set_shader_parameter(&'lightstyles', lightstyles_f)
-	
-	# animate textures
-	if update_tex_delay <= 0 :
-		_update_texs(Engine.get_frames_drawn() / 20)
-		update_tex_delay = 20
+	if update_ls_delay <= 0 :
+		_update_ls()
+		update_ls_delay = 10
 	else :
-		update_tex_delay -= 1
+		update_ls_delay -= 1
 
 	for i in 4 :
 		if amb[i] < ambtarget[i] :
@@ -135,26 +132,24 @@ func _process(delta : float) :
 		elif !ambp.playing :
 			ambp.play()
 		ambplayers[i].volume_db = linear_to_db(amb[i])
-	
-func _update_texs(frame : int) -> void :
-	for i in frame_textures.size() :
-		var e = bsp_textures[i]
-		var e2 = bsp_textures_fullbright[i]
-		if e is Array :
-			frame_textures[i] = e[frame % e.size()]
-			frame_textures_fullbright[i] = e2[frame % e.size()]
-		else :
-			frame_textures[i] = e
-			frame_textures_fullbright[i] = e2
-	surface.set_shader_parameter(&'texs', frame_textures)
-	surface.set_shader_parameter(&'texfs', frame_textures_fullbright)
+		
+func _update_ls() -> void :
+	#var frame := Engine.get_frames_drawn() / 10
+	for i in MAX_LIGHTSTYLE :
+		var pf32a := lightstyles[i]
+		#print(pf32a[ls_frame % pf32a.size()])
+		lightstyles_i.set_pixel(i, 0, pf32a[ls_frame % pf32a.size()])
+	lightstyles_t.update(lightstyles_i)
+	ls_frame += 1
 
 func set_lightstyle(style : int, light : String) -> void :
-	var lightraw : PackedFloat32Array
+	var lightraw : PackedColorArray
 	lightraw.resize(light.length())
 	for i in light.length() :
-		lightraw[i] = (light.unicode_at(i) - 0x61) / ZA
-	
+		lightraw[i] = Color(
+			(light.unicode_at(i) - 0x61) / ZA,
+			0.0, 0.0, 0.0
+		)
 	lightstyles[style] = lightraw
 
 # ambient sounds
@@ -171,3 +166,11 @@ func set_ambsnds(activator : Object, amb : Vector4) -> void :
 		
 	ambtarget = amb * 0.125 # too loud when used 1.0
 	amb_activator = activator
+
+func set_filter_mode(filter : int) -> void :
+	world_shader.texture_filter = filter
+	world_shader.rebuild_shader()
+
+func set_rendering_mode(ren_mode : int) -> void :
+	world_shader.texture_mode = ren_mode
+	world_shader.rebuild_shader()

@@ -32,9 +32,9 @@ var MENU := {
 			["Switch rendering mode", func() :
 				viewer.switch_render_mode()
 				],
-			["Region highlighting", func() :
-				viewer.toggle_region_highlighting()
-				],
+			#["Switch texture filtering", func() :
+			#	viewer.switch_texture_filtering()
+			#	],
 			["Lightmap boost", func(add : int) :
 				viewer.add_lightmap_boost(add)
 				,
