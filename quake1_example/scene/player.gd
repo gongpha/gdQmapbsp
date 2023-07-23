@@ -86,13 +86,13 @@ func _ready() :
 	# setup query points
 	low_level.set_collide_with_areas(true)
 	low_level.set_collide_with_bodies(false)
-	low_level.set_collision_mask(pow(2, 3-1)) # 3rd layer is LIQUID
+	low_level.set_collision_mask(pow(2, 2-1)) # 2rd layer is bsp_liquid
 	mid_level.set_collide_with_areas(true)
 	mid_level.set_collide_with_bodies(false)
-	mid_level.set_collision_mask(pow(2, 3-1)) # 3rd layer is LIQUID
+	mid_level.set_collision_mask(pow(2, 2-1)) # 2rd layer is bsp_liquid
 	eye_level.set_collide_with_areas(true)
 	eye_level.set_collide_with_bodies(false)
-	eye_level.set_collision_mask(pow(2, 3-1)) # 3rd layer is LIQUID
+	eye_level.set_collision_mask(pow(2, 2-1)) # 2rd layer is bsp_liquid
 	
 	
 func hurt(type: StringName, amount: int, duration: float) :
@@ -393,17 +393,6 @@ func _process_liquid_hurt(delta) :
 				time_submerged -= 1 # apply effect every 1 second
 				hurt(&'slime', fluid.damage() * s_level, fluid.duration())
 
-
-# Events
-
-func _fluid_enter(f : QmapbspQuakeFluidVolume) :
-	fluid = f
-
-
-func _fluid_exit(f : QmapbspQuakeFluidVolume) :
-	if f == fluid : fluid = null
-	time_submerged = 0
-	# TODO: apply damage for "duration" time after exit
 
 #########################################
 
