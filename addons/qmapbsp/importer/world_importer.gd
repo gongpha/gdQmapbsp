@@ -4,54 +4,34 @@ class_name QmapbspWorldImporter
 ## An abstract extension.
 ## Provides only fundamental properties.
 ## For loading the map into the nodes, see [QmapbspWorldImporterScene].
-
-func _start() : pass
 	
 # for loading textures from the wad/bsp file
 func _get_bsp_palette() -> PackedColorArray : return PackedColorArray()
 func _get_unit_scale_f() -> float : return 32.0
-func _get_custom_bsp_textures_shader() -> Shader :
-	return preload(
-		"../resource/shader/surface.gdshader"
-	)
-	
-# Returning [code]false[/code] will ignore all BSP textures and loading slightly faster
-func _texture_include_bsp_textures() -> bool :
-	return false
 
-func _texture_get_missing_texture() -> Material :
-	var t := load("res://addons/qmapbsp/texture/missing.tres")
-	return t
-
-## Returns [Material] or [Texture2D] (for lightmaps)
-func _texture_get(name : String, size : Vector2i) :
-	return null
+func _texture_get_missing_texture() -> Array :
+	return [load("res://addons/qmapbsp/texture/missing.tres"), Vector2i(64, 64)]
 	
-## Calls when using a texture from the BSP file or textures from [code]_texture_get[/code]
-## that return [Texture2D]
-func _texture_get_material_for_integrated(
-	name : String, tex : Texture2D
-) -> Material :
-	return null
+func _texture_get_mip_count(size : int) -> void :
+	return
 	
-# returns [group name, texture index in the group]
-func _texture_get_animated_textures_group(
-	name : String
+# [material, preferred texture size (or just return the argument "texture_size")]
+# returns an empty array if want the mip texture
+func _texture_get_material(
+	index : int, texture_name : String, texture_size : Vector2i
 ) -> Array :
 	return []
 	
-func _texture_get_global_surface_material() -> ShaderMaterial :
-	return ShaderMaterial.new()
+# returns like the above method
+func _texture_your_bsp_texture(
+	index : int, texture_name : String,
+	texture : ImageTexture, texture_meta : ImageTexture
+) -> Array :
+	return []
 	
-# out
-
-# items :
-# - Texture2D : static
-# - Array[Texture2D] : animated
-func _texture_your_bsp_textures(
-	textures : Array,
-	textures_fullbright : Array
-) -> void :
+func _texture_read_lightmap_texture() -> bool : return true
+	
+func _texture_your_lightmap_texture(lmtex : ImageTexture) -> void :
 	return
 
 ###########################################
@@ -61,6 +41,20 @@ func _model_get_region(
 	face_index : int, facemat : Material
 ) :
 	return null
+	
+# the "customs" array has allocated 4 slots for putting either null or colors
+func _model_put_custom_data(
+	# out
+	customs : Array,
+	
+	# in
+	texture_index : int,
+	lightmap_position : float,
+	lightmap_texel : float,
+	lights : Color,
+	lightstyle : int
+) :
+	return
 
 ###########################################
 # entities (models & worldspawn)
@@ -176,14 +170,18 @@ func _custom_work_bsp(bsp : RefCounted) -> void :
 #########################################
 
 func __sections__() -> Dictionary : return {
-	&'GATHERING_ALL_ENTITIES' : [_GatheringAllEntities, 0.5],
-	&'IMPORTING_DATA' : _ImportingData,
-	&'CONSTRUCTING_DATA' : _ConstructingData,
-	&'BUILDING_DATA' : _BuildingData,
-	&'BUILDING_DATA_CUSTOM' : [_BuildingDataCustom, 0.1],
-	&'FINALLY' : [_Finally, 0.1],
+	'BEGIN' : [_Begin, 0.5],
+	'GATHERING_ALL_ENTITIES' : [_GatheringAllEntities, 0.5],
+	'IMPORTING_DATA' : _ImportingData,
+	'CONSTRUCTING_DATA' : _ConstructingData,
+	'BUILDING_DATA' : _BuildingData,
+	'BUILDING_DATA_CUSTOM' : [_BuildingDataCustom, 0.1],
+	'FINALLY' : [_Finally, 0.1],
 }
 
+func _Begin() -> float :
+	_begin()
+	return 1.0
 func _GatheringAllEntities() -> float : return _race(0)
 func _ImportingData() -> float :
 	if mapp :
@@ -196,6 +194,7 @@ func _Finally() -> float :
 	_finally()
 	return 1.0
 	
+func _begin() -> void : return
 func _finally() -> void : return
 	
 var mapp : QmapbspMAPParser
@@ -240,10 +239,7 @@ func begin_load_files(bspf : FileAccess, mapf : FileAccess = null, ret := []) ->
 		err = bspp.begin_file(bspf)
 		if err != StringName() : return err
 		
-		bspp.read_miptextures = _texture_include_bsp_textures()
-		if bspp.read_miptextures :
-			bspp.bsp_shader = _get_custom_bsp_textures_shader()
-			bspp.known_palette = _get_bsp_palette()
+		bspp.known_palette = _get_bsp_palette()
 			
 	if mapf :
 		mapp = QmapbspMAPParser.new()
@@ -307,7 +303,8 @@ func _end() :
 #############################################
 # DO NOT TOUCH
 
-var missing_texture : Material
-func get_missing_texture() -> Material :
-	if !missing_texture : missing_texture = _texture_get_missing_texture()
+var missing_texture : Array
+func get_missing_texture() -> Array :
+	if missing_texture.is_empty() :
+		missing_texture = _texture_get_missing_texture()
 	return missing_texture

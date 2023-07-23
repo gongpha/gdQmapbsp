@@ -16,6 +16,8 @@ class_name QmapbspTrenchbroomMapConfig
 @export var mesh_splitting_size : float = 32.0 # godot unit
 ## The placeholder material. This applies to faces that can't load any textures.
 @export var default_material : Material
+## The placeholder material texture size.
+@export var default_material_texture_size : Vector2i = Vector2i(64, 64)
 ## Bakes navigation meshes based on this [NavigationMesh].
 ## The operation will skip if it's empty.
 @export var navmesh_template : NavigationMesh

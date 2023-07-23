@@ -13,9 +13,9 @@ func _get_unit_scale_f() -> float :
 func _entity_region_size(ent_id : int) -> float :
 	return map_config.mesh_splitting_size
 	
-func _texture_get_missing_texture() -> Material :
+func _texture_get_missing_texture() -> Array :
 	var no := map_config.default_material
-	if no : return no
+	if no : return [no, map_config.default_material_texture_size]
 	return super()
 	
 func _entity_unwrap_uv2(
