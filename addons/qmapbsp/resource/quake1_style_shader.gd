@@ -57,6 +57,7 @@ global uniform sampler2D lightmap_tex;
 varying flat int lstyles;
 varying float lwidth;
 varying float lights[4];
+varying float lx2pix;
 
 void vertex() {
 	lights = {
@@ -67,6 +68,7 @@ void vertex() {
 	};
 	lstyles = int(CUSTOM0.y);
 	lwidth = CUSTOM0.z;
+	lx2pix = CUSTOM0.w;
 }
 
 float lightmap(in vec2 uv2) {
@@ -74,8 +76,8 @@ float lightmap(in vec2 uv2) {
 	float lcursor = 0.0;
 	for (int l = 0; l < 4; l++) {
 		if ((lstyles & (1 << l)) == 0) continue;
-		lighttotal += texture(lightmap_tex, uv2 + vec2(lwidth * lcursor, 0.0)).x * lights[l];
-		lcursor += 1.0;
+		lighttotal += texture(lightmap_tex, uv2 + vec2(lcursor, 0.0)).x * lights[l];
+		lcursor += lwidth + lx2pix;
 	}
 	return lighttotal;
 }
