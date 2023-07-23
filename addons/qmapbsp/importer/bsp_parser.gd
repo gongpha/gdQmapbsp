@@ -6,13 +6,15 @@ class_name QmapbspBSPParser
 var curr_entry : Vector2i
 var bsp_version : int
 
+var known_map_textures : PackedStringArray
+
 # in
 var scale : float = 1 / 32.0
-var read_miptextures : bool = false # includes textures
 var read_lightmaps : bool = true
 var known_palette : PackedColorArray
 var bsp_shader : Shader
-var known_map_textures : PackedStringArray
+
+var import_visdata : bool = false
 
 var model_map : Dictionary # <model_id : ent_id>
 	
@@ -46,7 +48,7 @@ func _GatheringAllEntities() -> float :
 
 	return super()
 	
-func _brush_found() :
+func _brush_found() -> void :
 	# impossible to reach here
 	breakpoint
 	
@@ -66,28 +68,40 @@ var edges : Array[Vector2i]
 var edge_list : PackedInt32Array
 var planes : Array[Plane]
 var planetypes : Array[int]
+
 var textures : Array[Material]
+var texture_sizes : Array[Vector2i]
 var texture_ids : PackedByteArray # for built-in bsp material
+
 var texinfos : Array[Array]
 var models : Array[Array]
 var faces : Array[Array]
-#var clipnodes : Array[Array]
+var face_list : PackedInt32Array
+var bspnodes : Array[Array]
+var clipnodes : Array[Array]
 var entities : Array[Array]
+var visilist : PackedByteArray
+var leaves : Array[Array]
 
-# Built-in BSP material
-var global_surface_mat : ShaderMaterial
-var global_textures : Array[Texture2D]
-const GLOBAL_TEXTURE_LIMIT := 96 # device dependent
+var level_aabb : AABB
 
 var import_tasks := [
 	[_read_vertices, 128],
 	[_read_edges, 128],
-	[_read_ledges, 128],
+	[_read_ledges, 256],
 	[_read_planes, 128],
 	[_read_mip_textures, 16],
 	[_read_texinfo, 128],
 	[_read_models, 64],
-	[_read_faces, 64]
+	[_read_faces, 64],
+	[_read_bspnodes, 64],
+	[_read_clipnodes, 128],
+	[_read_lface, 256],
+	[_read_visilist, 256],
+	[_read_leaves, 64],
+	
+	[_construct_bspnodes, 16],
+	[_construct_clipnodes, 16]
 ]
 var import_curr_index : int = 0
 var import_curr_func : Callable = import_tasks[0][0]
@@ -122,13 +136,15 @@ func _read_vertices() -> float :
 		curr_entry = entries['vertices']
 		file.seek(curr_entry.x)
 		vertices.resize(curr_entry.y / VEC3_SIZE)
-	vertices[load_index] = _qpos_to_vec3(
+	var v := _qpos_to_vec3(
 		Vector3(
 			file.get_float(),
 			file.get_float(),
 			file.get_float()
 		)
 	)
+	vertices[load_index] = v
+	level_aabb = level_aabb.expand(v)
 	load_index += 1
 	return float(load_index) / vertices.size()
 			
@@ -186,83 +202,58 @@ func _read_mip_textures() -> float :
 		file.seek(curr_entry.x)
 		var count := file.get_32()
 		textures.resize(count)
-		texture_ids.resize(count)
+		texture_sizes.resize(count)
+		wim._texture_get_mip_count(count)
 		
 		mipoffsets.resize(count)
+		
 		for i in count :
 			mipoffsets[i] = file.get_32()
 			
-	#var skip_mips : bool = true
+		read_lightmaps = wim._texture_read_lightmap_texture()
+			
 	var texture_offset := mipoffsets[load_index]
-	var mat : Material
 	
-	var ret
-	var tsize : Vector2i
-	var tname : String
+	var texture : Texture2D
+	var ret : Array
+	
 	if texture_offset >= 0 :
 		var toffset := curr_entry.x + texture_offset
 		file.seek(toffset)
-		tname = file.get_buffer(16).get_string_from_ascii()
-		tsize = Vector2i(file.get_32(), file.get_32())
-		ret = wim._texture_get(
-			tname,
-			tsize
-		)
-	elif known_map_textures.size() > load_index :
-		ret = wim._texture_get(
-			known_map_textures[load_index],
-			Vector2i(-1, -1)
-		)
-	else :
-		mat = wim.get_no_texture()
-		mat.set_meta(&'size', Vector2i(64, 64))
+		var tname := file.get_buffer(16).get_string_from_ascii()
+		var tsize := Vector2i(file.get_32(), file.get_32())
 		
-	var tex : Texture2D
-	if ret is Texture2D :
-		tsize = ret.get_size()
-		tex = ret
-	elif ret is Material :
-		if ret is BaseMaterial3D :
-			var t : Texture2D = ret.albedo_texture
-			if t :
-				tsize = t.get_size()
-		mat = ret
+		ret = wim._texture_get_material(load_index, tname, tsize)
 		
-	if !mat and read_miptextures :
-		# use a texture inside the bsp file
-		if !tex and texture_offset >= 0 :
-			var toffset := curr_entry.x + texture_offset
+		if ret.is_empty() :
+			# load mip
 			var doffset := file.get_32()
 			file.seek(toffset + doffset)
 			var data := file.get_buffer(tsize.x * tsize.y)
 			var im := _make_im_from_pal(tsize, data)
-			tex = ImageTexture.create_from_image(im)
-		mat = wim._texture_get_material_for_integrated(tname, tex)
-		if !mat :
-			if global_textures.size() > GLOBAL_TEXTURE_LIMIT :
-				# oof
-				printerr("You hit the texture limit ! (> %d)" % GLOBAL_TEXTURE_LIMIT)
-			else :
-				texture_ids[load_index] = global_textures.size()
-				global_textures.append(tex)
 			
-			if !global_surface_mat :
-				global_surface_mat = wim._texture_get_global_surface_material()
-				global_surface_mat.shader = bsp_shader
-				# set a texture later
-				global_surface_mat.set_meta(&'apply_lightmaps', true)
-			mat = global_surface_mat
-	if !mat :
-		mat = wim.get_no_texture()
-	mat.set_meta(&'size', tsize)
-	textures[load_index] = mat
+			ret = wim._texture_your_bsp_texture(
+				load_index, tname,
+				ImageTexture.create_from_image(im[0]),
+				ImageTexture.create_from_image(im[1])
+			)
+	elif known_map_textures.size() > load_index :
+		ret = wim._texture_get_material(
+			load_index,
+			known_map_textures[load_index],
+			Vector2i(-1, -1)
+		)
 		
-		#for j in (4 if skip_mips else 3) : file.get_32()
+	if ret.is_empty() :
+		# use a missing texture material
+		ret = wim.get_missing_texture()
+	else :
+		textures[load_index] = ret[0]
+		texture_sizes[load_index] = Vector2i(ret[1])
+	
 	load_index += 1
 	if load_index == mipoffsets.size() :
 		mipoffsets.clear()
-		if !global_surface_mat :
-			read_lightmaps = false
 		return 1.0
 	return float(load_index) / mipoffsets.size()
 			
@@ -328,6 +319,200 @@ func _read_faces() -> float :
 	load_index += 1
 	return float(load_index) / faces.size()
 	
+func _read_bspnodes() -> float :
+	if load_index == 0 :
+		if !wim._load_bsp_nodes(load_index) : return 1.0
+		curr_entry = entries['nodes']
+		file.seek(curr_entry.x)
+		bspnodes.resize(curr_entry.y / (44 if is_bsp2 else 24))
+		if bspnodes.is_empty() : return 1.0
+	bspnodes[load_index] = [
+		file.get_32(), # plane
+		file.get_32() if is_bsp2 else _get16as32(file), # front
+		file.get_32() if is_bsp2 else _get16as32(file), # back
+		_read_bbfloat(file) if is_bsp2 else _read_bbshort(file), # boundbox short
+		file.get_32() if is_bsp2 else file.get_16(),
+		file.get_32() if is_bsp2 else file.get_16() # face id, num
+	]
+	load_index += 1
+	return float(load_index) / bspnodes.size()
+	
+func _read_clipnodes() -> float :
+	if load_index == 0 :
+		if !wim._load_clip_nodes(load_index) : return 1.0
+		curr_entry = entries['clipnodes']
+		file.seek(curr_entry.x)
+		clipnodes.resize(curr_entry.y / (12 if is_bsp2 else 8))
+		if clipnodes.is_empty() : return 1.0
+	clipnodes[load_index] = [
+		file.get_32(), # plane
+		file.get_32() if is_bsp2 else _get16as32(file), # front
+		file.get_32() if is_bsp2 else _get16as32(file), # back
+	]
+	load_index += 1
+	return float(load_index) / clipnodes.size()
+	
+func _read_lface() -> float :
+	if load_index == 0 :
+		curr_entry = entries['lface']
+		file.seek(curr_entry.x)
+		face_list.resize(curr_entry.y / 2)
+	face_list[load_index] = file.get_16()
+	load_index += 1
+	return float(load_index) / face_list.size()
+	
+func _read_visilist() -> float :
+	if !import_visdata : return 1.0
+	curr_entry = entries['visilist']
+	file.seek(curr_entry.x)
+	visilist = file.get_buffer(curr_entry.y)
+	return 1.0
+	
+func _read_leaves() -> float :
+	if load_index == 0 :
+		if !(wim._load_bsp_nodes(load_index) or import_visdata) : return 1.0
+		curr_entry = entries['leaves']
+		file.seek(curr_entry.x)
+		leaves.resize(curr_entry.y / 28)
+		
+	var arr : Array = leaves[load_index]
+	arr.append_array([
+		u32toi32(file.get_32()), # type 0
+		u32toi32(file.get_32()), # vislist 1
+		_qpos_to_vec3_read_16(file), _qpos_to_vec3_read_16(file), # bound 2 3
+		file.get_16(), # f_id 4
+		file.get_16(), # f_num 5
+		
+		# ambient sounds 6
+		Vector4(
+			file.get_8() / 255.0, # water
+			file.get_8() / 255.0, # sky
+			file.get_8() / 255.0, # slime
+			file.get_8() / 255.0  # lava
+		)
+	])
+	
+	load_index += 1
+	return float(load_index) / leaves.size()
+	
+func _dump_bspnodes_tree(node : int, is_bsp : bool, deep : int = 0) -> void :
+	var nodearr : Array = (bspnodes if is_bsp else clipnodes)[node]
+	
+	var plane : Plane = planes[nodearr[0]]
+	print("-".repeat(deep), plane)
+	for i in [0, 1] :
+		var child : int = nodearr[1 + i]
+		if child >= 0 :
+			print("-".repeat(deep), i)
+			_dump_bspnodes_tree(child, is_bsp, deep + 1)
+		else :
+			print("-".repeat(deep), i, " ", leaves[~child][0] if is_bsp else child)
+	
+var expanded_aabb : AABB
+func _construct_bspnodes() -> float :
+	return _construct_nodes(true)
+	
+func _construct_clipnodes() -> float :
+	return _construct_nodes(false)
+	
+func _construct_nodes(is_bsp : bool) -> float :
+	# load_index is MODEL ID. NOT ENTITY ID !!!
+	if load_index == 0 :
+		if !(wim._load_bsp_nodes(load_index) if is_bsp else wim._load_clip_nodes(load_index)) : return 1.0
+		expanded_aabb = level_aabb.grow(4.0)
+	var convexplanes : Array[Array]
+	var tempplanes : Array[Plane]
+	
+	#_dump_bspnodes_tree(models[load_index][3 if is_bsp else 4], is_bsp)
+	
+	_node_cut(models[load_index][3 if is_bsp else 4],
+		tempplanes, convexplanes,
+		is_bsp
+	)
+		
+	for o in convexplanes :
+		var cvx := ConvexPolygonShape3D.new()
+		cvx.points = o[1]
+		
+		# use node id instead of brush id
+		var metadata : Dictionary = { 'from' : &'BSP' if is_bsp else &'CLIP' }
+		metadata.merge(o[2])
+		
+		wim._entity_your_shape(model_map[load_index], o[0], cvx, Vector3(), metadata)
+	
+	load_index += 1
+	return float(load_index) / models.size()
+	
+# outplanes : [node_id : int, planes : Array[Plane]]...
+func _node_cut(
+	node : int,
+	tempplanes : Array[Plane],
+	convexplanes : Array[Array],
+	is_bsp : bool
+) -> void :
+	var arr : Array[Array] = (bspnodes if is_bsp else clipnodes)
+	var nodearr : Array = arr[node] if arr.size() > node else []
+	if nodearr.is_empty() : return
+	
+	for i in 2 :
+		var plane : Plane = planes[nodearr[0]]
+		if i == 0 :
+			# front
+			plane.normal *= -1
+			plane.d *= -1
+			
+		tempplanes.append(plane)
+		
+		var child : int = nodearr[1 + i]
+		if child >= 0 :
+			# child node
+			_node_cut(
+				child, tempplanes,
+				convexplanes, is_bsp
+			)
+		else :
+			var create_volume : bool = false
+			var leaf_type : int
+			var ambsnds : Vector4
+			if is_bsp :
+				var leaf : Array = leaves[~child]
+				leaf_type = leaf[0]
+				ambsnds = leaf[6]
+				if leaf_type != CONTENTS_EMPTY :
+					create_volume = true
+				if !ambsnds.is_zero_approx() :
+					# this volume plays sound
+					create_volume = true
+			else :
+				if child == -2 :
+					create_volume = true
+			
+			create_volume = create_volume and (
+				(is_bsp and wim._leaf_your_bsp_planes(load_index, leaf_type, tempplanes))
+				or
+				(!is_bsp and wim._leaf_your_clip_planes(load_index, tempplanes))
+			)
+			
+			if create_volume :
+				# solid/liquid area
+				var j := tempplanes.size() - 1
+				var clipper := QmapbspClipper.new()
+				clipper.begin(expanded_aabb)
+				for k in j + 1 :
+					var p := tempplanes[k]
+					clipper.clip_plane(p)
+				clipper.filter_and_clean()
+				
+				if clipper.vertices.size() >= 3 :
+					convexplanes.append(
+						[node, clipper.vertices, {
+							'leaf_type' : leaf_type,
+							'ambsnds' : ambsnds,
+						} if is_bsp else {}]
+					)
+			
+		tempplanes.pop_back()
+		
 var entity_geo : Dictionary # <model_id : <region or 0 : [...]> >
 var lightmapdata : PackedByteArray
 var ip : QmapbspImagePacker
@@ -419,18 +604,18 @@ func _model_geo() -> bool :
 	if read_lightmaps :
 		face_uvrs.resize(edge_count)
 	
-	var centroid : Vector3
+	var centroid_aabb : AABB
 	
 	var texture_info : Array = texinfos[face[4]] # tinfo id
 	var texture : Material = textures[texture_info[4]] # from texture index
 
 	var tsize : Vector2i
-	if texture == global_surface_mat and texture != null :
-		var tex := global_textures[texture_ids[texture_info[4]]]
-		if tex :
-			tsize = tex.get_size()
-	else :
-		tsize = texture.get_meta(&'size') if texture else Vector2i()
+	if texture != null :
+		tsize = texture_sizes[texture_info[4]]
+	
+	# default
+	tsize.x = 16 if tsize.x == 0 else tsize.x
+	tsize.y = 16 if tsize.y == 0 else tsize.y
 	
 	var tscale := Vector2(
 		1.0 / (tsize.x * unit_scale),
@@ -443,6 +628,7 @@ func _model_geo() -> bool :
 	var uv_max := Vector2(-INF, -INF)
 	
 	var smooth_group : int = -1
+	var first_e : bool = true
 	
 	for k in edge_count :
 		var edge_index : int = edge_list[edge_start + k]
@@ -502,10 +688,13 @@ func _model_geo() -> bool :
 		if uv.y < uv_min.y : uv_min.y = uv.y
 		if uv.x > uv_max.x : uv_max.x = uv.x
 		if uv.y > uv_max.y : uv_max.y = uv.y
-		centroid += vert
+		if first_e :
+			centroid_aabb.position = vert
+			first_e = false
+		else :
+			centroid_aabb = centroid_aabb.expand(vert)
 		
-	var center := centroid
-	centroid /= face_vertices.size()
+	var center := centroid_aabb.get_center()
 	var region_or_alone = wim._model_get_region(
 		load_index, face_array_index, texture
 	)
@@ -525,7 +714,7 @@ func _model_geo() -> bool :
 	
 	if region_or_alone == null : 
 		if wim._entity_prefers_region_partition(load_index) :
-			region_or_alone = Vector3i((centroid / (
+			region_or_alone = Vector3i((center / (
 				region_size
 			) + Vector3(0.5, 0.5, 0.5)).floor())
 		else :
@@ -538,12 +727,14 @@ func _model_geo() -> bool :
 	if read_lightmaps :
 		var min : Vector2i = (uv_min / 16.0).floor()
 		var max : Vector2i = (uv_max / 16.0).ceil()
-		var extent := (max - min) * 16
-		lsize = Vector2((extent.x >> 4) + 1, (extent.y >> 4) + 1)
+		var extent := (max - min) + Vector2i(1, 1)
 		var retlst : PackedByteArray
-		var lim := _gen_lightmap(lightmapdata, face[9], lsize, [
+		var lim := _gen_lightmap(face[9], extent, [
 			face[5], face[6], face[7], face[8]
 		], retlst)
+		
+		lsize = max - min
+		
 		lstyle = retlst[0]
 		if lim :
 			lid = ip.add(lim.get_size(), lim)
@@ -552,22 +743,21 @@ func _model_geo() -> bool :
 			
 		for i in face_uvrs.size() :
 			var uv := face_uvrs[i]
-			uv.x = inverse_lerp(uv_min.x, uv_max.x, uv.x)
-			uv.y = inverse_lerp(uv_min.y, uv_max.y, uv.y)
+			uv.x = inverse_lerp(min.x * 16.0, max.x * 16.0, uv.x)
+			uv.y = inverse_lerp(min.y * 16.0, max.y * 16.0, uv.y)
 			face_uvrs[i] = uv
 	
-	var texturekey = (
-		texture_ids[texture_info[4]]
-		if texture == global_surface_mat
-		else texture
-	)
+	var texturekey : int = texture_info[4]
 	
 	if entity_geo_d.has(region_or_alone) :
 		var arr : Array = entity_geo_d[region_or_alone]
 		arr[0].append([
 			face_vertices, face_vertex_face_ids, face_normals, face_uvs,
 			lsize, lid, face_uvrs, Color(
-				face[5], face[6], face[7], face[8]
+				face[5] / 64.0,
+				face[6] / 64.0,
+				face[7] / 64.0,
+				face[8] / 64.0
 			), lstyle
 		])
 		var texdict : Dictionary = arr[1]
@@ -575,22 +765,23 @@ func _model_geo() -> bool :
 			texdict[texturekey].append(arr[0].size() - 1)
 		else :
 			texdict[texturekey] = PackedInt32Array([arr[0].size() - 1])
-		arr[2] += center
-		arr[4] += face_vertices.size()
+		arr[2] = arr[2].expand(center)
 	else :
 		entity_geo_d[region_or_alone] = [
 			[
 				[
 					face_vertices, face_vertex_face_ids, face_normals, face_uvs,
 					lsize, lid, face_uvrs, Color(
-						face[5], face[6], face[7], face[8]
+						face[5] / 64.0,
+						face[6] / 64.0,
+						face[7] / 64.0,
+						face[8] / 64.0
 					), lstyle
 				]
 			],
 			{texturekey : PackedInt32Array([0])},
-			center,
-			extents,
-			face_vertices.size()
+			AABB(center, Vector3()),
+			extents
 		]
 		
 	loc_load_index += 1
@@ -607,7 +798,7 @@ func _BuildingData() -> float :
 			lightmap_image = ip.commit(Image.FORMAT_L8, pos_list)
 			lightmap_size = lightmap_image.get_size()
 			lmtex = ImageTexture.create_from_image(lightmap_image)
-			#lightmap_image.save_png('a.png')
+			
 		entity_geo_keys = entity_geo.keys()
 		if entity_geo_keys.is_empty() : return 1.0
 	
@@ -632,7 +823,6 @@ func _BuildingData() -> float :
 	return float(load_index) / entity_geo_keys.size()
 	
 const EPS := 0.0001
-const UUU := 0.0 # unused
 var regions : Dictionary
 var region_keys : Array
 var target_ent : int = -1
@@ -659,10 +849,8 @@ func _build_geo() -> bool :
 		occ_nor_seq = []
 		occ_indices = PackedInt32Array()
 		
-		if global_surface_mat :
-			global_textures.resize(GLOBAL_TEXTURE_LIMIT)
-			global_surface_mat.set_shader_parameter(&'texs', global_textures)
-			global_surface_mat.set_shader_parameter(&'lmp', lmtex)
+		wim._texture_your_lightmap_texture(lmtex)
+		
 			
 		if wim._entity_prefers_occluder(target_ent) :
 			occ = ArrayOccluder3D.new()
@@ -686,32 +874,21 @@ func _build_geo() -> bool :
 	var rarray : Array = regions[r]
 	var surfaces : Array = rarray[0]
 	var texdict : Dictionary = rarray[1]
-	var center : Vector3 = rarray[2] / rarray[4]
+	var center : Vector3 = rarray[2].get_center()
 	var extents : Vector3 = rarray[3]
 	var mesh : ArrayMesh
 	
-	var global_surface_tool : SurfaceTool
 	var surface_tool : SurfaceTool
 	
 	var mat : Material
 	
 	for s in texdict :
-		var is_global := s is int
-		if !surface_tool or !is_global :
-			if is_global :
-				if !global_surface_tool :
-					global_surface_tool = SurfaceTool.new()
-					global_surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-					global_surface_tool.set_custom_format(0, SurfaceTool.CUSTOM_RGBA_HALF)
-					global_surface_tool.set_custom_format(1, SurfaceTool.CUSTOM_RGBA_HALF)
-					global_surface_tool.set_material(global_surface_mat)
-					mat = global_surface_mat
-				surface_tool = global_surface_tool
-			else :
-				surface_tool = SurfaceTool.new()
-				surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-				surface_tool.set_material(s)
-				mat = s
+		mat = textures[s]
+		
+		if !surface_tool :
+			surface_tool = SurfaceTool.new()
+			surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+			surface_tool.set_material(mat)
 		
 		surface_tool.set_smooth_group(-1)
 		var C_UV := surface_tool.set_uv
@@ -720,6 +897,7 @@ func _build_geo() -> bool :
 		var C_CT := surface_tool.set_custom
 		var C_VT := surface_tool.add_vertex
 		var C_SG : Callable = surface_tool.set_smooth_group if smooth_group_faces.size() > 0 else Callable()
+		var C_CD : Callable = wim._model_put_custom_data
 		
 		var indexes : PackedInt32Array = texdict[s]
 		var refv := [
@@ -744,9 +922,24 @@ func _build_geo() -> bool :
 				C_UV.call(uvs[i])
 				if !uvrs.is_empty() :
 					C_UV2.call(uvrs[i])
-				if is_global :
-					C_CT.call(0, Color(s, lstyle, lsize.x / lightmap_size.x, UUU))
-					C_CT.call(1, lights)
+					
+				var customs : Array
+				customs.resize(4)
+				C_CD.call(
+					customs,
+					
+					s,
+					lsize.x / lightmap_size.x,
+					1.0 / lightmap_size.x,
+					lights,
+					lstyle
+				)
+				
+				for j in 4 :
+					var colv = customs[j]
+					if colv is Color :
+						surface_tool.set_custom_format(j, SurfaceTool.CUSTOM_RGBA_HALF)
+						C_CT.call(j, colv)
 				var V := verts[i]
 				var nor := nors[i]
 				
@@ -786,42 +979,34 @@ func _build_geo() -> bool :
 			var offset : Vector2
 			if read_lightmaps :
 				pos = pos_list[lid]
+				pos += Vector2(
+					0.5,
+					0.5
+				)
 				offset = (
 					pos / lightmap_size
 				)
 			
 			if read_lightmaps :
+				var fsize : Vector2
 				if lid == unlit :
-					var fsize := (Vector2(2, 2) / lightmap_size)
-					for i in uvrs.size() :
-						uvrs[i] = (uvrs[i] * fsize) + offset
+					fsize = (Vector2(2, 2) / lightmap_size)
 				else :
-					var fsize := (lsize / lightmap_size)
+					fsize = (lsize / lightmap_size)
 					
-					for i in uvrs.size() :
-						var uv := uvrs[i]
-						# avoiding bleeding
-						# (definitely not the right solution. but it works well)
-						uv.x = inverse_lerp(-0.6, lsize.x + 0.6, uv.x * lsize.x)
-						uv.y = inverse_lerp(-0.6, lsize.y + 0.6, uv.y * lsize.y)
-						uvrs[i] = (uv * fsize) + offset
+				for i in uvrs.size() :
+					uvrs[i] = (uvrs[i] * fsize) + offset
 				
 			for i in verts.size() - 2 :
 				ADD.call(0, refv)
 				ADD.call(i + 1, refv)
 				ADD.call(i + 2, refv)
 		
-		if !is_global :
-			if smooth_group_faces.size() > 0 :
-				surface_tool.generate_normals()
-			surface_tool.generate_tangents()
-			mesh = surface_tool.commit(mesh)
-			surface_tool = null
-	if global_surface_tool :
 		if smooth_group_faces.size() > 0 :
-			global_surface_tool.generate_normals()
-		global_surface_tool.generate_tangents()
-		mesh = global_surface_tool.commit(mesh)
+			surface_tool.generate_normals()
+		surface_tool.generate_tangents()
+		mesh = surface_tool.commit(mesh)
+		surface_tool = null
 	wim._entity_your_mesh(target_ent, loc_load_index, mesh, center, r)
 	loc_load_index += 1
 	return false
@@ -844,22 +1029,44 @@ const ENTRY_LIST := [
 	'leaves', 'lface', 'edges', 'ledges', 'models',
 ]
 
-func _make_im_from_pal(
+const CONTENTS_EMPTY  := -1
+const CONTENTS_SOLID  := -2
+const CONTENTS_WATER  := -3
+const CONTENTS_SLIME  := -4
+const CONTENTS_LAVA   := -5
+const CONTENTS_SKY    := -6
+const CONTENTS_ORIGIN := -7
+const CONTENTS_CLIP   := -8
+
+func _make_im(
 	s : Vector2i, d : PackedByteArray
 ) -> Image :
+	var im := Image.create_from_data(
+		s.x, s.y, false, Image.FORMAT_R8, d
+	)
+	return im
+
+func _make_im_from_pal(
+	s : Vector2i, d : PackedByteArray
+) -> Array :
 	if known_palette.size() < 256 :
 		known_palette.resize(256) # dummy pal for avoiding errors
 	var im := Image.create(s.x, s.y, false, Image.FORMAT_RGB8)
+	var im2 := Image.create(s.x, s.y, false, Image.FORMAT_L8)
 	for i in d.size() :
 		var p := d[i]
-		im.set_pixelv(Vector2i(
+		var v := Vector2i(
 			i % s.x, i / s.x
-		), known_palette[p])
-	return im
+		)
+		var c := known_palette[p]
+		var c2 := 1.0 if p >= 240 else 0.0
+		im.set_pixelv(v, c)
+		im2.set_pixelv(v, Color(c2, c2, c2))
+	return [im, im2]
 
 const MAX_LIGHTMAPS := 4
 func _gen_lightmap(
-	lightmapdata : PackedByteArray, offset : int, size : Vector2i,
+	offset : int, size : Vector2i,
 	lightstyles : PackedByteArray, ret_lstyle : PackedByteArray
 ) -> Image :
 	if offset == -1 :
@@ -873,7 +1080,6 @@ func _gen_lightmap(
 		ist |= 1 << i
 		
 	var im := Image.create(size.x * lightmaps, size.y, false, Image.FORMAT_L8)
-	var xpos : int = 0
 	for l in MAX_LIGHTMAPS :
 		if lightstyles[l] == 255 : continue
 		var new := offset + size.x * size.y
@@ -883,8 +1089,7 @@ func _gen_lightmap(
 			size.x, size.y, false, Image.FORMAT_L8,
 			c
 		)
-		im.blit_rect(sim, Rect2i(0.0, 0.0, size.x, size.y), Vector2(xpos * size.x, 0.0))
+		im.blit_rect(sim, Rect2i(0, 0, size.x, size.y), Vector2i(l * size.x, 0))
 		offset = new
-		xpos += 1
 	ret_lstyle.append(ist)
 	return im

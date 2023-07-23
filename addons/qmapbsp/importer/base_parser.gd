@@ -120,11 +120,61 @@ static func _read_vec3(f : FileAccess) -> Vector3 :
 		f.get_float()
 	)
 	
+static func _read_vec3_16(f : FileAccess) -> Vector3 :
+	return Vector3(
+		f.get_16(),
+		f.get_16(),
+		f.get_16()
+	)
+	
+func _qpos_to_vec3(q : Vector3) -> Vector3 :
+	return _qnor_to_vec3(q) * unit_scale
+
 static func _qnor_to_vec3_read(f : FileAccess) -> Vector3 :
 	return _qnor_to_vec3(_read_vec3(f))
 	
 func _qpos_to_vec3_read(f : FileAccess) -> Vector3 :
 	return _qnor_to_vec3(_read_vec3(f)) * unit_scale
 	
-func _qpos_to_vec3(q : Vector3) -> Vector3 :
-	return _qnor_to_vec3(q) * unit_scale
+static func _qnor_to_vec3_read_16(f : FileAccess) -> Vector3 :
+	return _qnor_to_vec3(_read_vec3_16(f))
+	
+func _qpos_to_vec3_read_16(f : FileAccess) -> Vector3 :
+	return _qnor_to_vec3(_read_vec3_16(f)) * unit_scale
+	
+const _1s15 = 1 << 15
+const _1s16 = 1 << 16
+static func u16to16(u : int) -> int :
+	return (u + _1s15) % _1s16 - _1s15
+	
+static func _read_qvec3_16(f : FileAccess) -> Vector3i :
+	return Vector3i(
+		u16to16(f.get_16()),
+		u16to16(f.get_16()),
+		u16to16(f.get_16())
+	)
+
+func _read_bbshort(f : FileAccess) -> AABB :
+	var min := _read_qvec3_16(f) * unit_scale
+	var max := _read_qvec3_16(f) * unit_scale
+	max -= min
+	#return AABB(min, max)
+	min.x += max.x
+	return AABB(
+		_qnor_to_vec3(min),
+		Vector3(max.x, max.z, max.y)
+	)
+
+func _read_bbfloat(f : FileAccess) -> AABB :
+	var min := _read_vec3(f) * unit_scale
+	var max := _read_vec3(f) * unit_scale
+	max -= min
+	#return AABB(min, max)
+	min.x += max.x
+	return AABB(
+		_qnor_to_vec3(min),
+		Vector3(max.x, max.z, max.y)
+	)
+
+func _get16as32(f : FileAccess) -> int :
+	return u16to16(f.get_16())

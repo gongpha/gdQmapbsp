@@ -138,8 +138,7 @@ func _entity_your_shape(
 	ent_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
-	
-	known_texture_names : PackedStringArray
+	metadata : Dictionary,
 ) -> void :
 	var node := _get_entity_node(ent_id)
 	if !node : return

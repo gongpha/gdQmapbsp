@@ -97,7 +97,10 @@ trenchbroom_test_toggle_noclip={
 
 [layer_names]
 
-3d_physics/layer_3="liquid"
+3d_physics/layer_1="bsp"
+3d_physics/layer_2="bsp_water"
+3d_physics/layer_3="clip"
+3d_physics/layer_4="player"
 3d_physics/layer_29="LEAVES"
 
 [physics]
@@ -109,3 +112,10 @@ common/physics_ticks_per_second=120
 global_illumination/sdfgi/probe_ray_count=0
 global_illumination/sdfgi/frames_to_converge=3
 occlusion_culling/use_occlusion_culling=true
+
+[shader_globals]
+
+lmboost={
+"type": "float",
+"value": 4.0
+}

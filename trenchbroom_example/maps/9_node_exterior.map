@@ -1,0 +1,21 @@
+// Game: Qmapbsp Test Game
+// Format: Standard
+// entity 0
+{
+"classname" "worldspawn"
+"_tb_textures" "trenchbroom_example/textures"
+// brush 0
+{
+( -64 -64 32 ) ( -64 -63 32 ) ( -64 -64 33 ) simple1 0 0 0 1 1
+( -64 -64 32 ) ( -64 -64 33 ) ( -63 -64 32 ) simple1 0 0 0 1 1
+( -64 -64 -64 ) ( -63 -64 -64 ) ( -64 -63 -64 ) simple1 0 0 0 1 1
+( 64 64 64 ) ( 64 65 64 ) ( 65 64 64 ) simple1 0 0 0 1 1
+( 64 64 64 ) ( 65 64 64 ) ( 64 64 65 ) simple1 0 0 0 1 1
+( 64 64 64 ) ( 64 64 65 ) ( 64 65 64 ) simple1 0 0 0 1 1
+}
+}
+// entity 1
+{
+"classname" "light"
+"origin" "4 -4 -60"
+}
