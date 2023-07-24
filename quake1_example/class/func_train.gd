@@ -4,9 +4,9 @@ class_name QmapbspQuakeFunctionTrain
 # Properties defaults:
 const SPEED : int = 100 # Speed (units per second)
 const DMG : int = 2 # Damage on block
-const SOUND : int = 1
-const SOUND_LOOP_IDX : int = 0
+const SOUND : int = 1 # Default sound streams
 const SOUND_IMP_IDX : int = 1 # impulse / non-loop
+const SOUND_LOOP_IDX : int = 0
 
 # 0: "Silent"
 # 1: "Ratchet Metal"
@@ -16,7 +16,7 @@ const audio_paths := [
 ]
 
 var tween : Tween
-var curve : Curve3D
+var paths : Array
 var corner : Vector3
 var player : AudioStreamPlayer3D
 var streams : Array
@@ -47,35 +47,50 @@ func _after_map_ready() :
 	)
 	
 	if path is QmapbspQuakePathCorner :
-		curve = path.curve
-		if curve and curve.point_count > 0 :
-			position = curve.get_point_position(0) + corner
+		if path.linked and path.linked.size() > 0 :
+			paths = path.linked
+			var path_corner : QmapbspQuakePathCorner = path.linked[0]
+			position = path_corner.position + corner
 
 
 func _trigger(b : Node3D) :
-	if curve == null : return
-	_start(curve)
+	if paths == null : return
+	_start()
 
 
-func _start(c : Curve3D) :
+func _start() :
 	if tween : return
 	
 	tween = create_tween()
-#	tween.tween_callback(_play_snd.bind(SOUND_IMP_IDX))
-	tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
 	
 	var s : float = get_meta(&'scale', 32.0)
 	var target_pos := position # initial position
-	for i in c.point_count :
-		if i == 0 : continue
-		var next_pos := c.get_point_position(i)
-		print('POINT next_pos ', next_pos, ' ', self)
+	for i in paths.size() :
+		if i == 0 : continue # skip first index (already got first position)
+		
+		var path_corner = paths[i]
+		var next_pos : Vector3 = path_corner.position + corner
 		var speed : float = _prop('speed', SPEED) / s
 		var dura : float = target_pos.distance_to(next_pos) / speed
-		tween.tween_property(self, ^'position', next_pos + corner, dura)
+		tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
+		tween.tween_property(self, ^'position', next_pos, dura)
+		# set wait time for each path corner
+		if path_corner.props.has('wait') : 
+			var wait = path_corner.props.get('wait', '0').to_int()
+			tween.tween_callback(_play_snd.bind(SOUND_IMP_IDX))
+			if wait == -1 : 
+				tween.tween_callback(_tween_clear)
+			else :
+				tween.tween_interval(wait)
+				tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
 		target_pos = next_pos # set next position
 	
 	tween.tween_callback(_play_snd.bind(SOUND_IMP_IDX))
+
+
+func _tween_clear() :
+	tween.kill()
+	tween = null
 
 
 func _get_sounds() :
