@@ -5,7 +5,6 @@ class_name QmapbspQuakeFunctionTrain
 const SPEED : int = 100 # Speed (units per second)
 const DMG : int = 2 # Damage on block
 const SOUND : int = 1
-
 const SOUND_LOOP_IDX : int = 0
 const SOUND_IMP_IDX : int = 1 # impulse / non-loop
 
@@ -21,18 +20,21 @@ var curve : Curve3D
 var corner : Vector3
 var player : AudioStreamPlayer3D
 var streams : Array
+var viewer : QmapbspQuakeViewer
 
 
 func _map_ready() :
+	viewer = get_meta(&'viewer')
 	_gen_aabb()
 	_calc_corner()
+	_get_sounds()
 	_after_map_ready.call_deferred()
 
 
 func _calc_corner() :
 	# path is aligned with brush corner
 	corner = aabb.size / 2.0
-#	corner.x = -corner.x
+	corner.x = -corner.x
 
 
 func _after_map_ready() :
@@ -59,17 +61,17 @@ func _start(c : Curve3D) :
 	if tween : return
 	
 	tween = create_tween()
-	tween.tween_callback(_play_snd.bind(SOUND_IMP_IDX))
+#	tween.tween_callback(_play_snd.bind(SOUND_IMP_IDX))
+	tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
 	
 	var s : float = get_meta(&'scale', 32.0)
 	var target_pos := position # initial position
 	for i in c.point_count :
 		if i == 0 : continue
-		
 		var next_pos := c.get_point_position(i)
+		print('POINT next_pos ', next_pos, ' ', self)
 		var speed : float = _prop('speed', SPEED) / s
 		var dura : float = target_pos.distance_to(next_pos) / speed
-		tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
 		tween.tween_property(self, ^'position', next_pos + corner, dura)
 		target_pos = next_pos # set next position
 	
@@ -86,8 +88,10 @@ func _make_player() :
 	add_child(player)
 
 
-func _play_snd(path : String) :
+func _play_snd(idx : int) :
 	if not player : _make_player()
 	player.stop()
-	player.stream = get_meta(&'viewer').hub.load_audio(path)
+	var s : String = streams[idx]
+	if s.is_empty() : return
+	player.stream = viewer.hub.load_audio(s)
 	player.play()
