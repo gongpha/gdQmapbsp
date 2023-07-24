@@ -234,8 +234,8 @@ func _read_mip_textures() -> float :
 			
 			ret = wim._texture_your_bsp_texture(
 				load_index, tname,
-				ImageTexture.create_from_image(im[0]),
-				ImageTexture.create_from_image(im[1])
+				im[0],
+				im[1]
 			)
 	elif known_map_textures.size() > load_index :
 		ret = wim._texture_get_material(
