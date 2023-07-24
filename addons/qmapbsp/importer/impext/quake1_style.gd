@@ -35,33 +35,66 @@ func _texture_get_mip_count(size : int) -> void :
 	
 func _texture_your_bsp_texture(
 	index : int, texture_name : String,
-	texture : ImageTexture, texture_meta : ImageTexture
+	texture : Image, texture_meta : Image
 ) -> Array :
 	if texture_name.begins_with('sky') :
+		var sky_fg : Image = Image.create(
+			texture.get_width() / 2,
+			texture.get_height(), false, texture.get_format()
+		)
+		
+		sky_fg.blit_rect(texture, Rect2i(Vector2(), sky_fg.get_size()), Vector2i())
+		
+		sky_fg.convert(Image.FORMAT_RGBA8)
+		var alpha0 := Color(0.0, 0.0, 0.0, 0.0)
+		var calpha := Color(0.0, 0.0, 0.0, 1.0)
+		for x in sky_fg.get_width() :
+			for y in sky_fg.get_width() :
+				if sky_fg.get_pixel(x, y).is_equal_approx(calpha) :
+					sky_fg.set_pixel(x, y, alpha0)
+		
+		var sky_bg : Image = Image.create(
+			texture.get_width() / 2,
+			texture.get_height(), false, texture.get_format()
+		)
+		
+		sky_bg.blit_rect(texture, Rect2i(Vector2(texture.get_width() / 2, 0), sky_fg.get_size()), Vector2i())
+		
+		sky_bg.generate_mipmaps()
+		sky_fg.generate_mipmaps()
+		sky_fg.fix_alpha_edges()
+		
+		var tex_fg := ImageTexture.create_from_image(sky_fg)
+		var tex_bg := ImageTexture.create_from_image(sky_bg)
+		
 		var sky : ShaderMaterial = specials.get(texture_name)
 		if !sky :
 			sky = load("res://quake1_example/material/sky.tres")
-			sky.set_shader_parameter(&'skytex', texture)
-			if texture_name == 'sky4' :
-				sky.set_shader_parameter(&'threshold', 0.4)
+			sky.set_shader_parameter(&'skytex_fg', tex_fg)
+			sky.set_shader_parameter(&'skytex_bg', tex_bg)
+			
 			specials[texture_name] = sky
 			sky.set_meta(&'sky', true)
-		return [sky, texture.get_size()]
+		return [sky, tex_fg.get_size()]
 	elif texture_name.begins_with('*') :
+		var itexture := ImageTexture.create_from_image(texture)
 		var fluid : ShaderMaterial = specials.get(texture_name)
 		if !fluid :
 			fluid = ShaderMaterial.new()
 			fluid.shader = preload("res://quake1_example/material/fluid.gdshader")
-			fluid.set_shader_parameter(&'tex', texture)
+			fluid.set_shader_parameter(&'tex', itexture)
 			fluid.set_meta(&'fluid', true)
 			specials[texture_name] = fluid
-		return [fluid, texture.get_size()]
+		return [fluid, itexture.get_size()]
 		
 	########################################################
 	
 	var surfacemat : ShaderMaterial = ShaderMaterial.new()
 	surface_materials[index] = surfacemat
 	surfacemat.shader = surface_shader
+	
+	var itexture := ImageTexture.create_from_image(texture)
+	var itexture_meta := ImageTexture.create_from_image(texture_meta)
 	
 	# distinguish texture groups
 	if texture_name.unicode_at(0) == 43 : # +
@@ -94,8 +127,8 @@ func _texture_your_bsp_texture(
 			if framei >= textures_diffuse.size() :
 				textures_diffuse.resize(framei + 1)
 				textures_meta.resize(framei + 1)
-			textures_diffuse[framei] = texture
-			textures_meta[framei] = texture_meta
+			textures_diffuse[framei] = itexture
+			textures_meta[framei] = itexture_meta
 			
 			grouped_textures_idx_r.append([index, groupn])
 	#else :
@@ -103,8 +136,8 @@ func _texture_your_bsp_texture(
 	var textures_meta : Array[Texture2D]
 	textures_diffuse.resize(10)
 	textures_meta.resize(10)
-	textures_diffuse[0] = texture
-	textures_meta[0] = texture_meta
+	textures_diffuse[0] = itexture
+	textures_meta[0] = itexture_meta
 	surfacemat.set_shader_parameter(&'tex', textures_diffuse)
 	surfacemat.set_shader_parameter(&'texf', textures_meta)
 		

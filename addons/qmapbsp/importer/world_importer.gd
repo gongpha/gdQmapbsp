@@ -25,7 +25,7 @@ func _texture_get_material(
 # returns like the above method
 func _texture_your_bsp_texture(
 	index : int, texture_name : String,
-	texture : ImageTexture, texture_meta : ImageTexture
+	texture : Image, texture_meta : Image
 ) -> Array :
 	return []
 	
