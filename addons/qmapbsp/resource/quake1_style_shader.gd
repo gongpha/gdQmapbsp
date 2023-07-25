@@ -58,6 +58,7 @@ varying flat int lstyles;
 varying float lwidth;
 varying float lights[4];
 varying float lx2pix;
+varying flat int frame;
 
 void vertex() {
 	lights = {
@@ -69,6 +70,7 @@ void vertex() {
 	lstyles = int(CUSTOM0.y);
 	lwidth = CUSTOM0.z;
 	lx2pix = CUSTOM0.w;
+	frame = int(TIME * 5.0f) %% frame_count;
 }
 
 float lightmap(in vec2 uv2) {
@@ -83,7 +85,6 @@ float lightmap(in vec2 uv2) {
 }
 
 void fragment() {
-	int frame = int(TIME * 5.0f) %% frame_count;
 	vec3 color = texture(tex[frame], UV).xyz;
 	
 	%s
