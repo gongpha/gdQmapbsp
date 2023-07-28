@@ -185,3 +185,16 @@ func _model_put_custom_data(
 ) :
 	customs[0] = Color(UUU, lightstyle, lightmap_position, lightmap_texel)
 	customs[1] = Color(lights)
+
+func _entity_your_mesh(
+	ent_id : int,
+	brush_id : int,
+	mesh : ArrayMesh, origin : Vector3,
+	region
+) -> void :
+	super(ent_id, brush_id, mesh, origin, region)
+	
+	# z-fighting fix
+	if ent_id == 0 : return
+	var invf := 1.0 / _get_unit_scale_f() * 0.01
+	last_added_meshin.translate(Vector3(invf, invf, invf))
