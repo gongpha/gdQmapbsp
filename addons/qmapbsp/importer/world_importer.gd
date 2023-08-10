@@ -142,11 +142,16 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
 		
 	
-func _load_clip_nodes(model_id : int) -> bool :
+
+func _load_clip_nodes() -> bool :
 	return false
 		
-func _load_bsp_nodes(model_id : int) -> bool :
+func _load_bsp_nodes() -> bool :
 	return false
+	
+# certainly 0, 1, 2, and 3 are allowed
+func _traverse_nodes(model_id : int, hull_id : int) -> bool :
+	return true
 	
 # return true, if want the parser creates a collision shape
 # and returns it via _entity_your_shape

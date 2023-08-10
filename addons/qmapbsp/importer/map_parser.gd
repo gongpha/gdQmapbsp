@@ -117,7 +117,7 @@ func _end_entity(idx : int) :
 		var arr : Array = parsed_shapes[i]
 		tell_collision_shapes.emit(
 			idx, i, arr[0], arr[1], {
-				'from' : &'MAP_BRUSH',
+				'hull' : -2,
 				'known_texture_names' : arr[2]
 			}
 		)

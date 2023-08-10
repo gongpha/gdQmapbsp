@@ -100,8 +100,7 @@ var import_tasks := [
 	[_read_visilist, 256],
 	[_read_leaves, 64],
 	
-	[_construct_bspnodes, 16],
-	[_construct_clipnodes, 16]
+	[_construct_nodes, 16]
 ]
 var import_curr_index : int = 0
 var import_curr_func : Callable = import_tasks[0][0]
@@ -321,7 +320,7 @@ func _read_faces() -> float :
 	
 func _read_bspnodes() -> float :
 	if load_index == 0 :
-		if !wim._load_bsp_nodes(load_index) : return 1.0
+		if !wim._load_bsp_nodes() : return 1.0
 		curr_entry = entries['nodes']
 		file.seek(curr_entry.x)
 		bspnodes.resize(curr_entry.y / (44 if is_bsp2 else 24))
@@ -339,7 +338,7 @@ func _read_bspnodes() -> float :
 	
 func _read_clipnodes() -> float :
 	if load_index == 0 :
-		if !wim._load_clip_nodes(load_index) : return 1.0
+		if !wim._load_clip_nodes() : return 1.0
 		curr_entry = entries['clipnodes']
 		file.seek(curr_entry.x)
 		clipnodes.resize(curr_entry.y / (12 if is_bsp2 else 8))
@@ -370,7 +369,7 @@ func _read_visilist() -> float :
 	
 func _read_leaves() -> float :
 	if load_index == 0 :
-		if !(wim._load_bsp_nodes(load_index) or import_visdata) : return 1.0
+		if !(wim._load_bsp_nodes() or import_visdata) : return 1.0
 		curr_entry = entries['leaves']
 		file.seek(curr_entry.x)
 		leaves.resize(curr_entry.y / 28)
@@ -409,37 +408,41 @@ func _dump_bspnodes_tree(node : int, is_bsp : bool, deep : int = 0) -> void :
 			print("-".repeat(deep), i, " ", leaves[~child][0] if is_bsp else child)
 	
 var expanded_aabb : AABB
-func _construct_bspnodes() -> float :
-	return _construct_nodes(true)
 	
-func _construct_clipnodes() -> float :
-	return _construct_nodes(false)
-	
-func _construct_nodes(is_bsp : bool) -> float :
+func _construct_nodes() -> float :
 	# load_index is MODEL ID. NOT ENTITY ID !!!
 	if load_index == 0 :
-		if !(wim._load_bsp_nodes(load_index) if is_bsp else wim._load_clip_nodes(load_index)) : return 1.0
 		expanded_aabb = level_aabb.grow(4.0)
 	var convexplanes : Array[Array]
 	var tempplanes : Array[Plane]
 	
 	#_dump_bspnodes_tree(models[load_index][3 if is_bsp else 4], is_bsp)
 	
-	_node_cut(models[load_index][3 if is_bsp else 4],
-		tempplanes, convexplanes,
-		is_bsp
-	)
+	for h in 4 :
+		if h == 0 :
+			if bspnodes.is_empty() : continue
+		else :
+			if clipnodes.is_empty() : continue
+		if !wim._traverse_nodes(load_index, h) : continue
 		
-	for o in convexplanes :
-		var cvx := ConvexPolygonShape3D.new()
-		cvx.points = o[1]
+		_node_cut(models[load_index][h + 3],
+			tempplanes, convexplanes,
+			h == 0
+		)
+			
+		for o in convexplanes :
+			var cvx := ConvexPolygonShape3D.new()
+			cvx.points = o[1]
+			
+			# use node id instead of brush id
+			var metadata : Dictionary = { 'hull' : h }
+			metadata.merge(o[2])
+			
+			wim._entity_your_shape(model_map[load_index], o[0], cvx, Vector3(), metadata)
 		
-		# use node id instead of brush id
-		var metadata : Dictionary = { 'from' : &'BSP' if is_bsp else &'CLIP' }
-		metadata.merge(o[2])
+		convexplanes.clear()
+		tempplanes.clear()
 		
-		wim._entity_your_shape(model_map[load_index], o[0], cvx, Vector3(), metadata)
-	
 	load_index += 1
 	return float(load_index) / models.size()
 	

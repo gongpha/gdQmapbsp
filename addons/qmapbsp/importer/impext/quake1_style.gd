@@ -198,3 +198,7 @@ func _entity_your_mesh(
 	if ent_id == 0 : return
 	var invf := 1.0 / _get_unit_scale_f() * 0.01
 	last_added_meshin.translate(Vector3(invf, invf, invf))
+
+# in the original quake, only 3 hulls used
+func _traverse_nodes(model_id : int, hull_id : int) -> bool :
+	return hull_id < 3

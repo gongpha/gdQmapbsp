@@ -9,8 +9,6 @@ func _get_bsp_palette() -> PackedColorArray : return pal
 
 func _texture_include_bsp_textures() -> bool : return true
 
-var importing_clip_shape := false
-
 func _begin() -> void :
 	super()
 	viewer.world_shader = surface_shader
@@ -46,11 +44,12 @@ func _entity_your_shape(
 	shape : Shape3D, origin : Vector3,
 	metadata : Dictionary
 ) -> void :
-	var imported_from : StringName = metadata.get('from', &'')
-	if imported_from == &'CLIP' :
-		importing_clip_shape = true
+	# -2 : MAP brushes
+	# 0 : BSP
+	# 1 : CLIP_HUMAN
+	# 2 : CLIP_LARGE
+	var hull : int = metadata.get('hull', -1)
 	super(ent_id, brush_id, shape, origin, metadata)
-	importing_clip_shape = false
 	
 	# -2 = delete
 	# -1 = do not create a volume
@@ -60,7 +59,7 @@ func _entity_your_shape(
 	#  3 = slime
 	var what : int = -1
 	
-	if imported_from == &'MAP_BRUSH' :
+	if hull == -2 : # hull from MAP brushes
 		var known_texture_names : PackedStringArray = metadata.get(
 			'known_texture_names', PackedStringArray()
 		)
@@ -80,7 +79,10 @@ func _entity_your_shape(
 						what = -2
 						break
 						
-	elif imported_from == &'BSP' :
+						
+	# actually, we already have configured to omit clips (hull 1, 2)
+	# but decided to add the below condition to making more sure
+	elif hull == 0 : # is bsp (hull 0 point)
 		var leaf_type : int = metadata.get(
 			'leaf_type', -1
 		)
@@ -153,38 +155,6 @@ func _entity_occluder_includes_region(
 			# do not add an occluder to water/sky brushes
 			return false
 	return super(ent_id, occluder, region)
-	
-func _try_create_clipbody(node : Node) -> Node :
-	if importing_clip_shape :
-		var clip_body : CollisionObject3D = node.get_node_or_null(^'CLIPBODY')
-		if !clip_body :
-			# new
-			if node is StaticBody3D :
-				clip_body = QmapbspQuakeClipProxyStatic.new()
-			elif node is AnimatableBody3D :
-				clip_body = QmapbspQuakeClipProxyAnimated.new()
-			elif node is Area3D :
-				clip_body = QmapbspQuakeClipProxyArea.new()
-				clip_body.set_area(node)
-			else :
-				clip_body = Area3D.new()
-				
-			if node is CollisionObject3D :
-				var m : int
-				m = node.collision_layer
-				if m & 0b1 :
-					m = (m | 0b100) & ~(0b1)
-				clip_body.collision_layer = m
-				
-				m = node.collision_mask
-				if m & 0b1 :
-					m = (m | 0b100) & ~(0b1)
-				clip_body.collision_mask = m
-				
-			clip_body.name = &'CLIPBODY'
-			node.add_child(clip_body)
-		return clip_body
-	return node
 
 func _new_entity_node(classname : StringName) -> Node :
 	var node : Node = super(classname)
@@ -228,12 +198,12 @@ func _get_entity_node(id : int) -> Node :
 	if dict.has('targetname') :
 		node.add_to_group('T_' + dict['targetname'])
 		
-	return _try_create_clipbody(node)
+	return node
 
 func _entity_prefers_occluder(ent_id : int) -> bool :
 	return ent_id == 0 and viewer.occlusion_culling
 		
-func _load_bsp_nodes(model_id : int) -> bool :
+func _load_bsp_nodes() -> bool :
 	return true
 
 func _leaf_your_bsp_planes(
