@@ -128,6 +128,8 @@ var pakidx : int
 func _process(delta : float) :
 	for I in 128 :
 		var pak : QmapbspPakFile = load_pak_list[pakidx]
+		if !global_pal.is_empty() :
+			pak.global_pal = global_pal
 		var r := pak.poll()
 		if r == &'DONE' :
 			if !pak.global_pal.is_empty() :
@@ -287,7 +289,10 @@ func _on_tree_item_selected() -> void :
 			view.show()
 			var item := load_as_texture(arr[1])
 			if item :
-				_show_tex(item)
+				_show_tex(item,
+					"You've registered Quake !"
+					if arr[1] == "gfx/pop.lmp" else ""
+				)
 		&'wad' :
 			mdlview.hide()
 			texview_root.show()
@@ -307,9 +312,11 @@ func _show_mdl(p : String) -> void :
 	%animesh.play(&'seekloop')
 	%anispin.play(&'spin')
 
-func _show_tex(tex : Texture2D) -> void :
+func _show_tex(tex : Texture2D, description := String()) -> void :
 	texview.texture = tex
 	texinfo.text = "(%d, %d)" % [tex.get_width(), tex.get_height()]
+	if !description.is_empty() :
+		texinfo.text += '\n' + description
 
 func _play_bsp(pakpath : String) -> void :
 	var mapname := pakpath.get_basename().split('/')[-1]

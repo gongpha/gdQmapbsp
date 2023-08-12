@@ -11,13 +11,22 @@ static func load_from_file(
 	if path.ends_with('palette.lmp') :
 		res.append(_pal(f))
 		return &'pal'
-	if path.ends_with('colormap.lmp') :
+	elif path.ends_with('colormap.lmp') :
 		var arr : Array[PackedColorArray]
 		arr.resize(32)
 		for i in 32 :
 			arr[i] = _pal(f)
 		res.append(arr)
 		return &'map'
+	elif path.ends_with('pop.lmp') :
+		# proof-of-purchase graphics
+		var psize := Vector2i(16, 16)
+		res.append([
+			psize,
+			f.get_buffer(psize.x * psize.y)
+		])
+		return &'pic'
+		
 		
 	var psize := Vector2i(f.get_32(), f.get_32())
 	res.append([

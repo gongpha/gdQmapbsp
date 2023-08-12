@@ -101,8 +101,12 @@ func _poll_read_file() -> StringName :
 			var res : Array
 			var ret := QmapbspLmpFile.load_from_file(path, loadrsc_f, res)
 			match ret :
-				&'pal' : global_pal.append_array(res[0]) # DO NOT SET IT INSTANTLY
-				&'map' : global_map.append_array(res[0]) # DO NOT SET IT INSTANTLY
+				&'pal' :
+					if global_pal.is_empty() :
+						global_pal.append_array(res[0]) # DO NOT SET IT INSTANTLY
+				&'map' :
+					if global_pal.is_empty() :
+						global_map.append_array(res[0]) # DO NOT SET IT INSTANTLY
 				&'pic' :
 					convert_indexes.append(loadrsc_index)
 					convert_entries.append([&'lmp_pic', res[0]])
