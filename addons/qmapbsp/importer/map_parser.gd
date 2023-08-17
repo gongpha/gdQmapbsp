@@ -97,13 +97,17 @@ func _parse_shape() -> void :
 		else :
 			var vertices := planes_intersect(planes)
 			var vs := vertices.size()
+			aabb.size = Vector3.ZERO
 			
 			for i in vs :
 				var v := vertices[i]
 				v = _qpos_to_vec3(v * -1)
 				vertices[i] = v
-				V += v
-			V /= vs
+				if i == 0 :
+					aabb.position = v
+				else :
+					aabb = aabb.expand(v)
+			V = aabb.get_center()
 			for i in vs :
 				vertices[i] -= V
 			

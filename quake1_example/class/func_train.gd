@@ -40,8 +40,8 @@ func _after_map_ready() :
 		_gen_aabb()
 		if curve and curve.point_count > 0 :
 			corner = aabb.size / 2.0
-			corner.x = -corner.x
-			position = curve.get_point_position(0) + corner
+			corner.y -= aabb.size.y
+			position = curve.get_point_position(0) - corner
 
 func _trigger(b : Node3D) :
 	if curve == null : return
@@ -62,7 +62,7 @@ func _start(c : Curve3D) :
 		) / (props.get('speed', '64').to_int() / s)
 		poscursor = nextpos
 		tween.tween_property(self, ^'position',
-			nextpos + corner,
+			nextpos - corner,
 			dura
 		)
 	player_end = false

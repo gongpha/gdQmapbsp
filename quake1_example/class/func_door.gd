@@ -99,7 +99,7 @@ func _calc_add() :
 				aabb.size.x, 0.0, aabb.size.z
 			)) + Vector3(lip, 0.0, lip)
 			add = Vector3.BACK.rotated(Vector3.UP, rot) * dir
-			add_reveal = Vector3.RIGHT.rotated(Vector3.UP, -rot) * -(Vector3(
+			add_reveal = Vector3.LEFT.rotated(Vector3.UP, -rot) * -(Vector3(
 				aabb.size.x, 0.0, aabb.size.z
 			))
 		dura = add.length() / (props.get('speed', _def_speed()).to_int() / s)

@@ -111,7 +111,7 @@ func __sections__() -> Dictionary :
 	}
 
 static func _qnor_to_vec3(q : Vector3) -> Vector3 :
-	return Vector3(-q.x, q.z, q.y)
+	return Vector3(-q.y, q.z, -q.x)
 	
 static func _read_vec3(f : FileAccess) -> Vector3 :
 	return Vector3(
