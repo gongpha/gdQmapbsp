@@ -136,9 +136,7 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 				/ _get_unit_scale_f()
 			)
 		)
-		var angle : int = QmapbspMapFormat.expect_int(entity.get('angle', ''))
-		if angle >= 0 : angle += 90
-		entity['angle'] = angle
+		entity['angle'] = QmapbspMapFormat.expect_int(entity.get('angle', ''))
 		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
 		
 	
