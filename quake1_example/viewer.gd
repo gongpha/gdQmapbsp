@@ -33,6 +33,7 @@ var rendering : int = 0
 var skytex : ImageTexture
 var world_shader : QmapbspQuake1StyleShader
 
+
 func _ready() :
 	get_viewport().use_occlusion_culling = occlusion_culling
 	hud.setup(self)
@@ -54,10 +55,12 @@ func _ready() :
 	$loading/loading.pivot_offset = t.get_size() / 2
 	loading.texture = hub.load_as_texture("gfx/conback.lmp")
 	
+	
 func set_rendering(i : int) -> void :
 	rendering = i
 	if i == 1 :
 		lightmap_boost = 8.0
+
 
 func play_by_node() :
 	hud.show()
@@ -67,11 +70,17 @@ func play_by_node() :
 	
 	_update_wireframe_mode()
 	
-	
 	for n in get_tree().get_nodes_in_group(&'entities') :
 		if !n.has_method(&'_map_ready') : continue
 		n._map_ready()
-	#get_tree().call_group(&'entities', &'_map_ready')
+	
+	for n in get_tree().get_nodes_in_group(&'entities') :
+		if !n.has_method(&'_entities_ready') : continue
+		n._entities_ready()
+		
+	for n in get_tree().get_nodes_in_group(&'primary_doors') :
+		if !n.has_method(&'_doors_ready') : continue
+		n._doors_ready()
 	
 	if console.showing :
 		console.toggle()
@@ -85,6 +94,7 @@ func play_by_node() :
 		player.global_position = pspawn.global_position
 		player.around.rotation = pspawn.rotation
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 
 func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -105,6 +115,7 @@ func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	parser = QmapbspWorldImporterQuake1.new()
 	parser.viewer = self
 	map = QmapbspQuakeWorld.new()
+	map.name = &'map'
 	console.printv("Loading %s" % mapname)
 	console.printv("Loading a map %s times per frame." % iterations)
 	if iterations <= 32 :
@@ -133,8 +144,8 @@ func play_by_mapname(mapname : String, no_console : bool = false) -> bool :
 	set_process(true)
 	return true
 
-var oldprog : int
 
+var oldprog : int
 func _process(delta) :
 	for I in iterations :
 		var reti := parser.poll()
@@ -152,11 +163,14 @@ func _process(delta) :
 		elif reti != StringName() :
 			breakpoint
 
+
 func toggle_noclip() :
 	if !player : return
 	player.toggle_noclip()
 
+
 ###################################################
+
 
 func change_level(mapname : String) :
 	loading.show()
@@ -164,26 +178,36 @@ func change_level(mapname : String) :
 	
 	play_by_mapname.call_deferred(mapname, true)
 
+
 func set_skill(s : int) :
 	skill = s
 	
+	
 func trigger_targets(targetname : String, activator : Node3D) :
 	get_tree().call_group('T_' + targetname, &'_trigger', activator)
+
+
+func trigger_targets_exit(targetname : String, activator : Node3D) :
+	get_tree().call_group('T_' + targetname, &'_trigger_exit', activator)
+	
 	
 func killtarget(targetname : String) :
 	for n in get_tree().get_nodes_in_group('T_' + targetname) :
 		n.queue_free()
 
-func _emit_message_state(msg : String, show : bool, from : Node) :
+
+func emit_message_state(msg : String, show : bool, from : Node) :
 	if show :
 		message.set_talk_sound(hub.load_audio("misc/talk.wav"))
 	else :
 		if message.current_emitter != from : return
 	message.set_emitter(msg, show, from)
 
+
 func emit_message_once(msg : String, from : Node) :
 	message.set_talk_sound(hub.load_audio("misc/talk.wav"))
-	message.set_emitter(msg, true, null)
+	message.set_emitter(msg, true, from)
+
 
 func get_music(sounds : int) -> AudioStreamMP3 :
 	var mp3 : AudioStreamMP3 = trackcaches.get(sounds)
@@ -198,9 +222,11 @@ func get_music(sounds : int) -> AudioStreamMP3 :
 	trackcaches[sounds] = mp3
 	return mp3
 	
+	
 func found_secret() :
 	message.set_talk_sound(hub.load_audio("misc/secret.wav"))
 	message.set_emitter("You found a secret area!", true, null)
+
 
 var mode : int = 0
 var filter : int = 0
@@ -217,6 +243,7 @@ func switch_texture_filtering() -> void :
 	else :
 		filter += 1
 	worldspawn.set_filter_mode(filter)
+
 
 var lightmap_boost : float = 4.0
 var lightmap_boost_min : float = 0.0
@@ -236,6 +263,7 @@ func toggle_wireframe_mode() -> void :
 	wireframe_enabled = !wireframe_enabled
 	_update_wireframe_mode()
 	
+	
 func _update_wireframe_mode() -> void :
 	get_viewport().debug_draw = (
 		Viewport.DEBUG_DRAW_WIREFRAME
@@ -250,6 +278,7 @@ func _update_wireframe_mode() -> void :
 	
 func set_ambsnds(activator : Object, amb : Vector4) -> void :
 	worldspawn.set_ambsnds(activator, amb)
+
 
 # according to QC builtin functions
 func qc_lightstyle(style : int, light : String) -> void :

@@ -165,7 +165,7 @@ func _new_entity_node(classname : StringName) -> Node :
 	
 	if node.has_signal(&'emit_message_state') :
 		node.connect(&'emit_message_state',
-			viewer._emit_message_state.bind(node)
+			viewer.emit_message_state.bind(node)
 		)
 	if node.has_signal(&'emit_message_once') :
 		node.connect(&'emit_message_once',

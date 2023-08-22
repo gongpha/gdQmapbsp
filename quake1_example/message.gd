@@ -6,8 +6,10 @@ var current_message : String
 @onready var talk : AudioStreamPlayer = $talk
 @onready var life : Timer = $life
 
+
 func _ready() :
 	life.timeout.connect(_on_life_timeout)
+
 
 func clear() :
 	talk.stream = null
@@ -15,9 +17,11 @@ func clear() :
 	current_emitter = null
 	queue_redraw()
 	
+	
 func set_talk_sound(audio : AudioStream) :
 	if talk.stream == audio : return
 	talk.stream = audio
+
 
 func set_emitter(msg : String, show : bool, from : Node) :
 	if msg == current_message : return
@@ -33,6 +37,7 @@ func _show(m : String) :
 	current_message = m
 	life.start()
 	queue_redraw()
+	
 	
 func _draw() :
 	draw_quake_text(

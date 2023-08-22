@@ -33,8 +33,10 @@ var smooth_y : float
 
 var fluid : QmapbspQuakeFluidVolume
 
+
 func _ready() :
 	jump.stream = viewer.hub.load_audio("player/plyrjmp8.wav")
+
 
 func teleport_to(dest : Node3D, play_sound : bool = false) :
 	global_position = dest.global_position
@@ -61,6 +63,7 @@ func accelerate(in_speed : float, delta : float) -> void :
 		clampf(in_speed - velocity.dot(wishdir), 0, accel * delta)
 	)
 
+
 func friction(delta : float) -> void :
 	var speed : float = velocity.length()
 	var svec : Vector3
@@ -71,6 +74,7 @@ func friction(delta : float) -> void :
 	if speed < 0.1 :
 		svec = Vector3()
 	velocity = svec
+
 
 func move_ground(delta : float) -> void :
 	friction(delta)
@@ -95,6 +99,7 @@ func move_ground(delta : float) -> void :
 				around.position.y += smooth_y
 				# 0.688 is an initial value of around.y
 	
+	
 func _stairs(delta : float) :
 	var w := (velocity / max_speed) * Vector3(2.0, 0.0, 2.0) * delta
 	var ws := w * max_speed
@@ -109,17 +114,20 @@ func _stairs(delta : float) :
 		ws.x, 0.175 + stairstep - 0.75, ws.z
 	)
 
+
 func move_air(delta : float) -> void :
 	accelerate(max_air_speed, delta)
 	_stairs(delta)
 	move_and_slide()
 	_coltest()
 	
+	
 func move_noclip(delta : float) -> void :
 	friction(delta)
 	accelerate(max_speed, delta)
 	translate(velocity * delta)
 	_watercoltest()
+
 
 func _physics_process(delta : float) -> void :
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED :
@@ -223,14 +231,10 @@ func _input(event : InputEvent) -> void :
 		var hrot = head.rotation
 		hrot.x = clampf(hrot.x, -PI/2, PI/2)
 		head.rotation = hrot
-		
-#func _fluid_enter(f : QmapbspQuakeFluidVolume) :
-#	fluid = f
-#
-#func _fluid_exit(f : QmapbspQuakeFluidVolume) :
-#	if f == fluid : fluid = null
+
 
 #########################################
+
 
 func toggle_noclip() :
 	noclip = !noclip
