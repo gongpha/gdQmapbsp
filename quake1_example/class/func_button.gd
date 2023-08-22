@@ -133,9 +133,9 @@ func _make_player() :
 	add_child(player)
 
 
-func _play_snd() :
+func _play_snd(interrupt : bool = false) :
 	if !player : _make_player()
-	player.stop()
+	if player.is_playing() and not interrupt : return
 	if noise.is_empty() : return
 	player.stream = viewer.hub.load_audio(noise)
 	player.play()

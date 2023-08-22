@@ -253,9 +253,9 @@ func _move_open() :
 	if open : return
 	
 	tween = create_tween()
-	tween.tween_callback(_play_snd.bind(&'door_loop'))
+	tween.tween_callback(_play_snd.bind(&'door_loop', true))
 	tween.tween_property(self, ^'position', open_pos, dura)
-	tween.tween_callback(_play_snd.bind(&'door_impulse'))
+	tween.tween_callback(_play_snd.bind(&'door_impulse', true))
 	if not _flag(START_OPEN) : tween.tween_interval(wait) # wait after animation
 	tween.finished.connect(_move_end)
 	
@@ -269,9 +269,9 @@ func _move_close() :
 	if not _flag(START_OPEN) and wait == -1 : return # stay open
 
 	tween = create_tween()
-	tween.tween_callback(_play_snd.bind(&'door_loop'))
+	tween.tween_callback(_play_snd.bind(&'door_loop', true))
 	tween.tween_property(self, ^'position', close_pos, dura)
-	tween.tween_callback(_play_snd.bind(&'door_impulse'))
+	tween.tween_callback(_play_snd.bind(&'door_impulse', true))
 	if _flag(START_OPEN) : tween.tween_interval(wait) # wait after animation
 	tween.finished.connect(_move_end)
 	
@@ -353,9 +353,9 @@ func _make_player() :
 	add_child(player)
 
 
-func _play_snd(sname : StringName) :
+func _play_snd(sname : StringName, interrupt : bool = false) :
 	if !player : _make_player()
-	player.stop()
+	if player.is_playing() and not interrupt : return
 	var audio_path : String
 	match sname :
 		&'door_impulse' : audio_path = noise_door[1]

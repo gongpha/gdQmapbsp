@@ -79,32 +79,32 @@ func _move() :
 	tween = create_tween()
 	if open :
 		# anim step 1
-		tween.tween_callback(_play_snd.bind(SOUND_START_IDX))
+		tween.tween_callback(_play_snd.bind(SOUND_START_IDX, true))
 		tween.tween_property(self, ^'position',
 			close_pos + add_reveal, dura
 		)
 		tween.tween_interval(1) # approx
 		# anim step 2
-		tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
+		tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX, true))
 		tween.tween_property(self, ^'position',
 			_target_pos(), 0.5 # approx
 		)
-		tween.tween_callback(_play_snd.bind(SOUND_END_IDX))
+		tween.tween_callback(_play_snd.bind(SOUND_END_IDX, true))
 		if wait > 0 : tween.tween_interval(wait)
 		tween.finished.connect(_move_end)
 	else :
 		# anim step 1
-		tween.tween_callback(_play_snd.bind(SOUND_START_IDX))
+		tween.tween_callback(_play_snd.bind(SOUND_START_IDX, true))
 		tween.tween_property(self, ^'position',
 			close_pos + add_reveal, 0.5 # approx
 		)
 		tween.tween_interval(1) # approx
 		# anim step 2
-		tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX))
+		tween.tween_callback(_play_snd.bind(SOUND_LOOP_IDX, true))
 		tween.tween_property(self, ^'position',
 			_target_pos() + add_reveal, dura
 		)
-		tween.tween_callback(_play_snd.bind(SOUND_END_IDX))
+		tween.tween_callback(_play_snd.bind(SOUND_END_IDX, true))
 		if wait > 0 : tween.tween_interval(wait)
 		tween.finished.connect(_move_end)
 	
@@ -163,9 +163,9 @@ func _make_player() :
 	add_child(player)
 
 
-func _play_snd(idx : int) :
+func _play_snd(idx : int, interrupt : bool = false) :
 	if !player : _make_player()
-	player.stop()
+	if player.is_playing() and not interrupt : return
 	var s : String = streams[idx]
 	if s.is_empty() : return
 	player.stream = viewer.hub.load_audio(s)
