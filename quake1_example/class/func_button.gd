@@ -9,10 +9,20 @@ func _motion_f(destroy_tween : bool = false) :
 		if !t : continue
 		if !t.has_method(&'_trigger') : continue
 		t._trigger(self)
+		
+	if open :
+		# change to alternate texture
+		meshin.set_instance_shader_parameter(&'use_alternate', true)
+	
+func _move_return() -> void :
+	_move()
+	# change to normal texture
+	meshin.set_instance_shader_parameter(&'use_alternate', false)
 
 func _def_lip() -> String : return '4'
 func _def_wait() -> String : return '1'
 func _no_linking() -> bool : return true
+
 
 func _play_snd(idx : int) :
 	if open : super(idx)
