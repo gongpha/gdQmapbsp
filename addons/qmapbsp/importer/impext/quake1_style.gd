@@ -7,8 +7,13 @@ var surface_materials : Array[ShaderMaterial]
 
 # volatiles
 var global_textures : Array[Texture2D]
-var grouped_textures_idx : Dictionary # <group_name : String, [[textures_diffuse : ImageTexture...], [textures_meta : ImageTexture...]>
-var grouped_textures_idx_r : Array[Array] # [texture_index : int, group_name : String]...
+
+# Tex = [[textures_diffuse : ImageTexture...], [textures_meta : ImageTexture...]
+# <group_name : String, [Tex<def>, Tex<alt>] >
+var grouped_textures_idx : Dictionary
+
+# [texture_index : int, group_name : String]...
+var grouped_textures_idx_r : Array[Array]
 	
 var specials : Dictionary # <name : ShaderMaterial>
 	
@@ -98,18 +103,17 @@ func _texture_your_bsp_texture(
 	
 	# distinguish texture groups
 	if texture_name.unicode_at(0) == 43 : # +
-		var groupi : String
+		var is_alt := 0
 		var framei : int
 		
 		var u := texture_name.unicode_at(1)
-		if u >= 48 and u <= 57 :
-			groupi = '0'
+		if u >= 48 and u <= 57 : # 0 - 9
 			framei = u - 48
-		elif u >= 97 and u <= 106 :
-			groupi = '1'
+		elif u >= 97 and u <= 106 : # a - j
+			is_alt = 1
 			framei = u - 97
 			
-		var groupn : String = groupi + texture_name.substr(2)
+		var groupn : String = texture_name.substr(2)
 			
 		if !groupn.is_empty() :
 			var arr2 : Array
@@ -117,12 +121,17 @@ func _texture_your_bsp_texture(
 			var textures_meta : Array[Texture2D]
 			if grouped_textures_idx.has(groupn) :
 				arr2 = grouped_textures_idx[groupn]
-				textures_diffuse = arr2[0]
-				textures_meta = arr2[1]
+				textures_diffuse = arr2[is_alt][0]
+				textures_meta = arr2[is_alt][1]
 			else :
 				arr2.append(textures_diffuse)
 				arr2.append(textures_meta)
-				grouped_textures_idx[groupn] = arr2
+				var empty1 : Array[Texture2D]
+				var empty2 : Array[Texture2D]
+				if is_alt == 0 :
+					grouped_textures_idx[groupn] = [arr2, [empty1, empty2]]
+				else :
+					grouped_textures_idx[groupn] = [[empty1, empty2], arr2]
 				
 			if framei >= textures_diffuse.size() :
 				textures_diffuse.resize(framei + 1)
@@ -134,8 +143,8 @@ func _texture_your_bsp_texture(
 	#else :
 	var textures_diffuse : Array[Texture2D]
 	var textures_meta : Array[Texture2D]
-	textures_diffuse.resize(10)
-	textures_meta.resize(10)
+	textures_diffuse.resize(20)
+	textures_meta.resize(20)
 	textures_diffuse[0] = itexture
 	textures_meta[0] = itexture_meta
 	surfacemat.set_shader_parameter(&'tex', textures_diffuse)
@@ -149,14 +158,28 @@ func _texture_your_bsp_texture(
 			
 			var a : Array[Texture2D]
 			var b : Array[Texture2D]
-			for f in pair[0] :
+			var a2 : Array[Texture2D]
+			var b2 : Array[Texture2D]
+			for f in pair[0][0] :
 				a.append(f)
-			for f in pair[1] :
+			for f in pair[0][1] :
 				b.append(f)
+			for f in pair[1][0] :
+				a2.append(f)
+			for f in pair[1][1] :
+				b2.append(f)
+				
+			#if !a2.is_empty() :
+			#	a.resize(10)
+			#	b.resize(10)
+			var asize := a.size()
+			a.append_array(a2)
+			b.append_array(b2)
 			
 			surfacemat.set_shader_parameter(&'tex', a)
 			surfacemat.set_shader_parameter(&'texf', b)
-			surfacemat.set_shader_parameter(&'frame_count', a.size())
+			surfacemat.set_shader_parameter(&'frame_count', asize)
+			surfacemat.set_shader_parameter(&'frame_count2', a2.size())
 		
 		grouped_textures_idx.clear()
 		grouped_textures_idx_r.clear()

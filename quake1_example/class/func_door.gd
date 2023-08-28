@@ -36,12 +36,18 @@ var func_door := [
 	['doors/basetry.wav', 'doors/baseuse.wav'],
 ]
 
-
+# first found mesh instance
+var meshin : MeshInstance3D
 
 func _map_ready() :
 	add_to_group(&'doors')
 	_calc_add()
 	_starts_open()
+	
+	for c in get_children() :
+		if c is MeshInstance3D :
+			meshin = c
+			break
 	
 func _starts_open() :
 	if props.get('spawnflags', 0) & 0b01 :
@@ -153,6 +159,8 @@ func _audf() :
 		player.play()
 
 func _move_pre(tween : Tween) -> Vector3 : return position
+func _move_return() -> void :
+	_move()
 
 func _move() :
 	tween = create_tween()
@@ -173,7 +181,7 @@ func _move() :
 	
 	if wait != -1 :
 		tween.tween_interval(wait)
-		tween.finished.connect(_move)
+		tween.finished.connect(_move_return)
 		
 
 

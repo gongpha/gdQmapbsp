@@ -46,19 +46,23 @@ func rebuild_shader() -> void :
 shader_type spatial;
 render_mode %s;
 
-uniform sampler2D tex[10] : source_color%s;
-uniform sampler2D texf[10];
+uniform sampler2D tex[20] : source_color%s;
+uniform sampler2D texf[20];
 uniform int frame_count = 1;
+uniform int frame_count2 = 1;
 
 global uniform sampler2D lightstyle_tex : filter_nearest, source_color; // 64x1
 global uniform float lmboost = 1.0f;
 global uniform sampler2D lightmap_tex;
+
+instance uniform bool use_alternate = false; // use +a +b +c ... instead of +0 +1 +2 ...
 
 varying flat int lstyles;
 varying float lwidth;
 varying float lights[4];
 varying float lx2pix;
 varying flat int frame;
+varying flat int frame_plus;
 
 void vertex() {
 	lights = {
@@ -70,7 +74,8 @@ void vertex() {
 	lstyles = int(CUSTOM0.y);
 	lwidth = CUSTOM0.z;
 	lx2pix = CUSTOM0.w;
-	frame = int(TIME * 5.0f) %% frame_count;
+	frame = int(TIME * 5.0f) %% (use_alternate ? frame_count2 : frame_count);
+	frame_plus = use_alternate ? frame_count : 0;
 }
 
 float lightmap(in vec2 uv2) {
@@ -85,7 +90,7 @@ float lightmap(in vec2 uv2) {
 }
 
 void fragment() {
-	vec3 color = texture(tex[frame], UV).xyz;
+	vec3 color = texture(tex[frame + frame_plus], UV).xyz;
 	
 	%s
 }
