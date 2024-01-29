@@ -1,5 +1,5 @@
 @tool
-extends StaticBody3D
+extends AnimatableBody3D
 class_name QmapbspBrush
 
 func _qmapbsp_get_gi_mode() -> int :
