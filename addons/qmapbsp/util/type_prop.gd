@@ -10,12 +10,16 @@ static func var_to_prop(v) -> Array :
 			return ["", "string"]
 		TYPE_INT : typev = "integer"
 		TYPE_FLOAT : typev = "float"
-		TYPE_STRING : typev = "string"
+		TYPE_STRING, TYPE_STRING_NAME : typev = "string"
 		TYPE_BOOL : typev = "boolean"
+		TYPE_NODE_PATH : typev = "string"
+		TYPE_COLOR : typev = "string"
 		
 	match typeof(v) :
 		TYPE_COLOR :
-			vv = "%d %d %d" % [v.r * 255, v.g * 255, v.b * 255]
+			vv = var_to_str(String("%d %d %d" % [v.r * 255, v.g * 255, v.b * 255]))
+		TYPE_STRING_NAME, TYPE_NODE_PATH :
+			vv = var_to_str(String(vv))
 		_ :
 			vv = var_to_str(v)
 	return [vv, typev]
@@ -30,7 +34,12 @@ static func prop_to_var(p : StringName, known_type : int = -1) :
 				int(S[1]) / 255.0,
 				int(S[2]) / 255.0,
 			)
-		TYPE_STRING, TYPE_STRING_NAME : return p
+		TYPE_STRING :
+			return String(p)
+		TYPE_STRING_NAME :
+			return p
+		TYPE_NODE_PATH :
+			return NodePath(p)
 	return str_to_var(p)
 
 #TYPE_AABB, TYPE_ARRAY, TYPE_BASIS,
