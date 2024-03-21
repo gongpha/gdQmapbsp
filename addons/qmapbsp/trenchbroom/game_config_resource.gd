@@ -131,7 +131,7 @@ func _write_fgd_class(
 		var typev : String = v[1]
 		var vv : String = v[0]
 		props += (
-			"\t%s(%s) : \"%s\" : \"%s\" : \"%s\"\n" % [
+			"\t%s(%s) : \"%s\" : %s : \"%s\"\n" % [
 				k,
 				typev,
 				k.capitalize(),
