@@ -30,6 +30,7 @@ static func prop_to_var(p : StringName, known_type : int = -1) :
 				int(S[1]) / 255.0,
 				int(S[2]) / 255.0,
 			)
+		TYPE_STRING, TYPE_STRING_NAME : return p
 	return str_to_var(p)
 
 #TYPE_AABB, TYPE_ARRAY, TYPE_BASIS,
