@@ -24,8 +24,8 @@ func _init() :
 	super()
 	tell_entity_props.connect(_tell_entity_props)
 
-func begin_file(f : FileAccess) -> StringName :
-	super(f)
+func begin_file(f : FileAccess, begin := 0) -> StringName :
+	super(f, begin)
 	
 	bsp_version = file.get_32()
 	match bsp_version :
@@ -41,7 +41,7 @@ func begin_file(f : FileAccess) -> StringName :
 func _GatheringAllEntities() -> float :
 	if !mapf :
 		curr_entry = entries['entities']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		var b := file.get_buffer(curr_entry.y).get_string_from_ascii()
 		mapf = QmapbspMapFormat.begin_from_text(b)
 		#mapf.tell_skip_entity_brushes = true
@@ -133,7 +133,7 @@ func import_get_progress() -> float :
 func _read_vertices() -> float :
 	if load_index == 0 :
 		curr_entry = entries['vertices']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		vertices.resize(curr_entry.y / VEC3_SIZE)
 	var v := _qpos_to_vec3(
 		Vector3(
@@ -154,7 +154,7 @@ var smooth_group_n : int = 0
 func _read_edges() -> float :
 	if load_index == 0 :
 		curr_entry = entries['edges']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		edges.resize(curr_entry.y / (8 if is_bsp2 else 4))
 		smooth_angle = deg_to_rad(wim._entity_auto_smooth_degree())
 		if smooth_angle >= 0 :
@@ -173,7 +173,7 @@ func _read_edges() -> float :
 func _read_ledges() -> float :
 	if load_index == 0 :
 		curr_entry = entries['ledges']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		edge_list.resize(curr_entry.y / 4)
 	edge_list[load_index] = file.get_32()
 	load_index += 1
@@ -182,7 +182,7 @@ func _read_ledges() -> float :
 func _read_planes() -> float :
 	if load_index == 0 :
 		curr_entry = entries['planes']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		planes.resize(curr_entry.y / 20)
 		planetypes.resize(planes.size())
 	
@@ -198,7 +198,7 @@ var mipoffsets : PackedInt32Array
 func _read_mip_textures() -> float :
 	if load_index == 0 :
 		curr_entry = entries['miptex']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		var count := file.get_32()
 		textures.resize(count)
 		texture_sizes.resize(count)
@@ -218,7 +218,7 @@ func _read_mip_textures() -> float :
 	
 	if texture_offset >= 0 :
 		var toffset := curr_entry.x + texture_offset
-		file.seek(toffset)
+		file.seek(file_begin + toffset)
 		var tname := file.get_buffer(16).get_string_from_ascii()
 		var tsize := Vector2i(file.get_32(), file.get_32())
 		
@@ -227,7 +227,7 @@ func _read_mip_textures() -> float :
 		if ret.is_empty() :
 			# load mip
 			var doffset := file.get_32()
-			file.seek(toffset + doffset)
+			file.seek(file_begin + toffset + doffset)
 			var data := file.get_buffer(tsize.x * tsize.y)
 			var im := _make_im_from_pal(tsize, data)
 			
@@ -259,7 +259,7 @@ func _read_mip_textures() -> float :
 func _read_texinfo() -> float :
 	if load_index == 0 :
 		curr_entry = entries['texinfo']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		texinfos.resize(curr_entry.y / 40)
 	texinfos[load_index] = [
 		_qnor_to_vec3_read(file), file.get_float(), # S
@@ -273,11 +273,11 @@ func _read_texinfo() -> float :
 func _read_models() -> float :
 	if load_index == 0 :
 		curr_entry = entries['models']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		models.resize(curr_entry.y / 64)
 	models[load_index] = [
-		_qpos_to_vec3_read(file), _qpos_to_vec3_read(file), # bound
-		_qpos_to_vec3_read(file), # origin
+		_read_vec3(file), _read_vec3(file), # bound
+		_read_vec3(file), # origin
 		file.get_32(), file.get_32(), file.get_32(), file.get_32(), # nodes
 		file.get_32(), # leaves
 		file.get_32(), # index
@@ -299,7 +299,7 @@ func u16toi16(u : int) -> int :
 func _read_faces() -> float :
 	if load_index == 0 :
 		curr_entry = entries['faces']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		faces.resize(curr_entry.y / (28 if is_bsp2 else 20))
 		if smooth_angle >= 0 :
 			smooth_group_faces.resize(faces.size())
@@ -322,7 +322,7 @@ func _read_bspnodes() -> float :
 	if load_index == 0 :
 		if !wim._load_bsp_nodes() : return 1.0
 		curr_entry = entries['nodes']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		bspnodes.resize(curr_entry.y / (44 if is_bsp2 else 24))
 		if bspnodes.is_empty() : return 1.0
 	bspnodes[load_index] = [
@@ -340,7 +340,7 @@ func _read_clipnodes() -> float :
 	if load_index == 0 :
 		if !wim._load_clip_nodes() : return 1.0
 		curr_entry = entries['clipnodes']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		clipnodes.resize(curr_entry.y / (12 if is_bsp2 else 8))
 		if clipnodes.is_empty() : return 1.0
 	clipnodes[load_index] = [
@@ -354,7 +354,7 @@ func _read_clipnodes() -> float :
 func _read_lface() -> float :
 	if load_index == 0 :
 		curr_entry = entries['lface']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		face_list.resize(curr_entry.y / 2)
 	face_list[load_index] = file.get_16()
 	load_index += 1
@@ -363,7 +363,7 @@ func _read_lface() -> float :
 func _read_visilist() -> float :
 	if !import_visdata : return 1.0
 	curr_entry = entries['visilist']
-	file.seek(curr_entry.x)
+	file.seek(file_begin + curr_entry.x)
 	visilist = file.get_buffer(curr_entry.y)
 	return 1.0
 	
@@ -371,7 +371,7 @@ func _read_leaves() -> float :
 	if load_index == 0 :
 		if !(wim._load_bsp_nodes() or import_visdata) : return 1.0
 		curr_entry = entries['leaves']
-		file.seek(curr_entry.x)
+		file.seek(file_begin + curr_entry.x)
 		leaves.resize(curr_entry.y / 28)
 		
 	var arr : Array = leaves[load_index]
@@ -412,6 +412,7 @@ var expanded_aabb : AABB
 func _construct_nodes() -> float :
 	# load_index is MODEL ID. NOT ENTITY ID !!!
 	if load_index == 0 :
+		wim._world_aabb(level_aabb)
 		expanded_aabb = level_aabb.grow(4.0)
 	var convexplanes : Array[Array]
 	var tempplanes : Array[Plane]
@@ -438,7 +439,7 @@ func _construct_nodes() -> float :
 			var metadata : Dictionary = { 'hull' : h }
 			metadata.merge(o[2])
 			
-			wim._entity_your_shape(model_map[load_index], o[0], cvx, Vector3(), metadata)
+			wim._entity_your_shape(model_map[load_index], load_index, o[0], cvx, Vector3(), metadata)
 		
 		convexplanes.clear()
 		tempplanes.clear()
@@ -524,7 +525,7 @@ func _ConstructingData() -> float : # per model
 	if load_index == 0 and loc_load_index == 0 :
 		if read_lightmaps :
 			var lightmaps_e : Vector2i = entries.lightmaps
-			file.seek(lightmaps_e.x)
+			file.seek(file_begin + lightmaps_e.x)
 			lightmapdata = file.get_buffer(lightmaps_e.y)
 			ip = QmapbspImagePacker.new()
 			
@@ -839,6 +840,7 @@ var occ_indices : PackedInt32Array
 func _build_geo() -> bool :
 	if loc_load_index == 0 :
 		# CALL ONCE
+		wim._model_your_idmap(model_map)
 		target_ent = model_map.get(load_index, -1)
 		if target_ent == -1 :
 			region_keys.clear()
@@ -1010,7 +1012,7 @@ func _build_geo() -> bool :
 		surface_tool.generate_tangents()
 		mesh = surface_tool.commit(mesh)
 		surface_tool = null
-	wim._entity_your_mesh(target_ent, loc_load_index, mesh, center, r)
+	wim._entity_your_mesh(target_ent, load_index, loc_load_index, mesh, center, r)
 	loc_load_index += 1
 	return false
 	

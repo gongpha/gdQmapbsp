@@ -1,7 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://bjrvl643qpvsm"]
 
 [ext_resource type="Script" path="res://trenchbroom_example/scenes/player.gd" id="1_xiyui"]
-[ext_resource type="Script" path="res://addons/qmapbsp/node/leaf_agent.gd" id="2_dnff7"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8hfp"]
 size = Vector3(1, 1.5, 1)
@@ -9,6 +8,9 @@ size = Vector3(1, 1.5, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_qf3qb"]
 resource_local_to_scene = true
 size = Vector3(1, 0.175, 1)
+
+[sub_resource type="Resource" id="Resource_5aetx"]
+metadata/__load_path__ = "res://addons/qmapbsp/node/leaf_agent.gd"
 
 [node name="player" type="CharacterBody3D"]
 collision_layer = 3
@@ -34,4 +36,4 @@ target_position = Vector3(0, -0.688, 0)
 max_results = 4
 
 [node name="leaf_agent" type="Node3D" parent="."]
-script = ExtResource("2_dnff7")
+script = SubResource("Resource_5aetx")

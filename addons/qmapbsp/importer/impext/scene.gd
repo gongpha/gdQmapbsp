@@ -27,6 +27,7 @@ func _entity_unwrap_uv2(
 var last_added_meshin : MeshInstance3D
 func _entity_your_mesh(
 	ent_id : int,
+	model_id : int,
 	brush_id : int,
 	mesh : ArrayMesh, origin : Vector3,
 	region
@@ -136,6 +137,7 @@ func _entity_your_occluder(
 var last_added_col : CollisionShape3D
 func _entity_your_shape(
 	ent_id : int,
+	model_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
 	metadata : Dictionary,
@@ -177,13 +179,8 @@ func _entity_node_directory_paths() -> PackedStringArray :
 	return [
 		"res://addons/qmapbsp/class/"
 	]
-
-func _new_entity_node(classname : StringName) -> Node :
-	if classname == &"func_occluder" :
-		# build occluder
-		var occluder
 	
-	var dirs := _entity_node_directory_paths()
+static func _instantiate_best_class(classname : StringName, dirs : PackedStringArray) -> Node :
 	for d in dirs :
 		var rscpath := d.path_join("%s.tscn") % classname
 		if ResourceLoader.exists(rscpath) :
@@ -198,7 +195,19 @@ func _new_entity_node(classname : StringName) -> Node :
 		if !scr :
 			continue
 		return scr.new()
+	return null
+
+func _new_entity_node(classname : StringName, ent_id : int) -> Node :
+	var new := _instantiate_best_class(classname, _entity_node_directory_paths())
+	if !new : 
+		return _new_unknown_class()
+	return new
+	
+func _new_unknown_class() -> Node :
 	return QmapbspUnknownClassname.new()
+
+func _entity_get_name(classname : StringName, id : int) -> StringName :
+	return '%s%d' % [classname, id]
 
 func _get_entity_node(id : int) -> Node :
 	var node : Node = entity_nodes.get(id, null)
@@ -207,7 +216,7 @@ func _get_entity_node(id : int) -> Node :
 	# new node
 	var dict : Dictionary = entity_props.get(id, {})
 	var classname : StringName = dict.get('classname', &'')
-	node = _new_entity_node(classname)
+	node = _new_entity_node(classname, id)
 	if !node :
 		return null
 	elif node is QmapbspUnknownClassname :
@@ -218,7 +227,7 @@ func _get_entity_node(id : int) -> Node :
 		dict['__qmapbsp_has_brush'] = true
 		dict['__qmapbsp_aabb'] = AABB()
 		
-	node.name = '%s%d' % [classname, id]
+	node.name = _entity_get_name(classname, id)
 	if node is Node3D and id != 0 :
 		var origin : Vector3 = dict.get('origin', Vector3())
 		node.position = origin

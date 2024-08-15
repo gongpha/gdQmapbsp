@@ -18,20 +18,6 @@ var grouped_textures_idx_r : Array[Array]
 var specials : Dictionary # <name : ShaderMaterial>
 	
 func _begin() -> void :
-	
-	# known issues : the global shader uniforms don't work
-	#				 when added from the project settings
-	RenderingServer.global_shader_parameter_add(
-		&'lightstyle_tex',
-		RenderingServer.GLOBAL_VAR_TYPE_SAMPLER2D,
-		null
-	)
-	RenderingServer.global_shader_parameter_add(
-		&'lightmap_tex',
-		RenderingServer.GLOBAL_VAR_TYPE_SAMPLER2D,
-		null
-	)
-	
 	surface_shader = QmapbspQuake1StyleShader.new()
 	surface_shader.rebuild_shader()
 
@@ -211,11 +197,12 @@ func _model_put_custom_data(
 
 func _entity_your_mesh(
 	ent_id : int,
+	model_id : int,
 	brush_id : int,
 	mesh : ArrayMesh, origin : Vector3,
 	region
 ) -> void :
-	super(ent_id, brush_id, mesh, origin, region)
+	super(ent_id, model_id, brush_id, mesh, origin, region)
 	
 	# z-fighting fix
 	if ent_id == 0 : return

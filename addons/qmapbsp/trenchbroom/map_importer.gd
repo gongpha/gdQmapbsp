@@ -1,3 +1,4 @@
+@tool
 extends EditorImportPlugin
 class_name QmapbspTrenchbroomMapImporterPlugin
 
@@ -21,8 +22,14 @@ func _get_save_extension() -> String :
 func _get_resource_type() -> String :
 	return "PackedScene"
 	
-func _get_priority() -> float : return 1.0
-func _get_import_order() -> int : return 0
+func _get_priority() -> float :
+	return 1.0
+	
+func _get_import_order() -> int :
+	return 0
+
+func _can_import_threaded() -> bool :
+	return false
 	
 ###############################
 # Presets

@@ -13,8 +13,8 @@ var generated_box_shapes_size : PackedVector3Array
 
 var parsed_shapes : Array[Array] # [shape, origin, textures]
 
-func begin_file(f : FileAccess) -> StringName :
-	super(f)
+func begin_file(f : FileAccess, begin := 0) -> StringName :
+	super(f, begin)
 	mapf = QmapbspMapFormat.begin_from_text(f.get_as_text(true))
 	return StringName()
 
@@ -120,7 +120,7 @@ func _end_entity(idx : int) :
 	for i in parsed_shapes.size() :
 		var arr : Array = parsed_shapes[i]
 		tell_collision_shapes.emit(
-			idx, i, arr[0], arr[1], {
+			idx, -1, i, arr[0], arr[1], {
 				'hull' : -2,
 				'known_texture_names' : arr[2]
 			}

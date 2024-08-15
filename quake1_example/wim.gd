@@ -28,11 +28,12 @@ var slime_area : QmapbspQuakeSlimeVolume
 	
 func _entity_your_mesh(
 	ent_id : int,
+	model_id : int,
 	brush_id : int,
 	mesh : ArrayMesh, origin : Vector3,
 	region
 ) -> void :
-	super(ent_id, brush_id, mesh, origin, region)
+	super(ent_id, model_id, brush_id, mesh, origin, region)
 	if region is Vector3i :
 		last_added_meshin.set_instance_shader_parameter(
 			&'region', region
@@ -40,16 +41,17 @@ func _entity_your_mesh(
 		
 func _entity_your_shape(
 	ent_id : int,
+	model_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
-	metadata : Dictionary
+	metadata : Dictionary,
 ) -> void :
 	# -2 : MAP brushes
 	# 0 : BSP
 	# 1 : CLIP_HUMAN
 	# 2 : CLIP_LARGE
 	var hull : int = metadata.get('hull', -1)
-	super(ent_id, brush_id, shape, origin, metadata)
+	super(ent_id, model_id, brush_id, shape, origin, metadata)
 	
 	# -2 = delete
 	# -1 = do not create a volume
@@ -156,8 +158,8 @@ func _entity_occluder_includes_region(
 			return false
 	return super(ent_id, occluder, region)
 
-func _new_entity_node(classname : StringName) -> Node :
-	var node : Node = super(classname)
+func _new_entity_node(classname : StringName, ent_id : int) -> Node :
+	var node : Node = super(classname, ent_id)
 	if !node : return null
 	
 	if classname == 'worldspawn' :

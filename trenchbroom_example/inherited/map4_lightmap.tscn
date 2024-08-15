@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://b3r3tyb0nv1gj"]
 
 [ext_resource type="PackedScene" uid="uid://c2sspd5hoamrc" path="res://trenchbroom_example/maps/4_lightmap.map" id="1_h6uyr"]
 

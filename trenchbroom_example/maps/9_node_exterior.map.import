@@ -1,0 +1,16 @@
+[remap]
+
+importer="qmapbsp.trenchbroom_map"
+type="PackedScene"
+uid="uid://tbv2gbb631xu"
+path="res://.godot/imported/9_node_exterior.map-ce6766964b3719d512eefd139f2ea422.scn"
+
+[deps]
+
+source_file="res://trenchbroom_example/maps/9_node_exterior.map"
+dest_files=["res://.godot/imported/9_node_exterior.map-ce6766964b3719d512eefd139f2ea422.scn"]
+
+[params]
+
+game_config_path=""
+map_config_path=""

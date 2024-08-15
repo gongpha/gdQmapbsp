@@ -8,45 +8,75 @@ var texture_filter := BaseMaterial3D.TextureFilter.TEXTURE_FILTER_LINEAR
 
 enum TextureMode { NORMAL, UNSHADED, LIGHTMAP, NORMALMAP }
 var texture_mode := TextureMode.NORMAL
+
+## use "true" if you don't desire to have any lights on your scene.
+## It's surely faster than the "false" option
+## but it will have literally NO lights except the lightmaps.
+## That means you can't have gunfire flash effects like
+## the Quake's original has.
+## (This project used "true" because
+##it's intended to be a demonstration of lightmap rendering)
+var fully_no_lights := true
+
 # ^^^ - ^^^
 
 func rebuild_shader() -> void :
 	var albedo : String
 	var texture_albedo_hint : String
 	
-	#texture_mode = TextureMode.LIGHTMAP
-	
 	match texture_filter :
 		BaseMaterial3D.TextureFilter.TEXTURE_FILTER_NEAREST :
 			texture_albedo_hint = ", filter_nearest"
 	
-	match texture_mode :
-		TextureMode.NORMAL :
-			albedo = """
-	ALBEDO = color * (mix(
-		lightmap(UV2),
-		1.0f,
-		texture(texf[frame], UV).r
-	) * lmboost);
-"""
-		TextureMode.UNSHADED :
-			albedo = "ALBEDO = color;"
-			
-		TextureMode.LIGHTMAP :
-			albedo = "ALBEDO = vec3(lightmap(UV2));"
-			
-			
-		TextureMode.NORMALMAP :
-			albedo = "ALBEDO = NORMAL;"
+	albedo = get_albedo()
 		
 	######################################################
 	
-	code = \
+	code = get_base_code().format({
+		'render_mode' : make_render_mode(),
+		'texture_albedo_hint' : texture_albedo_hint,
+		'albedo' : albedo,
+	})
+func make_render_mode() -> String :
+	if fully_no_lights :
+		return "render_mode unshaded, specular_disabled;"
+	return "render_mode specular_disabled;"
+	
+func get_albedo() -> String :
+	match texture_mode :
+		TextureMode.NORMAL :
+			if fully_no_lights :
+				return """
+	ALBEDO = color * mix(
+		lightmap(UV2),
+		4.0f,
+		texture(texf[frame], UV).r
+	) * lmboost;
 """
-shader_type spatial;
-render_mode %s;
+			return """
+	ALBEDO = color;
+	AO = mix(
+		lightmap(UV2),
+		4.0f,
+		texture(texf[frame], UV).r
+	) * lmboost;
+"""
+		TextureMode.UNSHADED :
+			return "ALBEDO = color;"
+			
+		TextureMode.LIGHTMAP :
+			return "ALBEDO = vec3(lightmap(UV2));"
+			
+			
+		TextureMode.NORMALMAP :
+			return "ALBEDO = NORMAL;"
+	return ""
 
-uniform sampler2D tex[20] : source_color%s;
+func get_base_code() -> String : return """
+shader_type spatial;
+{render_mode}
+
+uniform sampler2D tex[20] : source_color{texture_albedo_hint};
 uniform sampler2D texf[20];
 uniform int frame_count = 1;
 uniform int frame_count2 = 1;
@@ -74,7 +104,7 @@ void vertex() {
 	lstyles = int(CUSTOM0.y);
 	lwidth = CUSTOM0.z;
 	lx2pix = CUSTOM0.w;
-	frame = int(TIME * 5.0f) %% (use_alternate ? frame_count2 : frame_count);
+	frame = int(TIME * 5.0f) % (use_alternate ? frame_count2 : frame_count);
 	frame_plus = use_alternate ? frame_count : 0;
 }
 
@@ -91,12 +121,10 @@ float lightmap(in vec2 uv2) {
 
 void fragment() {
 	vec3 color = texture(tex[frame + frame_plus], UV).xyz;
+	ROUGHNESS = 1.0f;
+	METALLIC = 0.0f;
 	
-	%s
+	{albedo}
 }
 
-""" % [
-	"unshaded", # render_mode
-	texture_albedo_hint,
-	albedo,
-]
+"""

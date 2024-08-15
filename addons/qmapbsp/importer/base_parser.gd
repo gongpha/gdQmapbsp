@@ -2,6 +2,7 @@ extends QmapbspBaseLoader
 class_name QmapbspBaseParser
 
 var file : FileAccess
+var file_begin : int
 var error : StringName
 
 # in
@@ -13,8 +14,9 @@ signal tell_entity_props(id : int, props : Dictionary)
 # entities
 var mapf : QmapbspMapFormat
 
-func begin_file(f : FileAccess) -> StringName :
+func begin_file(f : FileAccess, begin := 0) -> StringName :
 	file = f
+	file_begin = begin
 	return StringName()
 
 func _GatheringAllEntities() -> float :

@@ -9,6 +9,8 @@ class_name QmapbspWorldImporter
 func _get_bsp_palette() -> PackedColorArray : return PackedColorArray()
 func _get_unit_scale_f() -> float : return 32.0
 
+func _world_aabb(aabb : AABB) -> void : return
+
 func _texture_get_missing_texture() -> Array :
 	return [load("res://addons/qmapbsp/texture/missing.tres"), Vector2i(64, 64)]
 	
@@ -62,6 +64,7 @@ func _model_put_custom_data(
 
 func _entity_your_mesh(
 	ent_id : int,
+	model_id : int,
 	brush_id : int,
 	mesh : ArrayMesh, origin : Vector3,
 	region
@@ -70,6 +73,7 @@ func _entity_your_mesh(
 # Do not reference these ids are the same object 
 func _entity_your_shape(
 	ent_id : int,
+	model_id : int,
 	brush_id : int,
 	shape : Shape3D, origin : Vector3,
 	metadata : Dictionary
@@ -139,6 +143,8 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 		entity['angle'] = QmapbspMapFormat.expect_int(entity.get('angle', ''))
 		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
 		
+		# qmapbsp props
+		entity['visible'] = QmapbspMapFormat.expect_int(entity.get('visible', ''))
 	
 
 func _load_clip_nodes() -> bool :
@@ -164,6 +170,9 @@ func _leaf_your_clip_planes(
 	planes_const : Array[Plane] # do not modify !
 ) -> bool :
 	return false
+	
+func _model_your_idmap(model_map : Dictionary) -> void :
+	return
 	
 #########################################
 
@@ -233,13 +242,16 @@ func begin_load_absolute(bsp_path : String, map_path : String = "", ret := []) -
 			ret.append(FileAccess.get_open_error())
 			return &'CANNOT_OPEN_MAP_FILE'
 		
-	return begin_load_files(B, M, ret)
+	return begin_load_files(B, 0, M, ret)
 	
-func begin_load_files(bspf : FileAccess, mapf : FileAccess = null, ret := []) -> StringName :
+func begin_load_files(
+	bspf : FileAccess, bspf_begin := 0,
+	mapf : FileAccess = null, ret := []
+) -> StringName :
 	var err : StringName
 	if bspf :
 		bspp = QmapbspBSPParser.new()
-		err = bspp.begin_file(bspf)
+		err = bspp.begin_file(bspf, bspf_begin)
 		if err != StringName() : return err
 		
 		bspp.known_palette = _get_bsp_palette()

@@ -183,3 +183,6 @@ static func expect_vec3(v : StringName) -> Vector3 :
 
 static func expect_int(v : StringName) -> int :
 	return v.to_int()
+
+static func expect_float(v : StringName) -> int :
+	return v.to_float()
