@@ -144,7 +144,7 @@ func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
 		entity['spawnflags'] = QmapbspMapFormat.expect_int(entity.get('spawnflags', ''))
 		
 		# qmapbsp props
-		entity['visible'] = QmapbspMapFormat.expect_int(entity.get('visible', ''))
+		entity['visible'] = QmapbspMapFormat.expect_int(entity.get('visible', '1'))
 	
 
 func _load_clip_nodes() -> bool :
