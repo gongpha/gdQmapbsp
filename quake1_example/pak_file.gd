@@ -159,7 +159,7 @@ func _poll_converting() -> StringName :
 		#_save_to_pck()
 		#var d := DirAccess.open("user://pak_imported_cache")
 		#d.remove("")
-		
+		#loadrsc_f = null
 		return &'DONE'
 	return StringName()
 	
