@@ -161,7 +161,7 @@ func _process(delta : float) :
 func _bsp_exists(s : String, t : TreeItem) :
 	# find a map file
 	var mapname := s.get_basename().split('/')[-1] + '.map'
-	if mapupper.toggled :
+	if mapupper.button_pressed:
 		mapname = mapname.to_upper()
 	if FileAccess.file_exists(pathshow_map.text.path_join(mapname)) :
 		t.set_custom_color(0, Color.DARK_ORANGE)
@@ -333,7 +333,7 @@ func _play_bsp(pakpath : String) -> void :
 	viewer.bspdir = "user://packcache/"
 	viewer.mapdir = pathshow_map.text
 	viewer.pal = global_pal
-	viewer.map_upper = s_registered.button_pressed
+	viewer.map_upper = mapupper.button_pressed
 	viewer.skill = difficulity.get_selected_id()
 	viewer.set_rendering(rendering.get_selected_id()) 
 	
