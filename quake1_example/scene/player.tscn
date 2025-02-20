@@ -1,18 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://bjrvl643qpvsm"]
+[gd_scene load_steps=3 format=3 uid="uid://bjrvl643qpvsm"]
 
 [ext_resource type="Script" path="res://quake1_example/scene/player.gd" id="1_ssijj"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8hfp"]
 size = Vector3(1, 1.5, 1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_qf3qb"]
-resource_local_to_scene = true
-size = Vector3(1, 0.175, 1)
-
 [node name="player" type="CharacterBody3D"]
 collision_layer = 15
 floor_constant_speed = true
-floor_snap_length = 0.5
 platform_on_leave = 2
 script = ExtResource("1_ssijj")
 
@@ -26,11 +21,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.688, 0)
 
 [node name="cam" type="Camera3D" parent="around/head"]
 current = true
-
-[node name="staircast" type="ShapeCast3D" parent="."]
-shape = SubResource("BoxShape3D_qf3qb")
-target_position = Vector3(0, -0.688, 0)
-max_results = 4
 
 [node name="jump" type="AudioStreamPlayer3D" parent="."]
 
