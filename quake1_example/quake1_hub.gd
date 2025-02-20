@@ -31,7 +31,6 @@ var viewer : QmapbspQuakeViewer
 var last_play : String
 
 func _ready() :
-	set_process(false)
 	var cfg := ConfigFile.new()
 	cfg.load("user://quake1.cfg")
 	pathshow.text = cfg.get_value("pak", "pakpath", "")
@@ -68,7 +67,8 @@ var c_raw : Dictionary
 
 var global_pal : PackedColorArray
 
-var load_pak_list : Array[QmapbspPakFile]
+var load_pak_list : Array[QmapbspPakFileThreaded]
+var load_pak_progress_timer : Tween
 var tracklist : Dictionary
 
 func find_pak() -> StringName :
@@ -80,6 +80,8 @@ func find_pak() -> StringName :
 	global_pal.clear()
 	load_pak_list.clear()
 	
+	pakidx = 0
+	
 	var tracklist_path := pathshow.text.path_join('tracklist.cfg')
 	if FileAccess.file_exists(tracklist_path) :
 		var f := FileAccess.open(tracklist_path, FileAccess.READ)
@@ -89,8 +91,8 @@ func find_pak() -> StringName :
 	while true :
 		var path : String = pathshow.text.path_join('pak%d.pak' % paknam)
 		var ret : Array
-		var pak = QmapbspPakFile.begin(path, ret)
-		if pak is QmapbspPakFile :
+		var pak = QmapbspPakFileThreaded.begin(path, ret)
+		if pak is QmapbspPakFileThreaded :
 			load_pak_list.append(pak)
 			paknam += 1
 		else :
@@ -122,41 +124,60 @@ func load_paks() :
 	cfg.set_value("pak", "pakpath", pathshow.text)
 	cfg.set_value("pak", "mappath", pathshow_map.text)
 	cfg.save("user://quake1.cfg")
-	set_process(true)
-			
+	
+	_load_pak_thread()
+	
 var pakidx : int
-func _process(delta : float) :
-	for I in 128 :
-		var pak : QmapbspPakFile = load_pak_list[pakidx]
-		if !global_pal.is_empty() :
-			pak.global_pal = global_pal
-		var r := pak.poll()
-		if r == &'DONE' :
-			if !pak.global_pal.is_empty() :
-				global_pal = pak.global_pal
-					
-			var P : PackedStringArray = pak.loadrsc_pathlist
-			var E : Array[Resource] = pak.loaded_entries
-			for i in P.size() :
-				globaldirs[P[i]] = E[i]
-			pakidx += 1
-			if pakidx == load_pak_list.size() :
-				prog.hide()
-				set_process(false)
-				load.disabled = false
-				status.text = 'Double-click on a file to play'
-				_show_tree(bsponly.button_pressed)
-				return
+func _load_pak_thread() -> void :
+	var pakt : QmapbspPakFileThreaded = load_pak_list[pakidx]
+	load_pak_progress_timer = create_tween()
+	load_pak_progress_timer.set_loops()
+	load_pak_progress_timer.tween_interval(0.05)\
+		.finished.connect(_pak_thread_check_progress.bind(pakt))
+	pakt.completed.connect(_pak_thread_completed.bind(pakt))
+	pakt.failed.connect(_pak_thread_failed.bind(pakt))
+	
+	if !global_pal.is_empty() :
+		pakt.pak.global_pal = global_pal
+	
+	pakt.start()
+	
+func _pak_thread_check_progress(pakt : QmapbspPakFileThreaded) -> void :
+	prog.value = pakt.get_progress()
+	status.text = 'Loading %s . . .' % pakt.pak.filename
+	
+func _pak_thread_completed(pakt : QmapbspPakFileThreaded) -> void :
+	var pak := pakt.pak
+	
+	if !pak.global_pal.is_empty() :
+		global_pal = pak.global_pal
 			
-		elif r != StringName() :
-			status.text = "[%s] %s" % [pak.filename, r]
-			prog.hide()
-			set_process(false)
-			load.disabled = false
-			return
-			
-		prog.value = pak.get_progress()
-		status.text = 'Loading %s . . .' % pak.filename
+	var P : PackedStringArray = pak.loadrsc_pathlist
+	var E : Array[Resource] = pak.loaded_entries
+	for i in P.size() :
+		globaldirs[P[i]] = E[i]
+	pakidx += 1
+	
+	if load_pak_progress_timer :
+		load_pak_progress_timer.kill()
+	
+	if pakidx == load_pak_list.size() :
+		prog.hide()
+		load.disabled = false
+		status.text = 'Double-click on a file to play'
+		_show_tree(bsponly.button_pressed)
+	else :
+		_load_pak_thread()
+		
+func _pak_thread_failed(reason : StringName, pakt : QmapbspPakFileThreaded) -> void :
+	var pak := pakt.pak
+	
+	if load_pak_progress_timer :
+		load_pak_progress_timer.kill()
+	
+	status.text = "[%s] %s" % [pak.filename, reason]
+	prog.hide()
+	load.disabled = false
 		
 func _bsp_exists(s : String, t : TreeItem) :
 	# find a map file
