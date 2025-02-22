@@ -58,7 +58,7 @@ func export_cfg() :
 		
 	var gt := GAMECONFIG_TEMPLATE.duplicate(true)
 	gt["name"] = name
-	gt["textures"]["root"] = texture_dir
+	gt["materials"]["root"] = texture_dir
 	gt["faceattribs"]["defaults"]["scale"] = [
 		def_face_scale.x, def_face_scale.y
 	]
@@ -163,7 +163,7 @@ func _write_fgd_class(
 		"""
 	
 const GAMECONFIG_TEMPLATE := {
-	"version" : 8,
+	"version" : 9,
 	"name" : "Qmapbsp Game",
 	"icon" : "icon.png",
 	"fileformats" : [
@@ -176,7 +176,7 @@ const GAMECONFIG_TEMPLATE := {
 		"searchpath" : ".",
 		"packageformat" : { "extension" : "pak", "format" : "idpak" }
 	},
-	"textures" : {
+	"materials" : {
 		"root": "textures",
 		"extensions": [
 			"png",
