@@ -1,9 +1,9 @@
 [gd_scene load_steps=12 format=3 uid="uid://b4fsmrslaowwn"]
 
-[ext_resource type="Script" path="res://quake1_example/quake1_hub.gd" id="1_2c1wm"]
+[ext_resource type="Script" uid="uid://cxa5ghwid6phs" path="res://quake1_example/quake1_hub.gd" id="1_2c1wm"]
 [ext_resource type="Texture2D" uid="uid://dwa5a34uawid4" path="res://quake1_example/background.png" id="1_q0fs5"]
 [ext_resource type="Texture2D" uid="uid://ddgo0qldm1jtp" path="res://icon.svg" id="2_c3pq6"]
-[ext_resource type="Script" path="res://quake1_example/mdl_instance.gd" id="4_q5pgd"]
+[ext_resource type="Script" uid="uid://idm6oe54jo7q" path="res://quake1_example/mdl_instance.gd" id="4_q5pgd"]
 
 [sub_resource type="Environment" id="Environment_8m3j4"]
 ambient_light_color = Color(0.72549, 0.282353, 0.0784314, 1)
@@ -41,8 +41,8 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_eflf5"]
 _data = {
-"RESET": SubResource("Animation_v10ej"),
-"seekloop": SubResource("Animation_dc32k")
+&"RESET": SubResource("Animation_v10ej"),
+&"seekloop": SubResource("Animation_dc32k")
 }
 
 [sub_resource type="Animation" id="Animation_dy4w6"]
@@ -79,8 +79,8 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_iedm2"]
 _data = {
-"RESET": SubResource("Animation_dy4w6"),
-"spin": SubResource("Animation_flwlq")
+&"RESET": SubResource("Animation_dy4w6"),
+&"spin": SubResource("Animation_flwlq")
 }
 
 [node name="hub" type="Control"]
@@ -264,14 +264,14 @@ transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 0, 0)
 [node name="animesh" type="AnimationPlayer" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp"]
 unique_name_in_owner = true
 libraries = {
-"": SubResource("AnimationLibrary_eflf5")
+&"": SubResource("AnimationLibrary_eflf5")
 }
 speed_scale = 0.1
 
 [node name="anispin" type="AnimationPlayer" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp"]
 unique_name_in_owner = true
 libraries = {
-"": SubResource("AnimationLibrary_iedm2")
+&"": SubResource("AnimationLibrary_iedm2")
 }
 
 [node name="status" type="Label" parent="tabs/PAK Viewer/vbox"]
@@ -313,6 +313,7 @@ layout_mode = 2
 selected = 1
 item_count = 6
 popup/item_0/text = "Easy"
+popup/item_0/id = 0
 popup/item_1/text = "Normal"
 popup/item_1/id = 1
 popup/item_2/text = "Hard"
@@ -331,6 +332,7 @@ layout_mode = 2
 selected = 0
 item_count = 3
 popup/item_0/text = "BSP Lightmap"
+popup/item_0/id = 0
 popup/item_1/text = "Lightmap + SDFGI"
 popup/item_1/id = 1
 popup/item_1/disabled = true

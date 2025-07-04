@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://bjrvl643qpvsm"]
 
-[ext_resource type="Script" path="res://trenchbroom_example/scenes/player.gd" id="1_xiyui"]
+[ext_resource type="Script" uid="uid://8agg5lyfu32w" path="res://trenchbroom_example/scenes/player.gd" id="1_xiyui"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_c8hfp"]
 size = Vector3(1, 1.5, 1)

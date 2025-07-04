@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://by31r16mgbeh7"]
 
-[ext_resource type="Script" path="res://addons/qmapbsp/resource/map_import_error.gd" id="1_kgybe"]
+[ext_resource type="Script" uid="uid://dkh6rolaxnxdr" path="res://addons/qmapbsp/resource/map_import_error.gd" id="1_kgybe"]
 
 [node name="!!! ERROR !!!" type="Node3D"]
 script = ExtResource("1_kgybe")

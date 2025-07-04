@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bxnhoo3bpbpnx"]
 
-[ext_resource type="Script" path="res://addons/qmapbsp/trenchbroom/sub/game_config_inspector.gd" id="1_4asoy"]
+[ext_resource type="Script" uid="uid://cd6378ob45cyt" path="res://addons/qmapbsp/trenchbroom/sub/game_config_inspector.gd" id="1_4asoy"]
 
 [node name="insp" type="VBoxContainer"]
 anchors_preset = 15

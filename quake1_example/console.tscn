@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://dvlurm3ntglha"]
 
-[ext_resource type="Script" path="res://quake1_example/console.gd" id="1_tic73"]
+[ext_resource type="Script" uid="uid://b5fkit4g4liwf" path="res://quake1_example/console.gd" id="1_tic73"]
 
 [sub_resource type="Animation" id="Animation_vukfu"]
 length = 0.001
@@ -36,8 +36,8 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_a4dt3"]
 _data = {
-"RESET": SubResource("Animation_vukfu"),
-"aniloop": SubResource("Animation_sgl1c")
+&"RESET": SubResource("Animation_vukfu"),
+&"aniloop": SubResource("Animation_sgl1c")
 }
 
 [node name="console" type="Control"]

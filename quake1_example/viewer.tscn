@@ -1,11 +1,11 @@
 [gd_scene load_steps=8 format=3 uid="uid://bfrpdkolpjr3g"]
 
-[ext_resource type="Script" path="res://quake1_example/viewer.gd" id="1_vs1gv"]
+[ext_resource type="Script" uid="uid://c88fp534hnpxv" path="res://quake1_example/viewer.gd" id="1_vs1gv"]
 [ext_resource type="PackedScene" uid="uid://dvlurm3ntglha" path="res://quake1_example/console.tscn" id="2_qwu1n"]
-[ext_resource type="Script" path="res://quake1_example/hud.gd" id="2_tj87b"]
-[ext_resource type="Script" path="res://quake1_example/menu.gd" id="3_044qv"]
-[ext_resource type="Script" path="res://quake1_example/message.gd" id="5_6jblb"]
-[ext_resource type="Shader" path="res://quake1_example/viewer_fade.gdshader" id="5_upbmq"]
+[ext_resource type="Script" uid="uid://23l50m24rpo2" path="res://quake1_example/hud.gd" id="2_tj87b"]
+[ext_resource type="Script" uid="uid://xrul08308wj6" path="res://quake1_example/menu.gd" id="3_044qv"]
+[ext_resource type="Script" uid="uid://dwo6r0nmk75eu" path="res://quake1_example/message.gd" id="5_6jblb"]
+[ext_resource type="Shader" uid="uid://dwm64r14hhg7l" path="res://quake1_example/viewer_fade.gdshader" id="5_upbmq"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_spi4i"]
 shader = ExtResource("5_upbmq")

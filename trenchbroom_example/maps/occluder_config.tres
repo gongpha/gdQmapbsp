@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="QmapbspTrenchbroomMapConfig" load_steps=2 format=3 uid="uid://d2jat17pe468k"]
 
-[ext_resource type="Script" path="res://addons/qmapbsp/trenchbroom/map_config.gd" id="1_r6noe"]
+[ext_resource type="Script" uid="uid://8ustkamox0hr" path="res://addons/qmapbsp/trenchbroom/map_config.gd" id="1_r6noe"]
 
 [resource]
 script = ExtResource("1_r6noe")
@@ -8,4 +8,10 @@ use_bsp_lightmap = false
 lightmap_texel = 1.0
 inverse_scale_factor = 32.0
 mesh_splitting_size = 32.0
-bake_occluders = true
+default_material_texture_size = Vector2i(64, 64)
+collsion_constructing_method = 0
+load_point_file = false
+simplify_point_files = true
+auto_smooth_max_angle = 30.0
+occ_bake_occluders = false
+occ_shrink_amount = 0.5

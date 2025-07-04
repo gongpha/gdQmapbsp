@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="QmapbspTrenchbroomGameConfigResource" load_steps=3 format=3 uid="uid://c78vigdmlrdpg"]
 
-[ext_resource type="Script" path="res://addons/qmapbsp/trenchbroom/game_config_resource.gd" id="1_pj0cu"]
+[ext_resource type="Script" uid="uid://ctbq2mhcpa03k" path="res://addons/qmapbsp/trenchbroom/game_config_resource.gd" id="1_pj0cu"]
 [ext_resource type="Resource" uid="uid://d3djx5mad2mq1" path="res://trenchbroom_example/usercfg.tres" id="2_mulf6"]
 
 [resource]

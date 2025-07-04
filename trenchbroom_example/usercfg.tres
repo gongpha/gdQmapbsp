@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="QmapbspUserConfig" load_steps=4 format=3 uid="uid://d3djx5mad2mq1"]
 
-[ext_resource type="Script" path="res://addons/qmapbsp/resource/user_config.gd" id="1_4544i"]
-[ext_resource type="Script" path="res://addons/qmapbsp/importer/cmplwf/quake1.gd" id="1_aloy5"]
+[ext_resource type="Script" uid="uid://dasn1ep08stkp" path="res://addons/qmapbsp/resource/user_config.gd" id="1_4544i"]
+[ext_resource type="Script" uid="uid://dwgrnki55bwnd" path="res://addons/qmapbsp/importer/cmplwf/quake1.gd" id="1_aloy5"]
 
 [sub_resource type="Resource" id="Resource_1lml6"]
 script = ExtResource("1_aloy5")

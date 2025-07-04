@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://brgdlntp1i0so"]
 
 [ext_resource type="PackedScene" uid="uid://c7skj88wu4yv" path="res://trenchbroom_example/maps/5_interior.map" id="1_fqt2g"]
-[ext_resource type="PackedScene" uid="uid://bjrvl643qpvsm" path="res://trenchbroom_example/scenes/player.tscn" id="2_3adn1"]
+[ext_resource type="PackedScene" uid="uid://bjrvl643qpvsm" path="res://quake1_example/scene/player.tscn" id="2_3adn1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_rl4fl"]
 resource_local_to_scene = true

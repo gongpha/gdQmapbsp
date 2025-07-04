@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://b240v1psxwvew"]
 
-[ext_resource type="Script" path="res://trenchbroom_example/classes/test_sphere.gd" id="1_s3wf2"]
+[ext_resource type="Script" uid="uid://c7m2jj31r6l6c" path="res://trenchbroom_example/classes/test_sphere.gd" id="1_s3wf2"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_p31m1"]
 
