@@ -56,8 +56,7 @@ func _texture_get_material(
 			_created_textures[texture_name] = rsc
 			return rsc
 		elif mat_or_tex2d is BaseMaterial3D :
-			if mat_or_tex2d.albedo_texture :
-				rsc = [mat_or_tex2d, mat_or_tex2d.albedo_texture.get_size()]
-				_created_textures[texture_name] = [rsc]
-				return rsc
+			rsc = [mat_or_tex2d, mat_or_tex2d.albedo_texture.get_size() if mat_or_tex2d.albedo_texture else Vector2(64, 64)]
+			_created_textures[texture_name] = [rsc]
+			return rsc
 	return super(index, texture_name, texture_size)
