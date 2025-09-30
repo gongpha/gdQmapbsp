@@ -15,7 +15,7 @@ var parsed_shapes : Array[Array] # [shape, origin, textures]
 
 func begin_file(f : FileAccess, begin := 0) -> StringName :
 	super(f, begin)
-	mapf = QmapbspMapFormat.begin_from_text(f.get_as_text(true))
+	mapf = QmapbspMapFormat.begin_from_text(f.get_as_text())
 	return StringName()
 
 func _brush_found() -> void :
