@@ -57,7 +57,7 @@ func export_cfg() :
 	fgd = null
 		
 	var texture_dir := textures_directory.replace("res://", "") # TODO : please fix
-	if texture_dir.is_empty() : texture_dir = '.'
+	if texture_dir.is_empty() : texture_dir = ''
 		
 	var gt := GAMECONFIG_TEMPLATE.duplicate(true)
 	gt["name"] = name
