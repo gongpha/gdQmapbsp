@@ -22,6 +22,9 @@ class_name QmapbspTrenchbroomGameConfigResource
 @export_group("Generated", "_")
 @export var _entity_properties_def : Dictionary
 
+@export_tool_button("Export configs to Trenchbroom")
+var export_cfg_button = export_cfg
+
 func export_cfg() :
 	if !usercfg :
 		printerr("No User config")
@@ -65,7 +68,6 @@ func export_cfg() :
 	gt["faceattribs"]["defaults"]["offset"] = [
 		def_face_offset.x, def_face_offset.y
 	]
-	
 	
 	var cfg := FileAccess.open(dirpath.path_join("GameConfig.cfg"), FileAccess.WRITE)
 	cfg.store_string(JSON.stringify(gt, "\t", false))
@@ -233,5 +235,3 @@ const FGD_TEMPLATE := """
 ////////////////////////////
 
 """
-
-
