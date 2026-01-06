@@ -434,6 +434,7 @@ func _construct_nodes() -> float :
 		for o in convexplanes :
 			var cvx := ConvexPolygonShape3D.new()
 			cvx.points = o[1]
+			cvx.margin = QmapbspMAPParser.SHAPE_MARGIN
 			
 			# use node id instead of brush id
 			var metadata : Dictionary = { 'hull' : h }

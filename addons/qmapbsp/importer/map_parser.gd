@@ -13,6 +13,8 @@ var generated_box_shapes_size : PackedVector3Array
 
 var parsed_shapes : Array[Array] # [shape, origin, textures]
 
+const SHAPE_MARGIN := 0.001
+
 func begin_file(f : FileAccess, begin := 0) -> StringName :
 	super(f, begin)
 	mapf = QmapbspMapFormat.begin_from_text(f.get_as_text())
@@ -113,6 +115,7 @@ func _parse_shape() -> void :
 			
 			shape = ConvexPolygonShape3D.new()
 			shape.points = vertices
+			shape.margin = SHAPE_MARGIN
 			
 		parsed_shapes.append([shape, V, mapf.brush_textures.duplicate()])
 		
