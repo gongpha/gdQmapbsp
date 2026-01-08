@@ -26,6 +26,7 @@ current = true
 shadow_enabled = true
 spot_range = 40.0
 spot_attenuation = 0.0
+spot_angle = 30.0
 
 [node name="jump" type="AudioStreamPlayer3D" parent="."]
 

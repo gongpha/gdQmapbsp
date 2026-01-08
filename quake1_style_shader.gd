@@ -130,7 +130,7 @@ void fragment() {
 }
 
 void light() {
-    if (!LIGHT_IS_DIRECTIONAL) {
+    if (!LIGHT_IS_DIRECTIONAL && !{fully_no_lights} && {texlight}) {
         float dot_product = clamp(dot(NORMAL, LIGHT), 0.0, 1.0);
         DIFFUSE_LIGHT += LIGHT_COLOR * ATTENUATION * dot_product;
     }
