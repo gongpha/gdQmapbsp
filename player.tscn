@@ -22,12 +22,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.688, 0)
 [node name="cam" type="Camera3D" parent="around/head"]
 current = true
 
-[node name="SpotLight3D" type="SpotLight3D" parent="around/head/cam"]
-shadow_enabled = true
-spot_range = 40.0
-spot_attenuation = 0.0
-spot_angle = 30.0
-
 [node name="jump" type="AudioStreamPlayer3D" parent="."]
 
 [node name="origin" type="Marker3D" parent="."]

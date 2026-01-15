@@ -16,7 +16,7 @@ var texture_mode := TextureMode.NORMAL
 ## the Quake's original has.
 ## (This project used "true" because
 ##it's intended to be a demonstration of lightmap rendering)
-var fully_no_lights := false
+var use_dynamic_lights := false
 
 # ^^^ - ^^^
 
@@ -36,20 +36,17 @@ func rebuild_shader() -> void :
 		'render_mode' : make_render_mode(),
 		'texture_albedo_hint' : texture_albedo_hint,
 		'albedo' : albedo,
-		"fully_no_lights": str(fully_no_lights),
-		"texlight": str(texture_mode == 0),
 	})
 func make_render_mode() -> String :
-	if fully_no_lights :
-		return "render_mode unshaded, specular_disabled;"
 	return "render_mode specular_disabled;"
 	
 func get_albedo() -> String :
 	match texture_mode :
 		TextureMode.NORMAL :
-			if fully_no_lights :
+			if use_dynamic_lights :
 				return """
-	ALBEDO = color * mix(
+	ALBEDO = color;
+	AO = mix(
 		lightmap(UV2),
 		4.0f,
 		texture(texf[frame], UV).r
@@ -74,7 +71,8 @@ func get_albedo() -> String :
 			return "ALBEDO = NORMAL;"
 	return ""
 
-func get_base_code() -> String : return """
+func get_base_code() -> String : 
+	var code:String = """
 shader_type spatial;
 {render_mode}
 
@@ -129,14 +127,14 @@ void fragment() {
 	{albedo}
 }
 
+""" 
+	if use_dynamic_lights == false:
+		code + """
 void light() {
-    if (!LIGHT_IS_DIRECTIONAL && !{fully_no_lights} && {texlight}) {
+    if (!LIGHT_IS_DIRECTIONAL) {
         float dot_product = clamp(dot(NORMAL, LIGHT), 0.0, 1.0);
         DIFFUSE_LIGHT += LIGHT_COLOR * ATTENUATION * dot_product;
     }
-	else if (!{fully_no_lights} && !{texlight}) {
-		DIFFUSE_LIGHT = vec3(1.0,1.0,1.0);
-	}
 }
-
 """
+	return code
