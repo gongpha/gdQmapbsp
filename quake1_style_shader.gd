@@ -9,13 +9,8 @@ var texture_filter := BaseMaterial3D.TextureFilter.TEXTURE_FILTER_LINEAR
 enum TextureMode { NORMAL, UNSHADED, LIGHTMAP, NORMALMAP }
 var texture_mode := TextureMode.NORMAL
 
-## use "true" if you don't desire to have any lights on your scene.
-## It's surely faster than the "false" option
-## but it will have literally NO lights except the lightmaps.
-## That means you can't have gunfire flash effects like
-## the Quake's original has.
-## (This project used "true" because
-##it's intended to be a demonstration of lightmap rendering)
+## Only dynamic light without lighmap
+## Before using, comment out the line "editor_only = true" in "light.gd" otherwise there will be no light
 var use_dynamic_lights := false
 
 # ^^^ - ^^^
