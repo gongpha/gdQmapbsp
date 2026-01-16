@@ -10,7 +10,9 @@ enum TextureMode { NORMAL, UNSHADED, LIGHTMAP, NORMALMAP }
 var texture_mode := TextureMode.NORMAL
 
 ## Only dynamic light without lighmap
-## Before using, comment out the line "editor_only = true" in "light.gd" otherwise there will be no light
+## Before using, comment out the line "editor_only = true" in "light.gd"
+## otherwise there will be no light
+## It would be more convenient to change this using a global variable
 var use_dynamic_lights := false
 
 # ^^^ - ^^^
@@ -123,8 +125,8 @@ void fragment() {
 }
 
 """ 
-	if use_dynamic_lights == false:
-		code + """
+	if use_dynamic_lights == false and texture_mode == 0:
+		code += """
 void light() {
     if (!LIGHT_IS_DIRECTIONAL) {
         float dot_product = clamp(dot(NORMAL, LIGHT), 0.0, 1.0);
@@ -132,4 +134,8 @@ void light() {
     }
 }
 """
+	else:
+		code += """
+render_mode unshaded;
+		"""
 	return code
