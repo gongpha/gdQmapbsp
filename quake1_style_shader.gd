@@ -134,7 +134,7 @@ void light() {
     }
 }
 """
-	else:
+	elif texture_mode != 0:
 		code += """
 render_mode unshaded;
 		"""
