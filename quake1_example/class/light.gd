@@ -12,6 +12,7 @@ func _init() :
 	
 	var light : int = props.get("light", 300)
 	omni_range = light / 32.0
+	editor_only = true
 	omni_attenuation = 0.00001
 	light_indirect_energy = light / 50.0
 	distance_fade_enabled = true
