@@ -25,8 +25,10 @@ var trackcaches : Dictionary # <sounds : AudioStreamMP3>
 var bsp_textures : Array
 var bsp_textures_fullbright : Array
 
-var registered : bool = false
-var occlusion_culling : bool = false
+@export var registered : bool = true
+@export var occlusion_culling : bool = false
+@export var dynamic_lights := false
+
 var skill : int = 1
 var rendering : int = 0
 

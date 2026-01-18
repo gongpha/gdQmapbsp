@@ -1,21 +1,33 @@
 extends Shader
 class_name QmapbspQuake1StyleShader
 
-# After modifying these variables,
-# "rebuild_shader" must be called after it
-# VVV - VVV
-var texture_filter := BaseMaterial3D.TextureFilter.TEXTURE_FILTER_LINEAR
+@export var texture_filter := BaseMaterial3D.TextureFilter.TEXTURE_FILTER_LINEAR :
+	set(v) :
+		if texture_filter == v :
+			return
+		texture_filter = v
+		rebuild_shader()
 
 enum TextureMode { NORMAL, UNSHADED, LIGHTMAP, NORMALMAP }
-var texture_mode := TextureMode.NORMAL
+@export var texture_mode := TextureMode.NORMAL :
+	set(v) :
+		if texture_mode == v :
+			return
+		texture_mode = v
+		rebuild_shader()
 
-## Only dynamic light without lighmap
-## Before using, comment out the line "editor_only = true" in "light.gd"
-## otherwise there will be no light
-## It would be more convenient to change this using a global variable
-var use_dynamic_lights := false
-
-# ^^^ - ^^^
+## set to "true" to support rendering any Godot lights on lightmaps.
+## it is recommended to keep it false if you don't have Godot lights
+## in the scene at all for better performance
+@export var dynamic_lights := false :
+	set(v) :
+		if dynamic_lights == v :
+			return
+		dynamic_lights = v
+		rebuild_shader()
+		
+func _init() -> void :
+	rebuild_shader()
 
 func rebuild_shader() -> void :
 	var albedo : String
@@ -32,26 +44,29 @@ func rebuild_shader() -> void :
 	code = get_base_code().format({
 		'render_mode' : make_render_mode(),
 		'texture_albedo_hint' : texture_albedo_hint,
-		'albedo' : albedo,
+		'albedo' : albedo
 	})
+	
 func make_render_mode() -> String :
-	return "render_mode specular_disabled;"
+	if dynamic_lights and texture_mode == TextureMode.NORMAL :
+		return "render_mode specular_disabled;"
+	return "render_mode unshaded, specular_disabled;"
 	
 func get_albedo() -> String :
 	match texture_mode :
 		TextureMode.NORMAL :
-			if use_dynamic_lights :
+			if dynamic_lights :
 				return """
 	ALBEDO = color;
-	AO = mix(
+	EMISSION = ALBEDO * mix(
 		lightmap(UV2),
 		4.0f,
 		texture(texf[frame], UV).r
 	) * lmboost;
 """
-			return """
-	ALBEDO = color;
-	EMISSION = ALBEDO * mix(
+			else :
+				return """
+	ALBEDO = color * mix(
 		lightmap(UV2),
 		4.0f,
 		texture(texf[frame], UV).r

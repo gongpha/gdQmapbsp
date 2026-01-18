@@ -11,7 +11,21 @@ func _texture_include_bsp_textures() -> bool : return true
 
 func _begin() -> void :
 	super()
+	surface_shader.dynamic_lights = viewer.dynamic_lights
 	viewer.world_shader = surface_shader
+	
+func _entity_your_cooked_properties(id : int, entity : Dictionary) -> void :
+	# ignore any "light" entity
+	var classname = entity.get("classname", &"")
+	if classname is StringName :
+		if (
+			classname == &'light' or
+			classname == &'light_flame_large_yellow' or
+			classname == &'light_fluorospark' or
+			classname == &'light_torch_small_walltorch'
+		) :
+			return
+	super(id, entity)
 
 func _entity_node_directory_paths() -> PackedStringArray :
 	return PackedStringArray(

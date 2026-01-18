@@ -241,6 +241,7 @@ size_flags_vertical = 3
 stretch = true
 
 [node name="vp" type="SubViewport" parent="tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc"]
+own_world_3d = true
 handle_input_locally = false
 size = Vector2i(2, 2)
 render_target_update_mode = 0
@@ -295,6 +296,11 @@ offset_left = 24.0
 offset_top = 24.0
 offset_right = -24.0
 offset_bottom = -24.0
+
+[node name="s_dynamic_lights" type="CheckBox" parent="tabs/Viewer Settings/vbox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Dynamic Lights"
 
 [node name="s_registered" type="CheckBox" parent="tabs/Viewer Settings/vbox"]
 unique_name_in_owner = true

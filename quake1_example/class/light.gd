@@ -47,4 +47,3 @@ func _trigger(b) :
 		viewer.qc_lightstyle(style, 'a')
 	
 	visible = !visible
-

@@ -169,8 +169,6 @@ func set_ambsnds(activator : Object, amb : Vector4) -> void :
 
 func set_filter_mode(filter : int) -> void :
 	world_shader.texture_filter = filter
-	world_shader.rebuild_shader()
 
 func set_rendering_mode(ren_mode : int) -> void :
 	world_shader.texture_mode = ren_mode
-	world_shader.rebuild_shader()

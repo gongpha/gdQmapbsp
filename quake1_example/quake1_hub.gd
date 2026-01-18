@@ -21,7 +21,7 @@ class_name QmapbspQuake1Hub
 @onready var mdlview : VBoxContainer = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview"
 @onready var current_mdl : QmapbspMDLInstance = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root/mesh"
 
-
+@onready var s_dynamic_lights : CheckBox = %"s_dynamic_lights"
 @onready var s_registered : CheckBox = %"s_registered"
 @onready var s_occlusion_culling : CheckBox = %"s_occlusion_culling"
 @onready var difficulity : OptionButton = %"s_difficulity"
@@ -36,6 +36,12 @@ func _ready() :
 	cfg.load("user://quake1.cfg")
 	pathshow.text = cfg.get_value("pak", "pakpath", "")
 	pathshow_map.text = cfg.get_value("pak", "mappath", "")
+	
+	s_dynamic_lights.button_pressed = cfg.get_value("settings", "dynamic_lights", false)
+	s_registered.button_pressed = cfg.get_value("settings", "registered", true)
+	s_occlusion_culling.button_pressed = cfg.get_value("settings", "occlusion_culling", false)
+	difficulity.select(cfg.get_value("settings", "difficulity", 1))
+	rendering.select(cfg.get_value("settings", "rendering", 0))
 	
 	view.hide()
 	
@@ -121,6 +127,13 @@ func load_paks() :
 	var cfg := ConfigFile.new()
 	cfg.set_value("pak", "pakpath", pathshow.text)
 	cfg.set_value("pak", "mappath", pathshow_map.text)
+	
+	cfg.set_value("settings", "registered", s_registered.button_pressed)
+	cfg.set_value("settings", "occlusion_culling", s_occlusion_culling.button_pressed)
+	cfg.set_value("settings", "difficulity", difficulity.get_selected_id())
+	cfg.set_value("settings", "rendering", rendering.get_selected_id())
+	cfg.set_value("settings", "dynamic_lights", s_dynamic_lights.button_pressed)
+	
 	cfg.save("user://quake1.cfg")
 	set_process(true)
 			
