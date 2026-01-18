@@ -37,6 +37,11 @@ func _ready() :
 	pathshow.text = cfg.get_value("pak", "pakpath", "")
 	pathshow_map.text = cfg.get_value("pak", "mappath", "")
 	
+	s_registered.button_pressed = cfg.get_value("settings", "registered", true)
+	s_occlusion_culling.button_pressed = cfg.get_value("settings", "occlusion_culling", false)
+	difficulity.select(cfg.get_value("settings", "difficulity", 1))
+	rendering.select(cfg.get_value("settings", "rendering", 0))
+	
 	view.hide()
 	
 	DirAccess.remove_absolute("user://packcache/")
@@ -121,6 +126,12 @@ func load_paks() :
 	var cfg := ConfigFile.new()
 	cfg.set_value("pak", "pakpath", pathshow.text)
 	cfg.set_value("pak", "mappath", pathshow_map.text)
+	
+	cfg.set_value("settings", "registered", s_registered.button_pressed)
+	cfg.set_value("settings", "occlusion_culling", s_occlusion_culling.button_pressed)
+	cfg.set_value("settings", "difficulity", difficulity.get_selected_id())
+	cfg.set_value("settings", "rendering", rendering.get_selected_id())
+	
 	cfg.save("user://quake1.cfg")
 	set_process(true)
 			
