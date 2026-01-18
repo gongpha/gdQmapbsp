@@ -84,7 +84,7 @@ func get_albedo() -> String :
 	return ""
 
 func get_base_code() -> String : 
-	var code:String = """
+	return """
 shader_type spatial;
 {render_mode}
 
@@ -139,18 +139,4 @@ void fragment() {
 	{albedo}
 }
 
-""" 
-	if use_dynamic_lights == false and texture_mode == 0:
-		code += """
-void light() {
-    if (!LIGHT_IS_DIRECTIONAL) {
-        float dot_product = clamp(dot(NORMAL, LIGHT), 0.0, 1.0);
-        DIFFUSE_LIGHT += LIGHT_COLOR * ATTENUATION * dot_product;
-    }
-}
 """
-	elif texture_mode != 0:
-		code += """
-render_mode unshaded;
-		"""
-	return code

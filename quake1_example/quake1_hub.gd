@@ -336,6 +336,7 @@ func _play_bsp(pakpath : String) -> void :
 	
 	viewer = preload("res://quake1_example/viewer.tscn").instantiate()
 	viewer.hub = self
+	viewer.dynamic_lights = s_dynamic_lights.button_pressed
 	viewer.registered = s_registered.button_pressed
 	viewer.occlusion_culling = s_occlusion_culling.button_pressed
 
