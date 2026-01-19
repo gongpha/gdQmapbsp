@@ -25,7 +25,6 @@ class_name QmapbspQuake1Hub
 @onready var s_registered : CheckBox = %"s_registered"
 @onready var s_occlusion_culling : CheckBox = %"s_occlusion_culling"
 @onready var difficulity : OptionButton = %"s_difficulity"
-@onready var rendering : OptionButton = %"s_rendering"
 
 var viewer : QmapbspQuakeViewer
 var last_play : String
@@ -41,7 +40,6 @@ func _ready() :
 	s_registered.button_pressed = cfg.get_value("settings", "registered", true)
 	s_occlusion_culling.button_pressed = cfg.get_value("settings", "occlusion_culling", false)
 	difficulity.select(cfg.get_value("settings", "difficulity", 1))
-	rendering.select(cfg.get_value("settings", "rendering", 0))
 	
 	view.hide()
 	
@@ -131,7 +129,6 @@ func load_paks() :
 	cfg.set_value("settings", "registered", s_registered.button_pressed)
 	cfg.set_value("settings", "occlusion_culling", s_occlusion_culling.button_pressed)
 	cfg.set_value("settings", "difficulity", difficulity.get_selected_id())
-	cfg.set_value("settings", "rendering", rendering.get_selected_id())
 	cfg.set_value("settings", "dynamic_lights", s_dynamic_lights.button_pressed)
 	
 	cfg.save("user://quake1.cfg")
@@ -349,7 +346,6 @@ func _play_bsp(pakpath : String) -> void :
 	viewer.pal = global_pal
 	viewer.map_upper = mapupper.button_pressed
 	viewer.skill = difficulity.get_selected_id()
-	viewer.set_rendering(rendering.get_selected_id()) 
 	
 	if viewer.play_by_mapname(mapname) :
 		tabs.hide()

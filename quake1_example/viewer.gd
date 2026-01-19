@@ -30,7 +30,6 @@ var bsp_textures_fullbright : Array
 @export var dynamic_lights := false
 
 var skill : int = 1
-var rendering : int = 0
 
 var skytex : ImageTexture
 var world_shader : QmapbspQuake1StyleShader
@@ -55,11 +54,6 @@ func _ready() :
 	$loading/loading.texture = t
 	$loading/loading.pivot_offset = t.get_size() / 2
 	loading.texture = hub.load_as_texture("gfx/conback.lmp")
-	
-func set_rendering(i : int) -> void :
-	rendering = i
-	if i == 1 :
-		lightmap_boost = 8.0
 
 func play_by_node() :
 	hud.show()
