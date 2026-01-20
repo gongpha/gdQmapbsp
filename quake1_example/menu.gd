@@ -204,17 +204,17 @@ func updownsound() :
 
 func _unhandled_input(event : InputEvent) :
 	if visible :
-		if event.is_action_pressed(&"ui_up") :
+		if event.is_action_pressed(&"ui_up", true) :
 			updownsound()
 			menu_cursor -= 1
 			menu_cursor_prev = menu_cursor
 			if menu_cursor < 0 : menu_cursor = menu_items.size() - 1
-		elif event.is_action_pressed(&"ui_down") :
+		elif event.is_action_pressed(&"ui_down", true) :
 			updownsound()
 			menu_cursor += 1
 			menu_cursor_prev = menu_cursor
 			if menu_cursor >= menu_items.size() : menu_cursor = 0
-		elif event.is_action_pressed(&"ui_left") :
+		elif event.is_action_pressed(&"ui_left", true) :
 			var that = menu_items[menu_cursor]
 			if that is Array and that.size() == 3 :
 				# slider
@@ -222,7 +222,7 @@ func _unhandled_input(event : InputEvent) :
 				menu3()
 				menu_canvas.queue_redraw()
 				return
-		elif event.is_action_pressed(&"ui_right") :
+		elif event.is_action_pressed(&"ui_right", true) :
 			var that = menu_items[menu_cursor]
 			if that is Array and that.size() == 3 :
 				# slider
