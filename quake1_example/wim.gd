@@ -11,6 +11,7 @@ func _texture_include_bsp_textures() -> bool : return true
 
 func _begin() -> void :
 	super()
+	surface_shader.dynamic_lights = viewer.dynamic_lights
 	viewer.world_shader = surface_shader
 
 func _entity_node_directory_paths() -> PackedStringArray :
@@ -162,8 +163,17 @@ func _new_entity_node(classname : StringName, ent_id : int) -> Node :
 	var node : Node = super(classname, ent_id)
 	if !node : return null
 	
-	if classname == 'worldspawn' :
+	if classname == &'worldspawn' :
 		viewer.worldspawn = node
+	elif (
+		classname == &'light' or
+		classname == &'light_flame_large_yellow' or
+		classname == &'light_fluorospark' or
+		classname == &'light_torch_small_walltorch'
+	) :
+		# lights always invisible
+		if node is Light3D :
+			node.editor_only = true
 	
 	if node.has_signal(&'emit_message_state') :
 		node.connect(&'emit_message_state',

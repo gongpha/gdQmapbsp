@@ -19,7 +19,6 @@ var specials : Dictionary # <name : ShaderMaterial>
 	
 func _begin() -> void :
 	surface_shader = QmapbspQuake1StyleShader.new()
-	surface_shader.rebuild_shader()
 
 func _texture_get_mip_count(size : int) -> void :
 	surface_materials.resize(size)

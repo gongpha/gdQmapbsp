@@ -55,34 +55,7 @@ func _map_ready() :
 		ambplayers.append(lava)
 		
 		var env : Environment = wenv.environment
-		var rendering : int = viewer.rendering
-		if rendering != 0 :
-#			var skysky : Sky = load("res://quake1_example/sky_sky.tres")
-#			var skymat : ShaderMaterial = skysky.sky_material
-#			skymat.set_shader_parameter(&'skytex', viewer.skytex)
-#			env.sky = skysky
-#			env.background_mode = Environment.BG_SKY
-#			env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-#			env.ambient_light_energy = 16.0
-			if rendering == 1 :
-				env.sdfgi_enabled = true
-				env.sdfgi_max_distance = 512.0
-				env.sdfgi_cascades = 2
-				env.sdfgi_read_sky_light = false
-				env.sdfgi_energy = 4.0
-			else :
-				var aabb : AABB = props.get("__qmapbsp_aabb", AABB())
-				if aabb.get_volume() > 0.0 :
-					var voxelgi := VoxelGI.new()
-					voxelgi.size = aabb.size
-					voxelgi.position = aabb.get_center()
-					voxelgi.name = "VOXELGI"
-					add_child(voxelgi)
-					voxelgi.bake()
-					pass
-				
-		else :
-			env.ambient_light_source = Environment.AMBIENT_SOURCE_DISABLED
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_DISABLED
 
 #####################################################################
 # lightstyles
@@ -169,8 +142,6 @@ func set_ambsnds(activator : Object, amb : Vector4) -> void :
 
 func set_filter_mode(filter : int) -> void :
 	world_shader.texture_filter = filter
-	world_shader.rebuild_shader()
 
 func set_rendering_mode(ren_mode : int) -> void :
 	world_shader.texture_mode = ren_mode
-	world_shader.rebuild_shader()

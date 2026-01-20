@@ -21,11 +21,10 @@ class_name QmapbspQuake1Hub
 @onready var mdlview : VBoxContainer = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview"
 @onready var current_mdl : QmapbspMDLInstance = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root/mesh"
 
-
+@onready var s_dynamic_lights : CheckBox = %"s_dynamic_lights"
 @onready var s_registered : CheckBox = %"s_registered"
 @onready var s_occlusion_culling : CheckBox = %"s_occlusion_culling"
 @onready var difficulity : OptionButton = %"s_difficulity"
-@onready var rendering : OptionButton = %"s_rendering"
 
 var viewer : QmapbspQuakeViewer
 var last_play : String
@@ -37,10 +36,10 @@ func _ready() :
 	pathshow.text = cfg.get_value("pak", "pakpath", "")
 	pathshow_map.text = cfg.get_value("pak", "mappath", "")
 	
+	s_dynamic_lights.button_pressed = cfg.get_value("settings", "dynamic_lights", false)
 	s_registered.button_pressed = cfg.get_value("settings", "registered", true)
 	s_occlusion_culling.button_pressed = cfg.get_value("settings", "occlusion_culling", false)
 	difficulity.select(cfg.get_value("settings", "difficulity", 1))
-	rendering.select(cfg.get_value("settings", "rendering", 0))
 	
 	view.hide()
 	
@@ -130,7 +129,7 @@ func load_paks() :
 	cfg.set_value("settings", "registered", s_registered.button_pressed)
 	cfg.set_value("settings", "occlusion_culling", s_occlusion_culling.button_pressed)
 	cfg.set_value("settings", "difficulity", difficulity.get_selected_id())
-	cfg.set_value("settings", "rendering", rendering.get_selected_id())
+	cfg.set_value("settings", "dynamic_lights", s_dynamic_lights.button_pressed)
 	
 	cfg.save("user://quake1.cfg")
 	set_process(true)
@@ -334,6 +333,7 @@ func _play_bsp(pakpath : String) -> void :
 	
 	viewer = preload("res://quake1_example/viewer.tscn").instantiate()
 	viewer.hub = self
+	viewer.dynamic_lights = s_dynamic_lights.button_pressed
 	viewer.registered = s_registered.button_pressed
 	viewer.occlusion_culling = s_occlusion_culling.button_pressed
 
@@ -346,7 +346,6 @@ func _play_bsp(pakpath : String) -> void :
 	viewer.pal = global_pal
 	viewer.map_upper = mapupper.button_pressed
 	viewer.skill = difficulity.get_selected_id()
-	viewer.set_rendering(rendering.get_selected_id()) 
 	
 	if viewer.play_by_mapname(mapname) :
 		tabs.hide()

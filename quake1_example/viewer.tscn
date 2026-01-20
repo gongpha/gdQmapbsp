@@ -20,6 +20,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_vs1gv")
+dynamic_lights = true
 
 [node name="loading" type="TextureRect" parent="."]
 self_modulate = Color(0.5, 0.5, 0.5, 1)
