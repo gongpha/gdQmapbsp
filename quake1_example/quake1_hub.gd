@@ -17,6 +17,7 @@ class_name QmapbspQuake1Hub
 @onready var texview : TextureRect = $"tabs/PAK Viewer/vbox/hbox3/view/texview/tex"
 @onready var texinfo : Label = $"tabs/PAK Viewer/vbox/hbox3/view/texview/info"
 @onready var mapupper : CheckBox = $"tabs/PAK Viewer/vbox/mapupper"
+@onready var pakupper : CheckBox = $"tabs/PAK Viewer/vbox/pakupper"
 
 @onready var mdlview : VBoxContainer = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview"
 @onready var current_mdl : QmapbspMDLInstance = $"tabs/PAK Viewer/vbox/hbox3/view/mdlview/vc/vp/root/mesh"
@@ -76,7 +77,7 @@ var load_pak_list : Array[QmapbspPakFile]
 var tracklist : Dictionary
 
 func find_pak() -> StringName :
-	var paknam : int = 0
+	var paknum : int = 0
 	
 	globaldirs.clear()
 	c_textures.clear()
@@ -91,12 +92,16 @@ func find_pak() -> StringName :
 			_parse_tracks(f)
 	
 	while true :
-		var path : String = pathshow.text.path_join('pak%d.pak' % paknam)
+		var path : String
+		if pakupper.button_pressed :
+			path = pathshow.text.path_join('PAK%d.PAK' % paknum)
+		else :
+			path = pathshow.text.path_join('pak%d.pak' % paknum)
 		var ret : Array
 		var pak = QmapbspPakFile.begin(path, ret)
 		if pak is QmapbspPakFile :
 			load_pak_list.append(pak)
-			paknam += 1
+			paknum += 1
 		else :
 			break
 	if load_pak_list.is_empty() :

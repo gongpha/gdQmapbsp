@@ -176,6 +176,11 @@ layout_mode = 2
 button_pressed = true
 text = "Convert MAP filenames to UPPERCASE on load"
 
+[node name="pakupper" type="CheckBox" parent="tabs/PAK Viewer/vbox"]
+layout_mode = 2
+button_pressed = true
+text = "Convert PAK filenames to UPPERCASE on load"
+
 [node name="hbox2" type="HBoxContainer" parent="tabs/PAK Viewer/vbox"]
 layout_mode = 2
 
