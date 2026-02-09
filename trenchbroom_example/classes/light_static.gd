@@ -2,7 +2,6 @@
 extends "res://trenchbroom_example/classes/light.gd"
 
 func _init() :
-	super()
 	shadow_enabled = true
 
 func _qmapbsp_ent_props_pre(d : Dictionary) :

@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://dh5c5ghexuj8i"]
+[gd_scene format=3 uid="uid://dh5c5ghexuj8i"]
 
 [ext_resource type="Script" uid="uid://cy2d4sxeb03xg" path="res://quake1_example/class/worldspawn.gd" id="1_3n35g"]
 
@@ -10,23 +10,23 @@ ambient_light_energy = 16.0
 reflected_light_source = 1
 sdfgi_use_occlusion = true
 
-[node name="worldspawn" type="StaticBody3D"]
+[node name="worldspawn" type="StaticBody3D" unique_id=1582544364]
 script = ExtResource("1_3n35g")
 
-[node name="wenv" type="WorldEnvironment" parent="."]
+[node name="wenv" type="WorldEnvironment" parent="." unique_id=311719207]
 environment = SubResource("Environment_dlsko")
 
-[node name="music" type="AudioStreamPlayer" parent="."]
+[node name="music" type="AudioStreamPlayer" parent="." unique_id=1296167711]
 process_mode = 3
 
-[node name="water" type="AudioStreamPlayer" parent="."]
+[node name="water" type="AudioStreamPlayer" parent="." unique_id=1139413159]
 process_mode = 3
 
-[node name="sky" type="AudioStreamPlayer" parent="."]
+[node name="sky" type="AudioStreamPlayer" parent="." unique_id=1511077248]
 process_mode = 3
 
-[node name="slime" type="AudioStreamPlayer" parent="."]
+[node name="slime" type="AudioStreamPlayer" parent="." unique_id=581286842]
 process_mode = 3
 
-[node name="lava" type="AudioStreamPlayer" parent="."]
+[node name="lava" type="AudioStreamPlayer" parent="." unique_id=643821021]
 process_mode = 3

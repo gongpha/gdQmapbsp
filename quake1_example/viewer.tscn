@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://bfrpdkolpjr3g"]
+[gd_scene format=3 uid="uid://bfrpdkolpjr3g"]
 
 [ext_resource type="Script" uid="uid://c88fp534hnpxv" path="res://quake1_example/viewer.gd" id="1_vs1gv"]
 [ext_resource type="PackedScene" uid="uid://dvlurm3ntglha" path="res://quake1_example/console.tscn" id="2_qwu1n"]
@@ -10,7 +10,7 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_spi4i"]
 shader = ExtResource("5_upbmq")
 
-[node name="viewer" type="Control"]
+[node name="viewer" type="Control" unique_id=187987700]
 process_mode = 3
 texture_filter = 1
 layout_mode = 3
@@ -22,7 +22,7 @@ grow_vertical = 2
 script = ExtResource("1_vs1gv")
 dynamic_lights = true
 
-[node name="loading" type="TextureRect" parent="."]
+[node name="loading" type="TextureRect" parent="." unique_id=259956089]
 self_modulate = Color(0.5, 0.5, 0.5, 1)
 layout_mode = 1
 anchors_preset = 15
@@ -31,7 +31,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="loading" type="TextureRect" parent="loading"]
+[node name="loading" type="TextureRect" parent="loading" unique_id=1911844729]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -42,7 +42,7 @@ grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(3, 3)
 
-[node name="hud" type="Control" parent="."]
+[node name="hud" type="Control" parent="." unique_id=731630702]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -51,10 +51,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_tj87b")
 
-[node name="console" parent="." instance=ExtResource("2_qwu1n")]
+[node name="console" parent="." unique_id=547592706 instance=ExtResource("2_qwu1n")]
 layout_mode = 1
 
-[node name="menu" type="Control" parent="."]
+[node name="menu" type="Control" parent="." unique_id=458148898]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -64,7 +64,7 @@ grow_vertical = 2
 pivot_offset = Vector2(160, 0)
 script = ExtResource("3_044qv")
 
-[node name="fade" type="ColorRect" parent="menu"]
+[node name="fade" type="ColorRect" parent="menu" unique_id=876598038]
 material = SubResource("ShaderMaterial_spi4i")
 layout_mode = 1
 anchors_preset = 15
@@ -73,7 +73,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="message" type="Control" parent="."]
+[node name="message" type="Control" parent="." unique_id=422168450]
 process_mode = 1
 layout_mode = 1
 anchor_left = 0.5
@@ -84,7 +84,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("5_6jblb")
 
-[node name="talk" type="AudioStreamPlayer" parent="message"]
+[node name="talk" type="AudioStreamPlayer" parent="message" unique_id=1158144740]
 
-[node name="life" type="Timer" parent="message"]
+[node name="life" type="Timer" parent="message" unique_id=1229986024]
 wait_time = 2.0

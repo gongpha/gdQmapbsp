@@ -1,12 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://b3r3tyb0nv1gj"]
+[gd_scene format=3 uid="uid://b3r3tyb0nv1gj"]
 
 [ext_resource type="PackedScene" uid="uid://c2sspd5hoamrc" path="res://trenchbroom_example/maps/4_lightmap.map" id="1_h6uyr"]
 
-[node name="map" instance=ExtResource("1_h6uyr")]
+[node name="map" unique_id=669598882 instance=ExtResource("1_h6uyr")]
 
-[node name="light_static0001" parent="." index="1"]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -0.125, 2.84656, -2.125)
-
-[node name="lightmap" type="LightmapGI" parent="." index="2"]
+[node name="lightmap" type="LightmapGI" parent="." index="0" unique_id=160820192]
 quality = 3
 interior = true

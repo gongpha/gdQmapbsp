@@ -18,7 +18,7 @@ func _process(delta : float) :
 func _draw() :
 	draw_quake_text(
 		Vector2(16, 16),
-		"fps : %s\ndraw calls : %s\nprimitives : %s\nvelocity : %d" % [
+		"fps : %d\ndraw calls : %d\nprimitives : %d\nvelocity : %d" % [
 			Performance.get_monitor(Performance.TIME_FPS),
 			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 			Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),

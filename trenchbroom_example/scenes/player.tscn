@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://bjrvl643qpvsm"]
+[gd_scene format=3 uid="uid://bjrvl643qpvsm"]
 
 [ext_resource type="Script" uid="uid://8agg5lyfu32w" path="res://trenchbroom_example/scenes/player.gd" id="1_xiyui"]
 
@@ -9,31 +9,27 @@ size = Vector3(1, 1.5, 1)
 resource_local_to_scene = true
 size = Vector3(1, 0.175, 1)
 
-[sub_resource type="Resource" id="Resource_5aetx"]
-metadata/__load_path__ = "res://addons/qmapbsp/node/leaf_agent.gd"
-
-[node name="player" type="CharacterBody3D"]
+[node name="player" type="CharacterBody3D" unique_id=728249162]
 collision_layer = 3
 floor_constant_speed = true
 floor_snap_length = 0.4
 script = ExtResource("1_xiyui")
 
-[node name="col" type="CollisionShape3D" parent="."]
+[node name="col" type="CollisionShape3D" parent="." unique_id=2085583457]
 shape = SubResource("BoxShape3D_c8hfp")
 
-[node name="around" type="Node3D" parent="."]
+[node name="around" type="Node3D" parent="." unique_id=1291894921]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.688, 0)
 
-[node name="head" type="Node3D" parent="around"]
+[node name="head" type="Node3D" parent="around" unique_id=27939887]
 
-[node name="cam" type="Camera3D" parent="around/head"]
+[node name="cam" type="Camera3D" parent="around/head" unique_id=2090444603]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.202, 0)
 current = true
 
-[node name="staircast" type="ShapeCast3D" parent="."]
+[node name="staircast" type="ShapeCast3D" parent="." unique_id=1870508223]
 shape = SubResource("BoxShape3D_qf3qb")
 target_position = Vector3(0, -0.688, 0)
 max_results = 4
 
-[node name="leaf_agent" type="Node3D" parent="."]
-script = SubResource("Resource_5aetx")
+[node name="leaf_agent" type="Node3D" parent="." unique_id=1018086982]

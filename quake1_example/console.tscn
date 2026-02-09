@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dvlurm3ntglha"]
+[gd_scene format=3 uid="uid://dvlurm3ntglha"]
 
 [ext_resource type="Script" uid="uid://b5fkit4g4liwf" path="res://quake1_example/console.gd" id="1_tic73"]
 
@@ -40,7 +40,7 @@ _data = {
 &"aniloop": SubResource("Animation_sgl1c")
 }
 
-[node name="console" type="Control"]
+[node name="console" type="Control" unique_id=1043003963]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -49,7 +49,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_tic73")
 
-[node name="disc" type="TextureRect" parent="."]
+[node name="disc" type="TextureRect" parent="." unique_id=379998054]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 1.0
@@ -62,8 +62,6 @@ grow_vertical = 0
 scale = Vector2(3, 3)
 pivot_offset = Vector2(24, 24)
 
-[node name="ani" type="AnimationPlayer" parent="disc"]
-autoplay = "aniloop"
-libraries = {
-"": SubResource("AnimationLibrary_a4dt3")
-}
+[node name="ani" type="AnimationPlayer" parent="disc" unique_id=2116379616]
+libraries/ = SubResource("AnimationLibrary_a4dt3")
+autoplay = &"aniloop"
