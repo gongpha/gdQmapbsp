@@ -5,10 +5,10 @@
 
 [sub_resource type="Resource" id="Resource_1lml6"]
 script = ExtResource("1_aloy5")
-qbsp_path = "/home/gongpha/bin/qbsp"
+qbsp_path = "/path/to/qbsp.executable"
 
 [resource]
 resource_name = "USERCONFIG"
 script = ExtResource("1_4544i")
 compilation_workflow = SubResource("Resource_1lml6")
-tb_path = "/home/gongpha/.TrenchBroom"
+tb_path = "/path/to/TrenchBroom"
