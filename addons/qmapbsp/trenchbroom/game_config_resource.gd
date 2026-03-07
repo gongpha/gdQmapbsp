@@ -93,15 +93,11 @@ func _scan_fgd_classes() -> String :
 	return fgdsrc
 		
 func _write_object_fgd(classname : String, object : Object) -> String :
-	# TODO : docs
-	var solid : bool = false
+	var solid : bool = true
 	if object.has_method(&'_qmapbsp_is_solid_class') :
 		solid = object._qmapbsp_is_solid_class()
 		
-	var has_info := object.has_method(&'_qmapbsp_get_fgd_info')
-	if !has_info and !solid : return ""
-		
-	var dict : Dictionary = object._qmapbsp_get_fgd_info() if has_info else {}
+	var dict : Dictionary = object._qmapbsp_get_fgd_info() if object.has_method(&'_qmapbsp_get_fgd_info') else {}
 	var s : String
 	var bases : PackedStringArray
 	if object is Node3D :
