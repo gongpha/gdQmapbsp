@@ -84,10 +84,7 @@ func _poll_read_file() -> StringName :
 	
 	match path.get_extension() :
 		'wav' :
-			var what = QmapbspWAVLoader.load_from_file(loadrsc_f)
-			if what is StringName : return what
-			rsc = what
-			#what.save_to_wav("_c/" + path.get_file())
+			rsc = AudioStreamWAV.load_from_buffer(loadrsc_f.get_buffer(datasize))
 		'wad' :
 			var wad = QmapbspWadFile.load_from_file(loadrsc_f)
 			if wad is StringName : return wad
