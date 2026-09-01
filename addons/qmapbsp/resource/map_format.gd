@@ -63,7 +63,7 @@ func poll(result : Array) -> int :
 			2 : # escaping
 				parsing = 1
 			3 : # comment
-				if c == 0x10 : # newline
+				if c == 0x0a : # newline
 					parsing = 0
 				i += 1
 			0 : # other
@@ -101,14 +101,15 @@ func poll(result : Array) -> int :
 							str_begin = i + 1
 							parsing = 1
 						i += 1
-					0x27 : # /
-						if src.length() - i - 1 == 0 :
+					0x2f : # /
+						if src.length() - i <= 1 :
 							result.append(&'FOUND_SLASH_AT_EOF')
 							return PollResult.ERR
 						i += 1
-						if src.unicode_at(i + 1) == 0x27 :
+						if src.unicode_at(i) == 0x2f :
 							# //
 							parsing = 3
+							i += 1
 					0x28 : # (
 						if tell_skip_entity_brushes :
 							i += 1
