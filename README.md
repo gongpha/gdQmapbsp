@@ -7,6 +7,10 @@ An interactive Quake's MAP/BSP loader for Godot 4. It loads MAP and BSP together
 ## Supported MAP/BSP formats
 ### BSP
 - Quake 1 BSP/BSP2
+- BSPX RGBLIGHTING (embedded color lightmaps)
+- External Quake .lit version 1 (color lightmaps)
+- BSPX VERTEXNORMALS and FACENORMALS (smooth shading)
+- BSPX BRUSHLIST (convex collision for BSP-only maps)
 ### MAP
 - Quake 1 MAP
 - Valve 220 Format MAP

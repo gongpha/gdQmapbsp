@@ -60,7 +60,7 @@ func get_albedo() -> String :
 	ALBEDO = color;
 	EMISSION = ALBEDO * mix(
 		lightmap(UV2),
-		4.0f,
+		vec3(4.0f),
 		texture(texf[frame], UV).r
 	) * lmboost;
 """
@@ -68,7 +68,7 @@ func get_albedo() -> String :
 				return """
 	ALBEDO = color * mix(
 		lightmap(UV2),
-		4.0f,
+		vec3(4.0f),
 		texture(texf[frame], UV).r
 	) * lmboost;
 """
@@ -76,7 +76,7 @@ func get_albedo() -> String :
 			return "ALBEDO = color;"
 			
 		TextureMode.LIGHTMAP :
-			return "ALBEDO = vec3(lightmap(UV2));"
+			return "ALBEDO = lightmap(UV2);"
 			
 			
 		TextureMode.NORMALMAP :
@@ -120,12 +120,12 @@ void vertex() {
 	frame_plus = use_alternate ? frame_count : 0;
 }
 
-float lightmap(in vec2 uv2) {
-	float lighttotal = 0.0;
+vec3 lightmap(in vec2 uv2) {
+	vec3 lighttotal = vec3(0.0);
 	float lcursor = 0.0;
 	for (int l = 0; l < 4; l++) {
 		if ((lstyles & (1 << l)) == 0) continue;
-		lighttotal += texture(lightmap_tex, uv2 + vec2(lcursor, 0.0)).x * lights[l];
+		lighttotal += texture(lightmap_tex, uv2 + vec2(lcursor, 0.0)).rgb * lights[l];
 		lcursor += lwidth + lx2pix;
 	}
 	return lighttotal;

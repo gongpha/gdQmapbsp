@@ -26,6 +26,10 @@ func _init() :
 
 func begin_file(f : FileAccess, begin := 0) -> StringName :
 	super(f, begin)
+	if file_begin < 0 or file_begin > file.get_length() - BSP_HEADER_SIZE :
+		return &'INVALID_BSP_HEADER'
+	file.seek(file_begin)
+	is_bsp2 = false
 	
 	bsp_version = file.get_32()
 	match bsp_version :
@@ -36,6 +40,7 @@ func begin_file(f : FileAccess, begin := 0) -> StringName :
 		_ : return &'BSP_VERSION_IS_NOT_SUPPORTED'
 	
 	_read_dentry()
+	_read_bspx_directory()
 	return StringName()
 	
 func _GatheringAllEntities() -> float :
@@ -145,7 +150,40 @@ func _read_vertices() -> float :
 	vertices[load_index] = v
 	level_aabb = level_aabb.expand(v)
 	load_index += 1
+	if load_index == vertices.size() :
+		_read_bspx_vertex_normals()
 	return float(load_index) / vertices.size()
+
+
+var vertex_normals : PackedVector3Array
+
+# one quake-space float3 normal per vertex ; only texinfo flag 0x800 uses it
+func _read_bspx_vertex_normals() -> void :
+	vertex_normals.clear()
+	var lump : Vector2i = bspx_entries.get(&'VERTEXNORMALS', Vector2i(-1, -1))
+	if lump.x < 0 or lump.y != vertices.size() * VEC3_SIZE or vertices.is_empty() :
+		return
+	file.seek(file_begin + lump.x)
+	var normals := PackedVector3Array()
+	normals.resize(vertices.size())
+	for i in vertices.size() :
+		var n : Vector3 = _qnor_to_vec3_read(file)
+		if not n.is_finite() :
+			return
+		normals[i] = n.normalized() if n.length_squared() > 0.000001 else Vector3.ZERO
+	vertex_normals = normals
+
+
+const BSPX_VERTEX_NORMAL_FLAG := 0x800
+
+
+func _get_bspx_face_vertex_normal(texinfo : Array, vertex_id : int) -> Vector3 :
+	if (int(texinfo[5]) & BSPX_VERTEX_NORMAL_FLAG) == 0 :
+		return Vector3.ZERO
+	if vertex_id < 0 or vertex_id >= vertex_normals.size() :
+		return Vector3.ZERO
+	return vertex_normals[vertex_id]
+
 			
 var smooth_angle : float
 var smooth_group_faces : PackedInt32Array # <numfaces> smooth group id
@@ -284,8 +322,121 @@ func _read_models() -> float :
 		file.get_32() # count
 	]
 	load_index += 1
+	if load_index == models.size() :
+		_read_bspx_brushlist()
 	return float(load_index) / models.size()
-	
+
+
+var brushlist_models : Dictionary # <model_id : Array[Dictionary]>
+var brushlist_valid : bool = false
+
+# bspx brushlist v1 stores model headers and brushes with non-axial planes.
+func _read_bspx_brushlist() -> void :
+	brushlist_models.clear()
+	brushlist_valid = false
+	var lump : Vector2i = bspx_entries.get(&'BRUSHLIST', Vector2i(-1, -1))
+	if lump.x < 0 or lump.y < 16 :
+		return
+	var original_position : int = file.get_position()
+	var parsed : Dictionary = _parse_bspx_brushlist(lump)
+	file.seek(original_position)
+	if parsed.is_empty() :
+		return
+	brushlist_models = parsed
+	brushlist_valid = true
+
+
+func _parse_bspx_brushlist(lump : Vector2i) -> Dictionary :
+	var invalid : Dictionary = {}
+	var finish : int = file_begin + lump.x + lump.y
+	file.seek(file_begin + lump.x)
+	var parsed : Dictionary = {}
+	while file.get_position() < finish :
+		if finish - file.get_position() < 16 :
+			return invalid
+		var version : int = file.get_32()
+		var model_id : int = file.get_32()
+		var brush_count : int = file.get_32()
+		var expected_plane_count : int = file.get_32()
+		if version != 1 or model_id >= models.size() or parsed.has(model_id) :
+			return invalid
+		if brush_count > (finish - file.get_position()) / 28 :
+			return invalid
+		var brushes : Array[Dictionary] = []
+		var plane_count : int = 0
+		for i in brush_count :
+			if finish - file.get_position() < 28 :
+				return invalid
+			var mins : Vector3 = _read_vec3(file)
+			var maxs : Vector3 = _read_vec3(file)
+			var contents : int = u16toi16(file.get_16())
+			var numplanes : int = file.get_16()
+			if not mins.is_finite() or not maxs.is_finite() :
+				return invalid
+			if mins.x >= maxs.x or mins.y >= maxs.y or mins.z >= maxs.z :
+				return invalid
+			if numplanes > (finish - file.get_position()) / 16 :
+				return invalid
+			plane_count += numplanes
+			var brush_planes : Array[Plane] = []
+			for j in numplanes :
+				var quake_normal : Vector3 = _read_vec3(file)
+				var quake_dist : float = file.get_float()
+				if not quake_normal.is_finite() or not is_finite(quake_dist) :
+					return invalid
+				if quake_normal.length_squared() < 0.000001 :
+					return invalid
+				brush_planes.append(Plane(
+					_qnor_to_vec3(quake_normal),
+					quake_dist * unit_scale
+				))
+			var a : Vector3 = _qpos_to_vec3(mins)
+			var b : Vector3 = _qpos_to_vec3(maxs)
+			var lo := Vector3(minf(a.x, b.x), minf(a.y, b.y), minf(a.z, b.z))
+			var hi := Vector3(maxf(a.x, b.x), maxf(a.y, b.y), maxf(a.z, b.z))
+			brushes.append({
+				'bounds' : AABB(lo, hi - lo),
+				'contents' : contents,
+				'planes' : brush_planes,
+			})
+		if plane_count != expected_plane_count :
+			return invalid
+		parsed[model_id] = brushes
+	return parsed
+
+
+func _emit_bspx_brushlist(model_id : int) -> void :
+	var ent_id : int = model_map.get(model_id, -1)
+	if ent_id < 0 :
+		return
+	# mesh collision methods and disabled collision take precedence.
+	if wim._entity_get_collision_shape_method(ent_id) != 0 :
+		return
+	var brushes : Array = brushlist_models.get(model_id, [])
+	for brush_id in brushes.size() :
+		var brush : Dictionary = brushes[brush_id]
+		var contents : int = brush['contents']
+		if not wim._brushlist_accept_contents(model_id, contents) :
+			continue
+		var clipper := QmapbspClipper.new()
+		clipper.begin(brush['bounds'])
+		clipper.clip_planes(brush['planes'])
+		# clipper returns face-expanded points ; the convex hull needs unique ones.
+		var points := PackedVector3Array()
+		for point in clipper.vertices :
+			if not points.has(point) :
+				points.append(point)
+		if points.size() < 4 :
+			continue
+		var cvx := ConvexPolygonShape3D.new()
+		cvx.points = points
+		cvx.margin = QmapbspMAPParser.SHAPE_MARGIN
+		wim._entity_your_shape(ent_id, model_id, brush_id, cvx, Vector3(), {
+			'source' : &'BRUSHLIST',
+			'contents' : contents,
+		})
+
+
 const B15 = 1 << 15
 const B16 = 1 << 16
 const B31 = 1 << 31
@@ -316,7 +467,51 @@ func _read_faces() -> float :
 		u32toi32(file.get_32()), # lightmap
 	]
 	load_index += 1
+	if load_index == faces.size() :
+		_read_bspx_face_normals()
 	return float(load_index) / faces.size()
+
+
+var face_normals_bspx : Array[PackedVector3Array]
+
+# facenormals contains a vector table and three indices per face corner.
+# tangent/bitangent indices are validated ; godot still generates UV tangents.
+func _read_bspx_face_normals() -> void :
+	face_normals_bspx.clear()
+	var lump : Vector2i = bspx_entries.get(&'FACENORMALS', Vector2i(-1, -1))
+	if lump.x < 0 or lump.y < 4 or faces.is_empty() :
+		return
+	file.seek(file_begin + lump.x)
+	var unique_count : int = file.get_32()
+	if unique_count == 0 or unique_count > (lump.y - 4) / VEC3_SIZE :
+		return
+	var corner_count : int = 0
+	for face in faces :
+		if int(face[3]) < 0 :
+			return
+		corner_count += int(face[3])
+	if 4 + (unique_count + corner_count) * VEC3_SIZE != lump.y :
+		return
+	var vectors := PackedVector3Array()
+	vectors.resize(unique_count)
+	for i in unique_count :
+		var n : Vector3 = _qnor_to_vec3_read(file)
+		if not n.is_finite() :
+			return
+		vectors[i] = n.normalized() if n.length_squared() > 0.000001 else Vector3.ZERO
+	var output : Array[PackedVector3Array] = []
+	for face in faces :
+		var normals := PackedVector3Array()
+		normals.resize(int(face[3]))
+		for corner in int(face[3]) :
+			var n_idx : int = file.get_32()
+			var t_idx : int = file.get_32()
+			var b_idx : int = file.get_32()
+			if n_idx >= unique_count or t_idx >= unique_count or b_idx >= unique_count :
+				return
+			normals[corner] = vectors[n_idx]
+		output.append(normals)
+	face_normals_bspx = output
 	
 func _read_bspnodes() -> float :
 	if load_index == 0 :
@@ -414,12 +609,17 @@ func _construct_nodes() -> float :
 	if load_index == 0 :
 		wim._world_aabb(level_aabb)
 		expanded_aabb = level_aabb.grow(4.0)
+	var use_brushlist : bool = brushlist_valid and wim._entity_prefers_bspx_brushlist(load_index)
+	if use_brushlist :
+		_emit_bspx_brushlist(load_index)
 	var convexplanes : Array[Array]
 	var tempplanes : Array[Plane]
 	
 	#_dump_bspnodes_tree(models[load_index][3 if is_bsp else 4], is_bsp)
 	
 	for h in 4 :
+		# BRUSHLIST replaces clip hull collision ; bsp hull 0 still handles volumes
+		if use_brushlist and h != 0 : continue
 		if h == 0 :
 			if bspnodes.is_empty() : continue
 		else :
@@ -520,21 +720,61 @@ func _node_cut(
 		
 var entity_geo : Dictionary # <model_id : <region or 0 : [...]> >
 var lightmapdata : PackedByteArray
+var lightmap_format : int = Image.FORMAT_L8
+var external_lit_path : String
 var ip : QmapbspImagePacker
 var unlit : int
+
+# external .lit version 1 contains an 8-byte header followed by rgb samples
+func _read_external_lit(mono_sample_count : int) -> PackedByteArray :
+	if external_lit_path.is_empty() :
+		return PackedByteArray()
+	var lit : FileAccess = FileAccess.open(external_lit_path, FileAccess.READ)
+	if lit == null or lit.get_length() < 8 :
+		return PackedByteArray()
+	if lit.get_buffer(4).get_string_from_ascii() != "QLIT" :
+		return PackedByteArray()
+	if lit.get_32() != 1 :
+		return PackedByteArray()
+	var payload_length : int = lit.get_length() - 8
+	if payload_length == 0 or payload_length % 3 != 0 :
+		return PackedByteArray()
+	if mono_sample_count > 0 and payload_length != mono_sample_count * 3 :
+		return PackedByteArray()
+	return lit.get_buffer(payload_length)
+
+
+# rgb data takes priority when its sample count matches the vanilla lump
+func _load_lightmap_data() -> void :
+	var mono : Vector2i = entries['lightmaps']
+	var rgb : Vector2i = bspx_entries.get(&'RGBLIGHTING', Vector2i(-1, -1))
+	lightmap_format = Image.FORMAT_L8
+	if rgb.x >= 0 and rgb.y > 0 and rgb.y % 3 == 0 and (mono.y == 0 or rgb.y == mono.y * 3) :
+		file.seek(file_begin + rgb.x)
+		lightmapdata = file.get_buffer(rgb.y)
+		lightmap_format = Image.FORMAT_RGB8
+	else :
+		var litdata : PackedByteArray = _read_external_lit(mono.y)
+		if not litdata.is_empty() :
+			lightmapdata = litdata
+			lightmap_format = Image.FORMAT_RGB8
+		else :
+			file.seek(file_begin + mono.x)
+			lightmapdata = file.get_buffer(mono.y)
+
+
 func _ConstructingData() -> float : # per model
 	if load_index == 0 and loc_load_index == 0 :
 		if read_lightmaps :
-			var lightmaps_e : Vector2i = entries.lightmaps
-			file.seek(file_begin + lightmaps_e.x)
-			lightmapdata = file.get_buffer(lightmaps_e.y)
+			_load_lightmap_data()
 			ip = QmapbspImagePacker.new()
 			
 			# for unlit surfaces
+			var white : PackedByteArray = PackedByteArray()
+			white.resize(12 if lightmap_format == Image.FORMAT_RGB8 else 4)
+			white.fill(255)
 			unlit = ip.add(Vector2i(2, 2),
-				Image.create_from_data(2, 2, false, Image.FORMAT_L8, [
-					255, 255, 255, 255
-				]
+				Image.create_from_data(2, 2, false, lightmap_format, white
 			))
 	
 	for I in 32 :
@@ -613,6 +853,11 @@ func _model_geo() -> bool :
 	
 	var texture_info : Array = texinfos[face[4]] # tinfo id
 	var texture : Material = textures[texture_info[4]] # from texture index
+	var has_bspx_normals : bool = (
+		face_normals_bspx.size() == faces.size()
+		or ((int(texture_info[5]) & BSPX_VERTEX_NORMAL_FLAG) != 0
+		and not vertex_normals.is_empty())
+	)
 
 	var tsize : Vector2i
 	if texture != null :
@@ -645,7 +890,7 @@ func _model_geo() -> bool :
 			v0 = edges[edge_index][0]
 		var vert : Vector3 = vertices[v0]
 		
-		if !smooth_group_fofv.is_empty() :
+		if not has_bspx_normals and !smooth_group_fofv.is_empty() :
 			var exist_faces := smooth_group_fofv[v0]
 			if !exist_faces.is_empty() :
 				for f in exist_faces :
@@ -666,7 +911,12 @@ func _model_geo() -> bool :
 			face_vertex_face_ids[k] = face_array_index
 		
 		face_vertices[k] = vert
-		face_normals[k] = plane_normal
+		var normal : Vector3 = Vector3.ZERO
+		if face_normals_bspx.size() == faces.size() :
+			normal = face_normals_bspx[face_array_index][k]
+		else :
+			normal = _get_bspx_face_vertex_normal(texture_info, v0)
+		face_normals[k] = normal if not normal.is_zero_approx() else plane_normal
 		var t_s : Vector3 = texture_info[0]
 		var f_s : float = texture_info[1]
 		var t_t : Vector3 = texture_info[2]
@@ -763,7 +1013,7 @@ func _model_geo() -> bool :
 				face[6] / 64.0,
 				face[7] / 64.0,
 				face[8] / 64.0
-			), lstyle
+			), lstyle, has_bspx_normals
 		])
 		var texdict : Dictionary = arr[1]
 		if texdict.has(texturekey) :
@@ -781,7 +1031,7 @@ func _model_geo() -> bool :
 						face[6] / 64.0,
 						face[7] / 64.0,
 						face[8] / 64.0
-					), lstyle
+					), lstyle, has_bspx_normals
 				]
 			],
 			{texturekey : PackedInt32Array([0])},
@@ -800,7 +1050,7 @@ var lmtex : ImageTexture
 func _BuildingData() -> float :
 	if load_index == 0 and loc_load_index == 0 :
 		if read_lightmaps :
-			lightmap_image = ip.commit(Image.FORMAT_L8, pos_list)
+			lightmap_image = ip.commit(lightmap_format, pos_list)
 			lightmap_size = lightmap_image.get_size()
 			lmtex = ImageTexture.create_from_image(lightmap_image)
 			
@@ -890,129 +1140,142 @@ func _build_geo() -> bool :
 	
 	for s in texdict :
 		mat = textures[s]
-		
-		if !surface_tool :
+		var indexes : PackedInt32Array = texdict[s]
+		var has_authored : bool = false
+		var has_generated : bool = false
+		for t in indexes :
+			if bool(surfaces[t][9]) :
+				has_authored = true
+			else :
+				has_generated = true
+		for authored in [false, true] :
+			if authored and not has_authored :
+				continue
+			if not authored and not has_generated :
+				continue
+
 			surface_tool = SurfaceTool.new()
 			surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 			surface_tool.set_material(mat)
-		
-		surface_tool.set_smooth_group(-1)
-		var C_UV := surface_tool.set_uv
-		var C_UV2 := surface_tool.set_uv2
-		var C_NM := surface_tool.set_normal
-		var C_CT := surface_tool.set_custom
-		var C_VT := surface_tool.add_vertex
-		var C_SG : Callable = surface_tool.set_smooth_group if smooth_group_faces.size() > 0 else Callable()
-		var C_CD : Callable = wim._model_put_custom_data
-		
-		var indexes : PackedInt32Array = texdict[s]
-		var refv := [
-			-1 # last smooth group
-		]
-		
-		for t in indexes :
-			var surface : Array = surfaces[t]
-			var verts : PackedVector3Array = surface[0]
-			var faceids : PackedInt32Array = surface[1]
-			var lid : int = surface[5]
-			var uvs : PackedVector2Array = surface[3]
-			var lsize : Vector2 = surface[4]
-			var nors : PackedVector3Array = surface[2]
-			var uvrs : PackedVector2Array = surface[6]
-			var lights : Color = surface[7]
-			var lstyle : int = surface[8]
-			
-			
-			
-			var ADD := func(i : int, ref : Array) :
-				C_UV.call(uvs[i])
-				if !uvrs.is_empty() :
-					C_UV2.call(uvrs[i])
-					
-				var customs : Array
-				customs.resize(4)
-				C_CD.call(
-					customs,
-					
-					s,
-					lsize.x / lightmap_size.x,
-					1.0 / lightmap_size.x,
-					lights,
-					lstyle
-				)
-				
-				for j in 4 :
-					var colv = customs[j]
-					if colv is Color :
-						surface_tool.set_custom_format(j, SurfaceTool.CUSTOM_RGBA_HALF)
-						C_CT.call(j, colv)
-				var V := verts[i]
-				var nor := nors[i]
-				
-				if C_SG.is_valid() :
-					var sg := smooth_group_faces[faceids[i]]
-					if sg != ref[0] :
-						C_SG.call(sg)
-						ref[0] = sg
-				else :
-					C_NM.call(nor)
-				
-				C_VT.call(V - center)
-				
-				var include_in_occ := true
-				if (
-					mat is StandardMaterial3D and
-					mat.get_transparency() != BaseMaterial3D.TRANSPARENCY_DISABLED
-				) :
-					include_in_occ = false
-				
-				if occ and include_in_occ :
-					var idx := occ_verts.find(V)
-					var shrinking = occ_shrinking != 0.0
-					if idx == -1 :
-						occ_indices.append(occ_verts.size())
-						occ_verts.append(V)
-						if shrinking :
-							occ_nor_seq.append(PackedVector3Array([nor]))
+
+			surface_tool.set_smooth_group(-1)
+			var C_UV := surface_tool.set_uv
+			var C_UV2 := surface_tool.set_uv2
+			var C_NM := surface_tool.set_normal
+			var C_CT := surface_tool.set_custom
+			var C_VT := surface_tool.add_vertex
+			var C_SG : Callable = surface_tool.set_smooth_group if not authored and smooth_group_faces.size() > 0 else Callable()
+			var C_CD : Callable = wim._model_put_custom_data
+
+			var refv := [
+				-1 # last smooth group
+			]
+
+			for t in indexes :
+				var surface : Array = surfaces[t]
+				if bool(surface[9]) != authored :
+					continue
+				var verts : PackedVector3Array = surface[0]
+				var faceids : PackedInt32Array = surface[1]
+				var lid : int = surface[5]
+				var uvs : PackedVector2Array = surface[3]
+				var lsize : Vector2 = surface[4]
+				var nors : PackedVector3Array = surface[2]
+				var uvrs : PackedVector2Array = surface[6]
+				var lights : Color = surface[7]
+				var lstyle : int = surface[8]
+
+
+
+				var ADD := func(i : int, ref : Array) :
+					C_UV.call(uvs[i])
+					if !uvrs.is_empty() :
+						C_UV2.call(uvrs[i])
+
+					var customs : Array
+					customs.resize(4)
+					C_CD.call(
+						customs,
+
+						s,
+						lsize.x / lightmap_size.x,
+						1.0 / lightmap_size.x,
+						lights,
+						lstyle
+					)
+
+					for j in 4 :
+						var colv = customs[j]
+						if colv is Color :
+							surface_tool.set_custom_format(j, SurfaceTool.CUSTOM_RGBA_HALF)
+							C_CT.call(j, colv)
+					var V := verts[i]
+					var nor := nors[i]
+
+					if C_SG.is_valid() :
+						var sg := smooth_group_faces[faceids[i]]
+						if sg != ref[0] :
+							C_SG.call(sg)
+							ref[0] = sg
 					else :
-						occ_indices.append(idx)
-						if shrinking :
-							var L := occ_nor_seq[idx]
-							if !L.has(nor) :
-								L.append(nor)
-						
-			var pos : Vector2
-			var offset : Vector2
-			if read_lightmaps :
-				pos = pos_list[lid]
-				pos += Vector2(
-					0.5,
-					0.5
-				)
-				offset = (
-					pos / lightmap_size
-				)
-			
-			if read_lightmaps :
-				var fsize : Vector2
-				if lid == unlit :
-					fsize = (Vector2(2, 2) / lightmap_size)
-				else :
-					fsize = (lsize / lightmap_size)
-					
-				for i in uvrs.size() :
-					uvrs[i] = (uvrs[i] * fsize) + offset
-				
-			for i in verts.size() - 2 :
-				ADD.call(0, refv)
-				ADD.call(i + 1, refv)
-				ADD.call(i + 2, refv)
-		
-		if smooth_group_faces.size() > 0 :
-			surface_tool.generate_normals()
-		surface_tool.generate_tangents()
-		mesh = surface_tool.commit(mesh)
-		surface_tool = null
+						C_NM.call(nor)
+
+					C_VT.call(V - center)
+
+					var include_in_occ := true
+					if (
+						mat is StandardMaterial3D and
+						mat.get_transparency() != BaseMaterial3D.TRANSPARENCY_DISABLED
+					) :
+						include_in_occ = false
+
+					if occ and include_in_occ :
+						var idx := occ_verts.find(V)
+						var shrinking = occ_shrinking != 0.0
+						if idx == -1 :
+							occ_indices.append(occ_verts.size())
+							occ_verts.append(V)
+							if shrinking :
+								occ_nor_seq.append(PackedVector3Array([nor]))
+						else :
+							occ_indices.append(idx)
+							if shrinking :
+								var L := occ_nor_seq[idx]
+								if !L.has(nor) :
+									L.append(nor)
+
+				var pos : Vector2
+				var offset : Vector2
+				if read_lightmaps :
+					pos = pos_list[lid]
+					pos += Vector2(
+						0.5,
+						0.5
+					)
+					offset = (
+						pos / lightmap_size
+					)
+
+				if read_lightmaps :
+					var fsize : Vector2
+					if lid == unlit :
+						fsize = (Vector2(2, 2) / lightmap_size)
+					else :
+						fsize = (lsize / lightmap_size)
+
+					for i in uvrs.size() :
+						uvrs[i] = (uvrs[i] * fsize) + offset
+
+				for i in verts.size() - 2 :
+					ADD.call(0, refv)
+					ADD.call(i + 1, refv)
+					ADD.call(i + 2, refv)
+
+			if not authored and smooth_group_faces.size() > 0 :
+				surface_tool.generate_normals()
+			surface_tool.generate_tangents()
+			mesh = surface_tool.commit(mesh)
+			surface_tool = null
 	wim._entity_your_mesh(target_ent, load_index, loc_load_index, mesh, center, r)
 	loc_load_index += 1
 	return false
@@ -1023,11 +1286,77 @@ func _end_entity(idx : int) :
 ##############################################
 
 var entries : Dictionary # <name : Vector2i (dentry)>
+var bspx_entries : Dictionary # <name : Vector2i (file-relative offset, size)>
 
 func _read_dentry() :
+	entries.clear()
 	for n in ENTRY_LIST :
 		entries[n] = Vector2i(file.get_32(), file.get_32())
-	
+
+# bspx directory is optional ; preserve the standard bsp cursor after probing
+func _read_bspx_directory() -> void :
+	var old_position : int = file.get_position()
+	bspx_entries = _parse_bspx_directory()
+	file.seek(old_position)
+
+
+# parse only directory metadata ; consumers can read lump data on demand
+func _parse_bspx_directory() -> Dictionary :
+	var empty : Dictionary = {}
+	var relative_file_size : int = file.get_length() - file_begin
+	var directory_offset : int = BSP_HEADER_SIZE
+
+	# the bspx header follows the last standard lump, aligned to four bytes
+	for entry in entries.values() :
+		var lump : Vector2i = entry
+		if lump.x < 0 or lump.y < 0 or lump.x > relative_file_size :
+			return empty
+		if lump.y > relative_file_size - lump.x :
+			return empty
+		directory_offset = maxi(directory_offset, lump.x + lump.y)
+	directory_offset = (directory_offset + 3) & ~3
+
+	if directory_offset > relative_file_size - BSPX_HEADER_SIZE :
+		return empty
+	file.seek(file_begin + directory_offset)
+	if file.get_buffer(4).get_string_from_ascii() != "BSPX" :
+		return empty
+
+	var count : int = file.get_32()
+	var remaining : int = relative_file_size - directory_offset - BSPX_HEADER_SIZE
+	if count > MAX_BSPX_LUMPS or count * BSPX_ENTRY_SIZE > remaining :
+		return empty
+
+	var directory : Dictionary = {}
+	for i in count :
+		var raw_name : PackedByteArray = file.get_buffer(BSPX_NAME_SIZE)
+		var name_end : int = raw_name.find(0)
+		if name_end <= 0 :
+			return empty
+		for j in range(name_end, BSPX_NAME_SIZE) :
+			if raw_name[j] != 0 :
+				return empty
+		var name : StringName = StringName(
+			raw_name.slice(0, name_end).get_string_from_ascii()
+		)
+		var offset : int = file.get_32()
+		var length : int = file.get_32()
+		if offset > 0x7FFFFFFF or length > 0x7FFFFFFF :
+			return empty
+		if directory.has(name) or offset > relative_file_size :
+			return empty
+		if length > relative_file_size - offset :
+			return empty
+		directory[name] = Vector2i(offset, length)
+	return directory
+
+
+const BSP_HEADER_SIZE := 4 + 15 * 8
+const BSPX_HEADER_SIZE := 8
+const BSPX_NAME_SIZE := 24
+const BSPX_ENTRY_SIZE := BSPX_NAME_SIZE + 8
+const MAX_BSPX_LUMPS := 4096
+
 const VEC3_SIZE := 4 * 3 # sizeof(float) * 3
 const ENTRY_LIST := [
 	'entities', 'planes', 'miptex', 'vertices', 'visilist',
@@ -1075,7 +1404,7 @@ func _gen_lightmap(
 	offset : int, size : Vector2i,
 	lightstyles : PackedByteArray, ret_lstyle : PackedByteArray
 ) -> Image :
-	if offset == -1 :
+	if offset < 0 or size.x <= 0 or size.y <= 0 :
 		ret_lstyle.append(0)
 		return null
 	var lightmaps : int = 0
@@ -1084,18 +1413,24 @@ func _gen_lightmap(
 		if lightstyles[i] == 255 : continue
 		lightmaps += 1
 		ist |= 1 << i
-		
-	var im := Image.create(size.x * lightmaps, size.y, false, Image.FORMAT_L8)
+	var bytes_per_sample : int = 3 if lightmap_format == Image.FORMAT_RGB8 else 1
+	var sample_bytes : int = size.x * size.y * bytes_per_sample
+	var byte_offset : int = offset * bytes_per_sample
+	if lightmaps == 0 or byte_offset + sample_bytes * lightmaps > lightmapdata.size() :
+		ret_lstyle.append(0)
+		return null
+	var im := Image.create(size.x * lightmaps, size.y, false, lightmap_format)
+	var packed_slot : int = 0
 	for l in MAX_LIGHTMAPS :
 		if lightstyles[l] == 255 : continue
-		var new := offset + size.x * size.y
-		
-		var c := lightmapdata.slice(offset, new)
+		var end_offset : int = byte_offset + sample_bytes
+		var c := lightmapdata.slice(byte_offset, end_offset)
 		var sim := Image.create_from_data(
-			size.x, size.y, false, Image.FORMAT_L8,
+			size.x, size.y, false, lightmap_format,
 			c
 		)
-		im.blit_rect(sim, Rect2i(0, 0, size.x, size.y), Vector2i(l * size.x, 0))
-		offset = new
+		im.blit_rect(sim, Rect2i(0, 0, size.x, size.y), Vector2i(packed_slot * size.x, 0))
+		byte_offset = end_offset
+		packed_slot += 1
 	ret_lstyle.append(ist)
 	return im

@@ -170,6 +170,14 @@ func _leaf_your_clip_planes(
 	planes_const : Array[Plane] # do not modify !
 ) -> bool :
 	return false
+
+# use bspx collision only when .map is not already providing brush shapes.
+func _entity_prefers_bspx_brushlist(_model_id : int) -> bool :
+	return mapp == null
+
+# non-solid contents can be enabled by overriding this hook.
+func _brushlist_accept_contents(_model_id : int, contents : int) -> bool :
+	return contents == QmapbspBSPParser.CONTENTS_SOLID or contents == QmapbspBSPParser.CONTENTS_CLIP
 	
 func _model_your_idmap(model_map : Dictionary) -> void :
 	return
@@ -242,15 +250,17 @@ func begin_load_absolute(bsp_path : String, map_path : String = "", ret := []) -
 			ret.append(FileAccess.get_open_error())
 			return &'CANNOT_OPEN_MAP_FILE'
 		
-	return begin_load_files(B, 0, M, ret)
+	var lit_path : String = bsp_path.get_basename() + '.lit' if !bsp_path.is_empty() else ''
+	return begin_load_files(B, 0, M, ret, lit_path)
 	
 func begin_load_files(
 	bspf : FileAccess, bspf_begin := 0,
-	mapf : FileAccess = null, ret := []
+	mapf : FileAccess = null, ret := [], lit_path : String = ''
 ) -> StringName :
 	var err : StringName
 	if bspf :
 		bspp = QmapbspBSPParser.new()
+		bspp.external_lit_path = lit_path
 		err = bspp.begin_file(bspf, bspf_begin)
 		if err != StringName() : return err
 		
